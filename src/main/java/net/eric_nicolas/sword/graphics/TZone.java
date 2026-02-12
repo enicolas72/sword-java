@@ -82,6 +82,22 @@ public class TZone extends TObject {
         return bounds.contains(x, y);
     }
 
+    @Override
+    public void insertIn(TAtom father) {
+        // Adjust bounds to be relative to parent's position
+        if (father instanceof TZone) {
+            TZone parentZone = (TZone) father;
+            // Child bounds are specified relative to parent, so add parent's origin
+            int dx = parentZone.bounds.a.x;
+            int dy = parentZone.bounds.a.y;
+            bounds.offset(dx, dy);
+            clipRect.offset(dx, dy);
+        }
+
+        // Call parent insertIn to update the tree structure
+        super.insertIn(father);
+    }
+
     /**
      * Data exchange methods - override in subclasses that need data exchange.
      */
