@@ -214,8 +214,9 @@ public class TMenu extends TStdWindow {
     @Override
     protected boolean mouseLDown(TEvent event) {
         if (!contains(event.where.x, event.where.y)) {
-            if (!hasOption(OP_MAIN_MENU)) {
-                // Clicking outside non-main menu closes it
+            // Only close if this is a submenu (has a father menu)
+            // Top-level application menus stay open
+            if (fatherMenu != null) {
                 closeMenu();
                 return true;
             }

@@ -10,24 +10,20 @@ import java.lang.reflect.Field;
  * TRadioBox - Radio button control.
  * Works with TGroupBox parent - only one radio button can be selected in a group.
  */
-public class TRadioBox extends TButton {
+public class TRadioBox extends TItemBox {
 
-    protected String text;
     protected int value; // Value for this radio button
-    protected Font radioFont;
 
     /**
      * Constructor with position, size, options, value, and text.
      */
     public TRadioBox(int x, int y, int width, int options, int value, String text) {
-        super(x, y, width, 20, 0, 0, options);
-        this.text = text != null ? text : "";
+        super(x, y, width, options, text);
         this.value = value;
-        this.radioFont = new Font("SansSerif", Font.PLAIN, 12);
     }
 
     @Override
-    protected void paint(Graphics2D g) {
+    protected void drawInside(Graphics2D g, int offset) {
         int x = bounds.a.x;
         int y = bounds.a.y;
 
@@ -50,7 +46,7 @@ public class TRadioBox extends TButton {
             } else {
                 g.setColor(TColors.BLACK);
             }
-            g.setFont(radioFont);
+            g.setFont(itemFont);
             String displayText = text.replace("&", "");
             g.drawString(displayText, x + 18, y + 14);
         }

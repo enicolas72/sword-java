@@ -10,26 +10,22 @@ import java.lang.reflect.Field;
  * TCheckBox - Checkbox control with bitmask state.
  * Works with TGroupBox parent to exchange data.
  */
-public class TCheckBox extends TButton {
+public class TCheckBox extends TItemBox {
 
-    protected String text;
     protected int mask; // Bit mask for this checkbox
-    protected Font checkFont;
     protected boolean checked;
 
     /**
      * Constructor with position, size, options, mask, and text.
      */
     public TCheckBox(int x, int y, int width, int options, int mask, String text) {
-        super(x, y, width, 20, 0, 0, options);
-        this.text = text != null ? text : "";
+        super(x, y, width, options, text);
         this.mask = mask;
         this.checked = false;
-        this.checkFont = new Font("SansSerif", Font.PLAIN, 12);
     }
 
     @Override
-    protected void paint(Graphics2D g) {
+    protected void drawInside(Graphics2D g, int offset) {
         int x = bounds.a.x;
         int y = bounds.a.y;
 
@@ -56,7 +52,7 @@ public class TCheckBox extends TButton {
             } else {
                 g.setColor(TColors.BLACK);
             }
-            g.setFont(checkFont);
+            g.setFont(itemFont);
             String displayText = text.replace("&", "");
             g.drawString(displayText, x + 18, y + 14);
         }

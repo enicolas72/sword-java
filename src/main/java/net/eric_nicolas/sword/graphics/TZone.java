@@ -44,15 +44,28 @@ public class TZone extends TObject {
     public void draw(Graphics2D g) {
         if (!isVisible()) return;
 
+        // Get absolute position for drawing
+        TPoint absPos = getAbsolutePosition();
+
         // Set clipping
-        g.setClip(clipRect.a.x, clipRect.a.y, clipRect.width(), clipRect.height());
+        g.setClip(absPos.x, absPos.y, bounds.width(), bounds.height());
 
         // Draw background
         g.setColor(bgColor);
-        g.fillRect(bounds.a.x, bounds.a.y, bounds.width(), bounds.height());
+        g.fillRect(absPos.x, absPos.y, bounds.width(), bounds.height());
+
+        // Temporarily adjust bounds for painting
+        TRect originalBounds = new TRect(bounds);
+        bounds.a.x = absPos.x;
+        bounds.a.y = absPos.y;
+        bounds.b.x = absPos.x + originalBounds.width();
+        bounds.b.y = absPos.y + originalBounds.height();
 
         // Draw content
         paint(g);
+
+        // Restore relative bounds
+        bounds = originalBounds;
 
         // Draw children
         if (_Son != null) {
@@ -79,23 +92,28 @@ public class TZone extends TObject {
     }
 
     public boolean contains(int x, int y) {
-        return bounds.contains(x, y);
+        TPoint absPos = getAbsolutePosition();
+        return x >= absPos.x && x < absPos.x + bounds.width() &&
+               y >= absPos.y && y < absPos.y + bounds.height();
     }
 
-    @Override
-    public void insertIn(TAtom father) {
-        // Adjust bounds to be relative to parent's position
-        if (father instanceof TZone) {
-            TZone parentZone = (TZone) father;
-            // Child bounds are specified relative to parent, so add parent's origin
-            int dx = parentZone.bounds.a.x;
-            int dy = parentZone.bounds.a.y;
-            bounds.offset(dx, dy);
-            clipRect.offset(dx, dy);
+    /**
+     * Compute absolute position by walking up parent chain.
+     * In C++ this is MakeGlobal().
+     */
+    protected TPoint getAbsolutePosition() {
+        int x = bounds.a.x;
+        int y = bounds.a.y;
+
+        TAtom parent = father();
+        while (parent instanceof TZone) {
+            TZone parentZone = (TZone) parent;
+            x += parentZone.bounds.a.x;
+            y += parentZone.bounds.a.y;
+            parent = parent.father();
         }
 
-        // Call parent insertIn to update the tree structure
-        super.insertIn(father);
+        return new TPoint(x, y);
     }
 
     /**

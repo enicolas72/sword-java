@@ -68,32 +68,18 @@ public class TWindow extends TZone {
     @Override
     protected boolean mouseMove(TEvent event) {
         if (dragging) {
-            int oldX = bounds.a.x;
-            int oldY = bounds.a.y;
+            // Calculate new position (relative to parent/desktop)
             int newX = event.where.x - dragOffset.x;
             int newY = event.where.y - dragOffset.y;
-            int dx = newX - oldX;
-            int dy = newY - oldY;
 
-            // Move window
+            // Update window bounds (stored as relative coordinates)
             int width = bounds.width();
             int height = bounds.height();
             bounds.a.set(newX, newY);
             bounds.b.set(newX + width, newY + height);
             clipRect = new TRect(bounds);
 
-            // Move children
-            if (_Son != null) {
-                TAtom child = _Son;
-                while (child != null) {
-                    if (child instanceof TZone) {
-                        TZone zone = (TZone) child;
-                        zone.bounds.offset(dx, dy);
-                        zone.clipRect.offset(dx, dy);
-                    }
-                    child = child.next();
-                }
-            }
+            // Children don't need to be moved - they maintain relative positions
             return true;
         }
         return false;
