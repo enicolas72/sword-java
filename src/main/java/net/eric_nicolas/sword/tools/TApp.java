@@ -115,8 +115,8 @@ public class TApp extends TShell implements Runnable {
     }
 
     protected void initializeMenu() {
-        // Create main menu (floating menu at top-left, vertical layout)
-        mainMenu = new TMenu("Menu", 0); // No OP_MAIN_MENU - make it vertical
+        // Create main menu (regular window, stays visible)
+        mainMenu = new TMenu("Menu", 0);
         createMenuChoices(mainMenu);
         mainMenu.initChoices();
         mainMenu.insertIn(desktop);

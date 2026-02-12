@@ -202,10 +202,15 @@ public class TMenuChoice extends TZone {
         if (command != 0) {
             // Trigger command
             sendCommand(command);
-            // Close the menu
+            // Only close the menu if it's a submenu (not a top-level menu)
             TAtom myFather = father();
             if (myFather != null && myFather instanceof TMenu) {
-                ((TMenu) myFather).closeMenu();
+                TMenu menu = (TMenu) myFather;
+                // Only close if this menu has a father menu (i.e., it's a submenu)
+                // Top-level menus stay open
+                if (menu.fatherMenu != null) {
+                    menu.closeMenu();
+                }
             }
         } else if (subMenu != null) {
             // Show submenu (not implemented yet)
