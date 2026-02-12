@@ -81,10 +81,22 @@ public class TDialog extends TStdWindow {
         modal = true;
         dialogResult = 0;
 
-        // Simple modal loop - wait for dialog result
+        // Modal event loop - process AWT events until dialog closes
+        // We need to pump events manually to avoid blocking the EDT
+        java.awt.EventQueue queue = java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue();
+
         while (dialogResult == 0 && _Father != null) {
             try {
-                Thread.sleep(50);
+                // Process one event from the queue
+                java.awt.AWTEvent event = queue.getNextEvent();
+                Object source = event.getSource();
+
+                // Dispatch the event to its source
+                if (source instanceof java.awt.Component) {
+                    ((java.awt.Component) source).dispatchEvent(event);
+                } else if (source instanceof java.awt.MenuComponent) {
+                    ((java.awt.MenuComponent) source).dispatchEvent(event);
+                }
             } catch (InterruptedException e) {
                 break;
             }

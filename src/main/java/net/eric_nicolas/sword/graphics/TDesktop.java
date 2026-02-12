@@ -33,6 +33,13 @@ public class TDesktop extends TZone {
     }
 
     @Override
+    protected boolean mouseLDown(TEvent event) {
+        // Desktop should not consume mouse events - let windows on top handle them
+        // Only consume if clicking on empty space (not on any child window)
+        return false;
+    }
+
+    @Override
     protected void paint(Graphics2D g) {
         // Desktop draws only background (filled in parent draw method)
     }
