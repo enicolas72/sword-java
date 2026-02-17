@@ -40,7 +40,7 @@ public class TDesktop extends TZone {
     }
 
     @Override
-    protected void paint(Graphics2D g) {
+    protected void paint(PaintContext ctx) {
         // Desktop draws only background (filled in parent draw method)
     }
 }

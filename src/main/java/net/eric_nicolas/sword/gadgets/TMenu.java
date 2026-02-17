@@ -338,31 +338,31 @@ public class TMenu extends TStdWindow {
     }
 
     @Override
-    protected void paint(Graphics2D g) {
+    protected void paint(PaintContext ctx) {
         if (hasOption(OP_MAIN_MENU)) {
             // Main menu - draw as horizontal bar
-            g.setColor(TColors.FACE_GRAY);
-            g.fillRect(bounds.a.x, bounds.a.y, bounds.width(), bounds.height());
+            ctx.setColor(TColors.FACE_GRAY);
+            ctx.fillRect(bounds.a.x, bounds.a.y, bounds.width(), bounds.height());
 
             // Draw bottom border
-            g.setColor(TColors.DARK_GRAY);
-            g.drawLine(bounds.a.x, bounds.b.y - 1, bounds.b.x - 1, bounds.b.y - 1);
+            ctx.setColor(TColors.DARK_GRAY);
+            ctx.drawLine(bounds.a.x, bounds.b.y - 1, bounds.b.x - 1, bounds.b.y - 1);
         } else {
             // Dropdown menu - draw with frame and title bar
-            g.setColor(TColors.FACE_GRAY);
-            g.fillRect(bounds.a.x, bounds.a.y, bounds.width(), bounds.height());
+            ctx.setColor(TColors.FACE_GRAY);
+            ctx.fillRect(bounds.a.x, bounds.a.y, bounds.width(), bounds.height());
 
             // Draw frame
-            g.setColor(TColors.DARK_GRAY);
-            g.drawRect(bounds.a.x, bounds.a.y, bounds.width() - 1, bounds.height() - 1);
+            ctx.setColor(TColors.DARK_GRAY);
+            ctx.drawRect(bounds.a.x, bounds.a.y, bounds.width() - 1, bounds.height() - 1);
 
             // Draw title bar
-            g.setColor(TColors.DARK_GRAY);
-            g.fillRect(bounds.a.x + 1, bounds.a.y + 1, bounds.width() - 2, 20);
+            ctx.setColor(TColors.DARK_GRAY);
+            ctx.fillRect(bounds.a.x + 1, bounds.a.y + 1, bounds.width() - 2, 20);
 
-            g.setColor(TColors.WHITE);
-            g.setFont(menuFont);
-            g.drawString(title, bounds.a.x + 5, bounds.a.y + 15);
+            ctx.setColor(TColors.WHITE);
+            ctx.setFont(menuFont);
+            ctx.drawString(bounds.a.x + 5, bounds.a.y + 15, title);
         }
     }
 }

@@ -23,32 +23,32 @@ public class TRadioBox extends TItemBox {
     }
 
     @Override
-    protected void drawInside(Graphics2D g, int offset) {
+    protected void drawInside(PaintContext ctx, int offset) {
         int x = bounds.a.x;
         int y = bounds.a.y;
 
         // Draw radio button circle (12x12)
-        g.setColor(TColors.WHITE);
-        g.fillOval(x + 2, y + 4, 12, 12);
-        g.setColor(TColors.DARK_GRAY);
-        g.drawOval(x + 2, y + 4, 12, 12);
+        ctx.setColor(TColors.WHITE);
+        ctx.fillOval(x + 2, y + 4, 12, 12);
+        ctx.setColor(TColors.DARK_GRAY);
+        ctx.drawOval(x + 2, y + 4, 12, 12);
 
         // Draw filled circle if selected
         if (isRadioSelected()) {
-            g.setColor(TColors.BLACK);
-            g.fillOval(x + 5, y + 7, 6, 6);
+            ctx.setColor(TColors.BLACK);
+            ctx.fillOval(x + 5, y + 7, 6, 6);
         }
 
         // Draw text
         if (text != null && !text.isEmpty()) {
             if (hasStatus(SF_DISABLED)) {
-                g.setColor(TColors.DARK_GRAY);
+                ctx.setColor(TColors.DARK_GRAY);
             } else {
-                g.setColor(TColors.BLACK);
+                ctx.setColor(TColors.BLACK);
             }
-            g.setFont(itemFont);
+            ctx.setFont(itemFont);
             String displayText = text.replace("&", "");
-            g.drawString(displayText, x + 18, y + 14);
+            ctx.drawString(x + 18, y + 14, displayText);
         }
     }
 

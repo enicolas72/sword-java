@@ -57,28 +57,28 @@ public class TButton extends TZone {
     }
 
     @Override
-    protected void paint(Graphics2D g) {
+    protected void paint(PaintContext ctx) {
         int width = bounds.width();
         int height = bounds.height();
 
         // Draw button background
         if (hasStatus(SF_DISABLED)) {
-            g.setColor(TColors.MEDIUM_GRAY);
+            ctx.setColor(TColors.MEDIUM_GRAY);
         } else if (pressed) {
-            g.setColor(TColors.DARK_GRAY);
+            ctx.setColor(TColors.DARK_GRAY);
         } else {
-            g.setColor(TColors.FACE_GRAY);
+            ctx.setColor(TColors.FACE_GRAY);
         }
-        g.fillRect(bounds.a.x, bounds.a.y, width, height);
+        ctx.fillRect(bounds.a.x, bounds.a.y, width, height);
 
         // Draw 3D frame
-        drawFrame(g, pressed);
+        drawFrame(ctx, pressed);
 
         // Draw inside content (override in subclasses)
-        drawInside(g, pressed ? 1 : 0);
+        drawInside(ctx, pressed ? 1 : 0);
     }
 
-    protected void drawFrame(Graphics2D g, boolean pressed) {
+    protected void drawFrame(PaintContext ctx, boolean pressed) {
         int x = bounds.a.x;
         int y = bounds.a.y;
         int w = bounds.width();
@@ -86,24 +86,24 @@ public class TButton extends TZone {
 
         if (pressed) {
             // Pressed: dark on top/left
-            g.setColor(TColors.DARK_GRAY);
-            g.drawLine(x, y, x + w - 1, y);
-            g.drawLine(x, y, x, y + h - 1);
-            g.setColor(TColors.LIGHT_GRAY);
-            g.drawLine(x + w - 1, y, x + w - 1, y + h - 1);
-            g.drawLine(x, y + h - 1, x + w - 1, y + h - 1);
+            ctx.setColor(TColors.DARK_GRAY);
+            ctx.drawLine(x, y, x + w - 1, y);
+            ctx.drawLine(x, y, x, y + h - 1);
+            ctx.setColor(TColors.LIGHT_GRAY);
+            ctx.drawLine(x + w - 1, y, x + w - 1, y + h - 1);
+            ctx.drawLine(x, y + h - 1, x + w - 1, y + h - 1);
         } else {
             // Normal: light on top/left, dark on bottom/right
-            g.setColor(TColors.LIGHT_GRAY);
-            g.drawLine(x, y, x + w - 2, y);
-            g.drawLine(x, y, x, y + h - 2);
-            g.setColor(TColors.DARK_GRAY);
-            g.drawLine(x + w - 1, y, x + w - 1, y + h - 1);
-            g.drawLine(x, y + h - 1, x + w - 1, y + h - 1);
+            ctx.setColor(TColors.LIGHT_GRAY);
+            ctx.drawLine(x, y, x + w - 2, y);
+            ctx.drawLine(x, y, x, y + h - 2);
+            ctx.setColor(TColors.DARK_GRAY);
+            ctx.drawLine(x + w - 1, y, x + w - 1, y + h - 1);
+            ctx.drawLine(x, y + h - 1, x + w - 1, y + h - 1);
         }
     }
 
-    protected void drawInside(Graphics2D g, int offset) {
+    protected void drawInside(PaintContext ctx, int offset) {
         // Override in subclasses
     }
 

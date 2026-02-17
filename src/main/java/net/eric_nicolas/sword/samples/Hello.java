@@ -4,7 +4,6 @@ import net.eric_nicolas.sword.tools.TApp;
 import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.gadgets.*;
 import net.eric_nicolas.sword.mechanism.*;
-import java.awt.Graphics2D;
 import java.awt.Font;
 
 /**
@@ -27,15 +26,13 @@ public class Hello {
             setBackgroundColor(TColors.LIGHT_GRAY);
         }
 
-
-
         @Override
-        protected void paint(Graphics2D g) {
+        protected void paint(PaintContext ctx) {
             // Draw text (relative to this zone's bounds)
-            g.setColor(TColors.BLACK);
-            g.setFont(bigFont);
-            g.drawString("Hello World !", bounds.a.x + 20, bounds.a.y + 40);
-            g.drawString("S. W. O. R. D.", bounds.a.x + 20, bounds.a.y + 80);
+            ctx.setColor(TColors.BLACK);
+            ctx.setFont(bigFont);
+            ctx.drawString(bounds.a.x + 20, bounds.a.y + 40, "Hello World !");
+            ctx.drawString(bounds.a.x + 20, bounds.a.y + 80, "S. W. O. R. D.");
         }
     }
 

@@ -47,12 +47,15 @@ public class TZone extends TObject {
         // Get absolute position for drawing
         TPoint absPos = getAbsolutePosition();
 
+        // Create paint context
+        PaintContext ctx = new PaintContext(g);
+
         // Set clipping
-        g.setClip(absPos.x, absPos.y, bounds.width(), bounds.height());
+        ctx.setClip(absPos.x, absPos.y, bounds.width(), bounds.height());
 
         // Draw background
-        g.setColor(bgColor);
-        g.fillRect(absPos.x, absPos.y, bounds.width(), bounds.height());
+        ctx.setColor(bgColor);
+        ctx.fillRect(absPos.x, absPos.y, bounds.width(), bounds.height());
 
         // Temporarily adjust bounds for painting
         TRect originalBounds = new TRect(bounds);
@@ -62,7 +65,7 @@ public class TZone extends TObject {
         bounds.b.y = absPos.y + originalBounds.height();
 
         // Draw content
-        paint(g);
+        paint(ctx);
 
         // Restore relative bounds
         bounds = originalBounds;
@@ -79,7 +82,7 @@ public class TZone extends TObject {
         }
     }
 
-    protected void paint(Graphics2D g) {
+    protected void paint(PaintContext ctx) {
         // Override in subclasses
     }
 

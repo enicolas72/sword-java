@@ -46,27 +46,27 @@ public class TEditLine extends TZone {
     }
 
     @Override
-    protected void paint(Graphics2D g) {
+    protected void paint(PaintContext ctx) {
         int x = bounds.a.x;
         int y = bounds.a.y;
         int w = bounds.width();
         int h = bounds.height();
 
         // Draw background
-        g.setColor(hasStatus(SF_DISABLED) ? TColors.MEDIUM_GRAY : TColors.WHITE);
-        g.fillRect(x, y, w, h);
+        ctx.setColor(hasStatus(SF_DISABLED) ? TColors.MEDIUM_GRAY : TColors.WHITE);
+        ctx.fillRect(x, y, w, h);
 
         // Draw border if enabled
         if (drawBorder) {
-            g.setColor(hasFocus ? TColors.BLACK : TColors.DARK_GRAY);
-            g.drawRect(x, y, w - 1, h - 1);
+            ctx.setColor(hasFocus ? TColors.BLACK : TColors.DARK_GRAY);
+            ctx.drawRect(x, y, w - 1, h - 1);
         }
 
         // Draw text
         if (text != null && !text.isEmpty()) {
-            g.setColor(TColors.BLACK);
-            g.setFont(editFont);
-            g.drawString(text, x + 4, y + 15);
+            ctx.setColor(TColors.BLACK);
+            ctx.setFont(editFont);
+            ctx.drawString(x + 4, y + 15, text);
         }
 
         // Draw cursor
@@ -78,14 +78,14 @@ public class TEditLine extends TZone {
                 lastBlinkTime = now;
             }
 
-            g.setColor(TColors.BLACK);
-            g.setFont(editFont);
+            ctx.setColor(TColors.BLACK);
+            ctx.setFont(editFont);
             int cursorX = x + 4;
             if (cursorPos > 0 && text.length() >= cursorPos) {
                 String beforeCursor = text.substring(0, cursorPos);
-                cursorX += g.getFontMetrics().stringWidth(beforeCursor);
+                cursorX += ctx.getFontMetrics().stringWidth(beforeCursor);
             }
-            g.drawLine(cursorX, y + 3, cursorX, y + h - 4);
+            ctx.drawLine(cursorX, y + 3, cursorX, y + h - 4);
         }
     }
 

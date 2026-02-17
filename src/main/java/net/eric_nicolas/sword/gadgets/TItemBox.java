@@ -31,14 +31,14 @@ public class TItemBox extends TButton {
     }
 
     @Override
-    protected void paint(Graphics2D g) {
+    protected void paint(PaintContext ctx) {
         // ItemBox doesn't draw button frame - just the content
         // Subclasses override to draw checkbox/radio specific UI
-        drawInside(g, 0);
+        drawInside(ctx, 0);
     }
 
     @Override
-    protected void drawInside(Graphics2D g, int offset) {
+    protected void drawInside(PaintContext ctx, int offset) {
         // Override in subclasses (TCheckBox, TRadioBox)
     }
 

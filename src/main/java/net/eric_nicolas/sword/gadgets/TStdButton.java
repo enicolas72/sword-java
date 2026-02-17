@@ -30,26 +30,26 @@ public class TStdButton extends TButton {
     }
 
     @Override
-    protected void drawInside(Graphics2D g, int offset) {
+    protected void drawInside(PaintContext ctx, int offset) {
         if (text == null || text.isEmpty()) return;
 
         // Set text color based on state
         if (hasStatus(SF_DISABLED)) {
-            g.setColor(TColors.DARK_GRAY);
+            ctx.setColor(TColors.DARK_GRAY);
         } else {
-            g.setColor(TColors.BLACK);
+            ctx.setColor(TColors.BLACK);
         }
 
         // Draw text centered
-        g.setFont(buttonFont);
-        FontMetrics fm = g.getFontMetrics();
+        ctx.setFont(buttonFont);
+        FontMetrics fm = ctx.getFontMetrics();
         int textWidth = fm.stringWidth(text);
         int textHeight = fm.getHeight();
 
         int x = bounds.a.x + (bounds.width() - textWidth) / 2 + offset;
         int y = bounds.a.y + (bounds.height() + textHeight) / 2 - fm.getDescent() + offset;
 
-        g.drawString(text, x, y);
+        ctx.drawString(x, y, text);
     }
 
     public String getText() {

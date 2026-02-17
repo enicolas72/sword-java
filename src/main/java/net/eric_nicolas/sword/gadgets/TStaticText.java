@@ -31,18 +31,18 @@ public class TStaticText extends TZone {
     }
 
     @Override
-    protected void paint(Graphics2D g) {
+    protected void paint(PaintContext ctx) {
         if (text == null || text.isEmpty()) return;
 
         // Draw text
-        g.setColor(TColors.BLACK);
-        g.setFont(textFont);
-        FontMetrics fm = g.getFontMetrics();
+        ctx.setColor(TColors.BLACK);
+        ctx.setFont(textFont);
+        FontMetrics fm = ctx.getFontMetrics();
 
         // Center vertically
         int y = bounds.a.y + (bounds.height() + fm.getHeight()) / 2 - fm.getDescent();
 
-        g.drawString(text, bounds.a.x + 2, y);
+        ctx.drawString(bounds.a.x + 2, y, text);
     }
 
     public String getText() {

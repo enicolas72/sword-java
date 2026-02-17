@@ -41,7 +41,7 @@ public class TGroupBox extends TZone {
     }
 
     @Override
-    protected void paint(Graphics2D g) {
+    protected void paint(PaintContext ctx) {
         int x = bounds.a.x;
         int y = bounds.a.y;
         int w = bounds.width();
@@ -49,22 +49,22 @@ public class TGroupBox extends TZone {
 
         if (text != null && !text.isEmpty()) {
             // Draw titled group box with frame
-            g.setColor(TColors.DARK_GRAY);
-            g.drawRect(x, y + 8, w - 1, h - 9);
+            ctx.setColor(TColors.DARK_GRAY);
+            ctx.drawRect(x, y + 8, w - 1, h - 9);
 
             // Draw title background
-            g.setColor(TColors.FACE_GRAY);
-            g.setFont(groupFont);
-            int textWidth = g.getFontMetrics().stringWidth(text);
-            g.fillRect(x + 10, y, textWidth + 6, 16);
+            ctx.setColor(TColors.FACE_GRAY);
+            ctx.setFont(groupFont);
+            int textWidth = ctx.getFontMetrics().stringWidth(text);
+            ctx.fillRect(x + 10, y, textWidth + 6, 16);
 
             // Draw title text
-            g.setColor(TColors.BLACK);
-            g.drawString(text, x + 13, y + 12);
+            ctx.setColor(TColors.BLACK);
+            ctx.drawString(x + 13, y + 12, text);
         } else {
             // Draw simple frame
-            g.setColor(TColors.DARK_GRAY);
-            g.drawRect(x, y, w - 1, h - 1);
+            ctx.setColor(TColors.DARK_GRAY);
+            ctx.drawRect(x, y, w - 1, h - 1);
         }
     }
 

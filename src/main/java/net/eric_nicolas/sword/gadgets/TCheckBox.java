@@ -25,36 +25,36 @@ public class TCheckBox extends TItemBox {
     }
 
     @Override
-    protected void drawInside(Graphics2D g, int offset) {
+    protected void drawInside(PaintContext ctx, int offset) {
         int x = bounds.a.x;
         int y = bounds.a.y;
 
         // Draw checkbox box (12x12)
-        g.setColor(TColors.WHITE);
-        g.fillRect(x + 2, y + 4, 12, 12);
-        g.setColor(TColors.DARK_GRAY);
-        g.drawRect(x + 2, y + 4, 12, 12);
+        ctx.setColor(TColors.WHITE);
+        ctx.fillRect(x + 2, y + 4, 12, 12);
+        ctx.setColor(TColors.DARK_GRAY);
+        ctx.drawRect(x + 2, y + 4, 12, 12);
 
         // Draw check mark if checked
         if (checked) {
-            g.setColor(TColors.BLACK);
+            ctx.setColor(TColors.BLACK);
             // Draw X
-            g.drawLine(x + 5, y + 7, x + 11, y + 13);
-            g.drawLine(x + 6, y + 7, x + 12, y + 13);
-            g.drawLine(x + 11, y + 7, x + 5, y + 13);
-            g.drawLine(x + 12, y + 7, x + 6, y + 13);
+            ctx.drawLine(x + 5, y + 7, x + 11, y + 13);
+            ctx.drawLine(x + 6, y + 7, x + 12, y + 13);
+            ctx.drawLine(x + 11, y + 7, x + 5, y + 13);
+            ctx.drawLine(x + 12, y + 7, x + 6, y + 13);
         }
 
         // Draw text
         if (text != null && !text.isEmpty()) {
             if (hasStatus(SF_DISABLED)) {
-                g.setColor(TColors.DARK_GRAY);
+                ctx.setColor(TColors.DARK_GRAY);
             } else {
-                g.setColor(TColors.BLACK);
+                ctx.setColor(TColors.BLACK);
             }
-            g.setFont(itemFont);
+            ctx.setFont(itemFont);
             String displayText = text.replace("&", "");
-            g.drawString(displayText, x + 18, y + 14);
+            ctx.drawString(x + 18, y + 14, displayText);
         }
     }
 

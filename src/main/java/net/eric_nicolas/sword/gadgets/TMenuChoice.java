@@ -97,44 +97,44 @@ public class TMenuChoice extends TZone {
     }
 
     @Override
-    protected void paint(Graphics2D g) {
+    protected void paint(PaintContext ctx) {
         int width = bounds.width();
         int height = bounds.height();
 
         if (hasOption(OP_SEPARATOR)) {
             // Draw separator
-            g.setColor(TColors.DARK_GRAY);
-            g.drawLine(bounds.a.x, bounds.a.y + 2, bounds.a.x + width - 1, bounds.a.y + 2);
-            g.setColor(TColors.LIGHT_GRAY);
-            g.drawLine(bounds.a.x, bounds.a.y + 3, bounds.a.x + width - 1, bounds.a.y + 3);
+            ctx.setColor(TColors.DARK_GRAY);
+            ctx.drawLine(bounds.a.x, bounds.a.y + 2, bounds.a.x + width - 1, bounds.a.y + 2);
+            ctx.setColor(TColors.LIGHT_GRAY);
+            ctx.drawLine(bounds.a.x, bounds.a.y + 3, bounds.a.x + width - 1, bounds.a.y + 3);
         } else {
             // Draw menu choice background
             if (hasStatus(SF_MENU_CHOICE_DOWN)) {
-                g.setColor(TColors.DARK_GRAY);
+                ctx.setColor(TColors.DARK_GRAY);
             } else {
-                g.setColor(TColors.FACE_GRAY);
+                ctx.setColor(TColors.FACE_GRAY);
             }
-            g.fillRect(bounds.a.x, bounds.a.y, width, height);
+            ctx.fillRect(bounds.a.x, bounds.a.y, width, height);
 
             // Draw text
-            g.setFont(menuFont);
+            ctx.setFont(menuFont);
             if (hasStatus(SF_DISABLED)) {
-                g.setColor(TColors.MEDIUM_GRAY);
+                ctx.setColor(TColors.MEDIUM_GRAY);
             } else if (hasStatus(SF_MENU_CHOICE_DOWN)) {
-                g.setColor(TColors.WHITE);
+                ctx.setColor(TColors.WHITE);
             } else {
-                g.setColor(TColors.BLACK);
+                ctx.setColor(TColors.BLACK);
             }
 
             // Remove & from displayed text
             String displayText = text != null ? text.replace("&", "") : "";
-            g.drawString(displayText, bounds.a.x + 5, bounds.a.y + 14);
+            ctx.drawString(bounds.a.x + 5, bounds.a.y + 14, displayText);
 
             // Draw hotkey or >> for submenus
             if (subMenu != null) {
-                g.drawString(">>", bounds.a.x + width - 20, bounds.a.y + 14);
+                ctx.drawString(bounds.a.x + width - 20, bounds.a.y + 14, ">>");
             } else if (hotText != null && !hotText.isEmpty()) {
-                g.drawString(hotText, bounds.a.x + width - 50, bounds.a.y + 14);
+                ctx.drawString(bounds.a.x + width - 50, bounds.a.y + 14, hotText);
             }
         }
     }

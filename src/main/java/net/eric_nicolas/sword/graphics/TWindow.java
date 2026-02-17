@@ -22,19 +22,19 @@ public class TWindow extends TZone {
     }
 
     @Override
-    protected void paint(Graphics2D g) {
+    protected void paint(PaintContext ctx) {
         // Draw frame
-        g.setColor(TColors.WINDOW_FRAME);
-        g.drawRect(bounds.a.x, bounds.a.y, bounds.width() - 1, bounds.height() - 1);
+        ctx.setColor(TColors.WINDOW_FRAME);
+        ctx.drawRect(bounds.a.x, bounds.a.y, bounds.width() - 1, bounds.height() - 1);
 
         // Draw title bar
-        g.setColor(TColors.DARK_GRAY);
-        g.fillRect(bounds.a.x + 1, bounds.a.y + 1, bounds.width() - 2, 20);
+        ctx.setColor(TColors.DARK_GRAY);
+        ctx.fillRect(bounds.a.x + 1, bounds.a.y + 1, bounds.width() - 2, 20);
 
         // Draw title text with smaller font
-        g.setColor(TColors.WHITE);
-        g.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 12));
-        g.drawString(title, bounds.a.x + 5, bounds.a.y + 15);
+        ctx.setColor(TColors.WHITE);
+        ctx.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 12));
+        ctx.drawString(bounds.a.x + 5, bounds.a.y + 15, title);
     }
 
     @Override
