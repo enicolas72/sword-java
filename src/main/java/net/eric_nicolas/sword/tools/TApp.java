@@ -95,6 +95,19 @@ public class TApp extends TShell implements Runnable {
             }
 
             @Override
+            public void keyTyped(KeyEvent e) {
+                // Handle actual character input (keyboard layout aware)
+                char ch = e.getKeyChar();
+                if (!Character.isISOControl(ch) || ch == '\b' || ch == '\n') {
+                    TEvent event = new TEvent(TEvent.EV_KEY_DOWN, e.getKeyCode(), getModifiers(e));
+                    event.keyChar = ch;
+                    if (desktop.handleEvent(event)) {
+                        forceRepaint();
+                    }
+                }
+            }
+
+            @Override
             public void keyReleased(KeyEvent e) {
                 TEvent event = new TEvent(TEvent.EV_KEY_UP, e.getKeyCode(), getModifiers(e));
                 desktop.handleEvent(event);

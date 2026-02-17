@@ -36,6 +36,7 @@ public class TEvent {
     public int what;           // Event type
     public TPoint where;       // Mouse position (for mouse events)
     public int message;        // Additional data (key code, command ID, etc.)
+    public char keyChar;       // Character typed (for keyTyped events)
     public int modifiers;      // Modifier keys (shift, ctrl, alt)
     public int buttons;        // Mouse button state
     public long when;          // Event timestamp

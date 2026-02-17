@@ -95,6 +95,33 @@ public class TEditLine extends TZone {
             hasFocus = true;
             showCursor = true;
             lastBlinkTime = System.currentTimeMillis();
+
+            // Position cursor based on click position
+            TPoint absPos = getAbsolutePosition();
+            int clickX = event.where.x - absPos.x - 4; // Subtract text offset
+            if (clickX <= 0) {
+                cursorPos = 0;
+            } else {
+                // Find character position closest to click
+                java.awt.image.BufferedImage tempImage = new java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_RGB);
+                java.awt.Graphics2D g = tempImage.createGraphics();
+                g.setFont(editFont);
+                java.awt.FontMetrics fm = g.getFontMetrics();
+
+                int charPos = 0;
+                int totalWidth = 0;
+                for (int i = 0; i < text.length(); i++) {
+                    int charWidth = fm.charWidth(text.charAt(i));
+                    if (totalWidth + charWidth / 2 > clickX) {
+                        break;
+                    }
+                    totalWidth += charWidth;
+                    charPos++;
+                }
+                cursorPos = Math.min(charPos, text.length());
+                g.dispose();
+            }
+
             return true;
         } else {
             hasFocus = false;
@@ -110,57 +137,60 @@ public class TEditLine extends TZone {
 
         boolean handled = false;
 
-        switch (event.message) {
-            case KeyEvent.VK_LEFT:
-                if (cursorPos > 0) {
-                    cursorPos--;
-                    handled = true;
-                }
-                break;
+        // Check if this is a character input event (keyChar is set)
+        if (event.keyChar != 0 && event.keyChar != KeyEvent.CHAR_UNDEFINED) {
+            // Handle character input (keyboard layout aware)
+            char ch = event.keyChar;
 
-            case KeyEvent.VK_RIGHT:
-                if (cursorPos < text.length()) {
-                    cursorPos++;
-                    handled = true;
-                }
-                break;
-
-            case KeyEvent.VK_HOME:
-                cursorPos = 0;
-                handled = true;
-                break;
-
-            case KeyEvent.VK_END:
-                cursorPos = text.length();
-                handled = true;
-                break;
-
-            case KeyEvent.VK_BACK_SPACE:
+            if (ch == '\b') {
+                // Backspace
                 if (cursorPos > 0) {
                     text = text.substring(0, cursorPos - 1) + text.substring(cursorPos);
                     cursorPos--;
                     handled = true;
                 }
-                break;
-
-            case KeyEvent.VK_DELETE:
-                if (cursorPos < text.length()) {
-                    text = text.substring(0, cursorPos) + text.substring(cursorPos + 1);
+            } else if (ch >= 32 && ch < 127 || ch >= 128) {
+                // Printable character (ASCII or extended)
+                if (text.length() < maxLength) {
+                    text = text.substring(0, cursorPos) + ch + text.substring(cursorPos);
+                    cursorPos++;
                     handled = true;
                 }
-                break;
+            }
+        } else {
+            // Handle special keys (navigation, etc.) using key codes
+            switch (event.message) {
+                case KeyEvent.VK_LEFT:
+                    if (cursorPos > 0) {
+                        cursorPos--;
+                        handled = true;
+                    }
+                    break;
 
-            default:
-                // Handle character input
-                if (event.message >= 32 && event.message < 127) {
-                    if (text.length() < maxLength) {
-                        char ch = (char) event.message;
-                        text = text.substring(0, cursorPos) + ch + text.substring(cursorPos);
+                case KeyEvent.VK_RIGHT:
+                    if (cursorPos < text.length()) {
                         cursorPos++;
                         handled = true;
                     }
-                }
-                break;
+                    break;
+
+                case KeyEvent.VK_HOME:
+                    cursorPos = 0;
+                    handled = true;
+                    break;
+
+                case KeyEvent.VK_END:
+                    cursorPos = text.length();
+                    handled = true;
+                    break;
+
+                case KeyEvent.VK_DELETE:
+                    if (cursorPos < text.length()) {
+                        text = text.substring(0, cursorPos) + text.substring(cursorPos + 1);
+                        handled = true;
+                    }
+                    break;
+            }
         }
 
         if (handled) {
