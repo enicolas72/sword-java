@@ -12,10 +12,8 @@ import java.awt.RenderingHints;
  */
 public class PaintContext {
 
-    private final Graphics2D g;
-
-    public PaintContext(Graphics2D g) {
-        this.g = g;
+    public static PaintContext ofAWT(Graphics2D g) {
+        return new PaintContext(g);
     }
 
     /**
@@ -193,4 +191,11 @@ public class PaintContext {
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
             enabled ? RenderingHints.VALUE_TEXT_ANTIALIAS_ON : RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
     }
+
+    //
+
+    private PaintContext(Graphics2D g) {
+        this.g = g;
+    }
+    private final Graphics2D g;
 }

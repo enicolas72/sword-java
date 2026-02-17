@@ -1,7 +1,6 @@
 package net.eric_nicolas.sword.graphics;
 
 import net.eric_nicolas.sword.mechanism.*;
-import java.awt.Graphics2D;
 import java.awt.Color;
 
 /**
@@ -41,14 +40,11 @@ public class TZone extends TObject {
         clipRect.intersect(bounds);
     }
 
-    public void draw(Graphics2D g) {
+    public void draw(PaintContext ctx) {
         if (!isVisible()) return;
 
         // Get absolute position for drawing
         TPoint absPos = getAbsolutePosition();
-
-        // Create paint context
-        PaintContext ctx = new PaintContext(g);
 
         // Set clipping
         ctx.setClip(absPos.x, absPos.y, bounds.width(), bounds.height());
@@ -75,7 +71,7 @@ public class TZone extends TObject {
             TAtom child = _Son;
             while (child != null) {
                 if (child instanceof TZone) {
-                    ((TZone) child).draw(g);
+                    ((TZone) child).draw(ctx);
                 }
                 child = child.next();
             }

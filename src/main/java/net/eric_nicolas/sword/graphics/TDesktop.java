@@ -1,7 +1,6 @@
 package net.eric_nicolas.sword.graphics;
 
 import net.eric_nicolas.sword.mechanism.*;
-import java.awt.Graphics2D;
 
 /**
  * TDesktop - Main application desktop/background.
@@ -26,7 +25,7 @@ public class TDesktop extends TZone {
     protected boolean command(int commandId) {
         // Route commands to application if not handled locally
         if (application != null) {
-            TEvent event = TEvent.createCommand(commandId);
+            TEvent event = TEvent.ofCommand(commandId);
             return application.handleEvent(event);
         }
         return false;

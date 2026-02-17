@@ -2,6 +2,7 @@ package net.eric_nicolas.sword.tools;
 
 import net.eric_nicolas.sword.mechanism.*;
 import net.eric_nicolas.sword.graphics.*;
+import net.eric_nicolas.sword.graphics.PaintContext;
 import net.eric_nicolas.sword.gadgets.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -46,7 +47,7 @@ public class TApp extends TShell implements Runnable {
         canvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                TEvent event = convertMouseEvent(e, true);
+                TEvent event = TEventAdapter.ofMousePressedEvent(e);
                 if (desktop.handleEvent(event)) {
                     forceRepaint();
                 }
@@ -54,7 +55,7 @@ public class TApp extends TShell implements Runnable {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                TEvent event = convertMouseEvent(e, false);
+                TEvent event = TEventAdapter.ofMouseReleasedEvent(e);
                 if (desktop.handleEvent(event)) {
                     forceRepaint();
                 }
@@ -64,7 +65,7 @@ public class TApp extends TShell implements Runnable {
         canvas.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-                TEvent event = new TEvent(TEvent.EV_MOUSE_MOVE, e.getX(), e.getY(), 0, getModifiers(e));
+                TEvent event = TEventAdapter.ofMouseMouseEvent(e);
                 if (desktop.handleEvent(event)) {
                     forceRepaint();
                 }
@@ -72,7 +73,7 @@ public class TApp extends TShell implements Runnable {
 
             @Override
             public void mouseDragged(MouseEvent e) {
-                TEvent event = new TEvent(TEvent.EV_MOUSE_MOVE, e.getX(), e.getY(), getButtons(e), getModifiers(e));
+                TEvent event = TEventAdapter.ofMouseDraggedEvent(e);
                 if (desktop.handleEvent(event)) {
                     forceRepaint();
                 }
@@ -82,7 +83,7 @@ public class TApp extends TShell implements Runnable {
         canvas.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                TEvent event = new TEvent(TEvent.EV_KEY_DOWN, e.getKeyCode(), getModifiers(e));
+                TEvent event = TEventAdapter.ofKeyPressedEvent(e, '\0');
                 // First try to handle as hotkey
                 if (keyDown(event)) {
                     forceRepaint();
@@ -99,8 +100,7 @@ public class TApp extends TShell implements Runnable {
                 // Handle actual character input (keyboard layout aware)
                 char ch = e.getKeyChar();
                 if (!Character.isISOControl(ch) || ch == '\b' || ch == '\n') {
-                    TEvent event = new TEvent(TEvent.EV_KEY_DOWN, e.getKeyCode(), getModifiers(e));
-                    event.keyChar = ch;
+                    TEvent event = TEventAdapter.ofKeyPressedEvent(e, ch);
                     if (desktop.handleEvent(event)) {
                         forceRepaint();
                     }
@@ -109,7 +109,7 @@ public class TApp extends TShell implements Runnable {
 
             @Override
             public void keyReleased(KeyEvent e) {
-                TEvent event = new TEvent(TEvent.EV_KEY_UP, e.getKeyCode(), getModifiers(e));
+                TEvent event = TEventAdapter.ofKeyReleasedEvent(e);
                 desktop.handleEvent(event);
             }
         });
@@ -167,7 +167,7 @@ public class TApp extends TShell implements Runnable {
                 // Check this choice's hotkey
                 if (keyCode == choice.getGlobalScanCode()) {
                     // Send command
-                    TEvent cmdEvent = TEvent.createCommand(choice.getCommand());
+                    TEvent cmdEvent = TEvent.ofCommand(choice.getCommand());
                     handleEvent(cmdEvent);
                     return true;
                 }
@@ -195,36 +195,6 @@ public class TApp extends TShell implements Runnable {
 
     protected boolean canClose() {
         return true;
-    }
-
-    protected TEvent convertMouseEvent(MouseEvent e, boolean pressed) {
-        int eventType;
-        if (pressed) {
-            if (e.getButton() == MouseEvent.BUTTON1) eventType = TEvent.EV_MOUSE_LDOWN;
-            else if (e.getButton() == MouseEvent.BUTTON3) eventType = TEvent.EV_MOUSE_RDOWN;
-            else eventType = TEvent.EV_MOUSE_MDOWN;
-        } else {
-            if (e.getButton() == MouseEvent.BUTTON1) eventType = TEvent.EV_MOUSE_LUP;
-            else if (e.getButton() == MouseEvent.BUTTON3) eventType = TEvent.EV_MOUSE_RUP;
-            else eventType = TEvent.EV_MOUSE_MUP;
-        }
-        return new TEvent(eventType, e.getX(), e.getY(), getButtons(e), getModifiers(e));
-    }
-
-    protected int getButtons(MouseEvent e) {
-        int buttons = 0;
-        if ((e.getModifiersEx() & MouseEvent.BUTTON1_DOWN_MASK) != 0) buttons |= TEvent.MB_LEFT;
-        if ((e.getModifiersEx() & MouseEvent.BUTTON3_DOWN_MASK) != 0) buttons |= TEvent.MB_RIGHT;
-        if ((e.getModifiersEx() & MouseEvent.BUTTON2_DOWN_MASK) != 0) buttons |= TEvent.MB_MIDDLE;
-        return buttons;
-    }
-
-    protected int getModifiers(InputEvent e) {
-        int modifiers = 0;
-        if (e.isShiftDown()) modifiers |= TEvent.KM_SHIFT;
-        if (e.isControlDown()) modifiers |= TEvent.KM_CTRL;
-        if (e.isAltDown()) modifiers |= TEvent.KM_ALT;
-        return modifiers;
     }
 
     public TDesktop getDesktop() {
@@ -262,8 +232,9 @@ public class TApp extends TShell implements Runnable {
 
     public void forceRepaint() {
         if (backBuffer != null && backGraphics != null) {
-            // Draw directly to back buffer
-            desktop.draw(backGraphics);
+            // Create paint context and draw to back buffer
+            PaintContext ctx = PaintContext.ofAWT(backGraphics);
+            desktop.draw(ctx);
 
             // Copy back buffer to screen immediately (synchronously)
             Graphics g = canvas.getGraphics();

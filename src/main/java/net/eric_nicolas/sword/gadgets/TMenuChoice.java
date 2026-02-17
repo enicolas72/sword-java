@@ -2,7 +2,7 @@ package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.mechanism.*;
-import java.awt.Graphics2D;
+
 import java.awt.Font;
 
 /**
@@ -229,7 +229,7 @@ public class TMenuChoice extends TZone {
 
         // If we found desktop, send command from there so it reaches TApp
         if (current != null && current instanceof TDesktop) {
-            TEvent event = TEvent.createCommand(cmd);
+            TEvent event = TEvent.ofCommand(cmd);
             ((TObject) current).handleEvent(event);
         }
     }

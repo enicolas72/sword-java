@@ -2,7 +2,6 @@ package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.mechanism.*;
-import java.awt.Graphics2D;
 
 /**
  * TButton - Base class for clickable buttons.
@@ -149,7 +148,7 @@ public class TButton extends TZone {
 
         // Send command event
         if (current != null && current instanceof TObject) {
-            TEvent event = TEvent.createCommand(cmd);
+            TEvent event = TEvent.ofCommand(cmd);
             ((TObject) current).handleEvent(event);
         }
     }

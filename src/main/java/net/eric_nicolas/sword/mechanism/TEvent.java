@@ -41,69 +41,15 @@ public class TEvent {
     public int buttons;        // Mouse button state
     public long when;          // Event timestamp
 
-    /**
-     * Default constructor - creates empty event.
-     */
-    public TEvent() {
-        this.what = EV_NOTHING;
-        this.where = new TPoint();
-        this.message = 0;
-        this.modifiers = 0;
-        this.buttons = 0;
-        this.when = System.currentTimeMillis();
-    }
-
-    /**
-     * Constructor with event type.
-     *
-     * @param what Event type
-     */
-    public TEvent(int what) {
-        this();
-        this.what = what;
-    }
-
-    /**
-     * Constructor for mouse events.
-     *
-     * @param what Event type
-     * @param x    Mouse X coordinate
-     * @param y    Mouse Y coordinate
-     * @param buttons Mouse button state
-     * @param modifiers Modifier keys
-     */
-    public TEvent(int what, int x, int y, int buttons, int modifiers) {
-        this.what = what;
-        this.where = new TPoint(x, y);
-        this.message = 0;
-        this.buttons = buttons;
-        this.modifiers = modifiers;
-        this.when = System.currentTimeMillis();
-    }
-
-    /**
-     * Constructor for keyboard events.
-     *
-     * @param what Event type
-     * @param keyCode Key code
-     * @param modifiers Modifier keys
-     */
-    public TEvent(int what, int keyCode, int modifiers) {
-        this.what = what;
-        this.where = new TPoint();
-        this.message = keyCode;
-        this.buttons = 0;
-        this.modifiers = modifiers;
-        this.when = System.currentTimeMillis();
-    }
 
     /**
      * Constructor for command events.
      *
      * @param commandId Command identifier
      */
-    public static TEvent createCommand(int commandId) {
-        TEvent event = new TEvent(EV_COMMAND);
+    public static TEvent ofCommand(int commandId) {
+        TEvent event = new TEvent();
+        event.what = EV_COMMAND;
         event.message = commandId;
         return event;
     }
@@ -151,5 +97,35 @@ public class TEvent {
         return "TEvent{what=" + what + ", where=" + where +
                ", message=" + message + ", modifiers=" + modifiers +
                ", buttons=" + buttons + "}";
+    }
+
+    // --- Only called from TEventAdapter
+
+    protected TEvent() {
+        this.what = EV_NOTHING;
+        this.where = new TPoint();
+        this.message = 0;
+        this.modifiers = 0;
+        this.buttons = 0;
+        this.when = System.currentTimeMillis();
+    }
+
+    protected TEvent(int what, int x, int y, int buttons, int modifiers) {
+        this.what = what;
+        this.where = new TPoint(x, y);
+        this.message = 0;
+        this.buttons = buttons;
+        this.modifiers = modifiers;
+        this.when = System.currentTimeMillis();
+    }
+
+    protected TEvent(int what, int keyCode, char ch, int modifiers) {
+        this.what = what;
+        this.where = new TPoint();
+        this.message = keyCode;
+        this.keyChar = ch;
+        this.buttons = 0;
+        this.modifiers = modifiers;
+        this.when = System.currentTimeMillis();
     }
 }
