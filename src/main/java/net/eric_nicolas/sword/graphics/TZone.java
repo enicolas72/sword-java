@@ -1,6 +1,9 @@
 package net.eric_nicolas.sword.graphics;
 
 import net.eric_nicolas.sword.mechanism.*;
+import net.eric_nicolas.sword.ui.Point;
+import net.eric_nicolas.sword.ui.Rect;
+
 import java.awt.Color;
 
 /**
@@ -8,35 +11,35 @@ import java.awt.Color;
  */
 public class TZone extends TObject {
 
-    protected TRect bounds;
-    protected TRect clipRect;
+    protected Rect bounds;
+    protected Rect clipRect;
     protected Color bgColor;
     protected Color fgColor;
 
     public TZone(int x, int y, int width, int height) {
         super();
-        this.bounds = new TRect(x, y, x + width, y + height);
-        this.clipRect = new TRect(bounds);
+        this.bounds = new Rect(x, y, x + width, y + height);
+        this.clipRect = new Rect(bounds);
         this.bgColor = TColors.WINDOW_BG;
         this.fgColor = TColors.BLACK;
         setOption(OP_DRAWABLE);
     }
 
-    public TRect getBounds() {
-        return new TRect(bounds);
+    public Rect getBounds() {
+        return new Rect(bounds);
     }
 
-    public void setBounds(TRect r) {
-        bounds = new TRect(r);
-        clipRect = new TRect(r);
+    public void setBounds(Rect r) {
+        bounds = new Rect(r);
+        clipRect = new Rect(r);
     }
 
-    public TRect getClipRect() {
-        return new TRect(clipRect);
+    public Rect getClipRect() {
+        return new Rect(clipRect);
     }
 
-    public void setClipRect(TRect r) {
-        clipRect = new TRect(r);
+    public void setClipRect(Rect r) {
+        clipRect = new Rect(r);
         clipRect.intersect(bounds);
     }
 
@@ -44,7 +47,7 @@ public class TZone extends TObject {
         if (!isVisible()) return;
 
         // Get absolute position for drawing
-        TPoint absPos = getAbsolutePosition();
+        Point absPos = getAbsolutePosition();
 
         // Set clipping
         ctx.setClip(absPos.x, absPos.y, bounds.width(), bounds.height());
@@ -54,7 +57,7 @@ public class TZone extends TObject {
         ctx.fillRect(absPos.x, absPos.y, bounds.width(), bounds.height());
 
         // Temporarily adjust bounds for painting
-        TRect originalBounds = new TRect(bounds);
+        Rect originalBounds = new Rect(bounds);
         bounds.a.x = absPos.x;
         bounds.a.y = absPos.y;
         bounds.b.x = absPos.x + originalBounds.width();
@@ -91,7 +94,7 @@ public class TZone extends TObject {
     }
 
     public boolean contains(int x, int y) {
-        TPoint absPos = getAbsolutePosition();
+        Point absPos = getAbsolutePosition();
         return x >= absPos.x && x < absPos.x + bounds.width() &&
                y >= absPos.y && y < absPos.y + bounds.height();
     }
@@ -100,7 +103,7 @@ public class TZone extends TObject {
      * Compute absolute position by walking up parent chain.
      * In C++ this is MakeGlobal().
      */
-    protected TPoint getAbsolutePosition() {
+    protected Point getAbsolutePosition() {
         int x = bounds.a.x;
         int y = bounds.a.y;
 
@@ -112,7 +115,7 @@ public class TZone extends TObject {
             parent = parent.father();
         }
 
-        return new TPoint(x, y);
+        return new Point(x, y);
     }
 
     /**

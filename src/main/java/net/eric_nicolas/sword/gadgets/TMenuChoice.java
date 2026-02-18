@@ -2,6 +2,8 @@ package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.mechanism.*;
+import net.eric_nicolas.sword.ui.events.EventCommand;
+import net.eric_nicolas.sword.ui.events.EventMouse;
 
 import java.awt.Font;
 
@@ -140,7 +142,7 @@ public class TMenuChoice extends TZone {
     }
 
     @Override
-    protected boolean mouseLDown(TMouseEvent event) {
+    protected boolean mouseLDown(EventMouse event) {
         if (contains(event.where.x, event.where.y) && !hasStatus(SF_DISABLED)) {
             activate();
             return true;
@@ -149,7 +151,7 @@ public class TMenuChoice extends TZone {
     }
 
     @Override
-    protected boolean mouseMove(TMouseEvent event) {
+    protected boolean mouseMove(EventMouse event) {
         boolean wasIn = hasStatus(SF_MOUSE_IN);
         boolean isIn = contains(event.where.x, event.where.y);
 
@@ -229,7 +231,7 @@ public class TMenuChoice extends TZone {
 
         // If we found desktop, send command from there so it reaches TApp
         if (current != null && current instanceof TDesktop) {
-            ((TObject) current).handleEvent(new TCmdEvent(cmd));
+            ((TObject) current).handleEvent(new EventCommand(cmd));
         }
     }
 

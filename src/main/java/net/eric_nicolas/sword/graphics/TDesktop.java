@@ -1,6 +1,8 @@
 package net.eric_nicolas.sword.graphics;
 
 import net.eric_nicolas.sword.mechanism.*;
+import net.eric_nicolas.sword.ui.events.EventCommand;
+import net.eric_nicolas.sword.ui.events.EventMouse;
 
 /**
  * TDesktop - Main application desktop/background.
@@ -25,13 +27,13 @@ public class TDesktop extends TZone {
     protected boolean command(int commandId) {
         // Route commands to application if not handled locally
         if (application != null) {
-            return application.handleEvent(new TCmdEvent(commandId));
+            return application.handleEvent(new EventCommand(commandId));
         }
         return false;
     }
 
     @Override
-    protected boolean mouseLDown(TMouseEvent event) {
+    protected boolean mouseLDown(EventMouse event) {
         // Desktop should not consume mouse events - let windows on top handle them
         // Only consume if clicking on empty space (not on any child window)
         return false;

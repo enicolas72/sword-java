@@ -1,9 +1,13 @@
 package net.eric_nicolas.sword.tools;
 
-import net.eric_nicolas.sword.mechanism.*;
 import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.graphics.PaintContext;
 import net.eric_nicolas.sword.gadgets.*;
+import net.eric_nicolas.sword.ui.events.EventCommand;
+import net.eric_nicolas.sword.ui.events.Event;
+import net.eric_nicolas.sword.ui.events.EventAwtAdapter;
+import net.eric_nicolas.sword.ui.events.EventKeyboard;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -47,7 +51,7 @@ public class TApp extends TShell implements Runnable {
         canvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                TEvent event = TEventAdapter.ofMousePressedEvent(e);
+                Event event = EventAwtAdapter.ofMousePressedEvent(e);
                 if (desktop.handleEvent(event)) {
                     forceRepaint();
                 }
@@ -55,7 +59,7 @@ public class TApp extends TShell implements Runnable {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                TEvent event = TEventAdapter.ofMouseReleasedEvent(e);
+                Event event = EventAwtAdapter.ofMouseReleasedEvent(e);
                 if (desktop.handleEvent(event)) {
                     forceRepaint();
                 }
@@ -65,7 +69,7 @@ public class TApp extends TShell implements Runnable {
         canvas.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-                TEvent event = TEventAdapter.ofMouseMouseEvent(e);
+                Event event = EventAwtAdapter.ofMouseMouseEvent(e);
                 if (desktop.handleEvent(event)) {
                     forceRepaint();
                 }
@@ -73,7 +77,7 @@ public class TApp extends TShell implements Runnable {
 
             @Override
             public void mouseDragged(MouseEvent e) {
-                TEvent event = TEventAdapter.ofMouseDraggedEvent(e);
+                Event event = EventAwtAdapter.ofMouseDraggedEvent(e);
                 if (desktop.handleEvent(event)) {
                     forceRepaint();
                 }
@@ -83,7 +87,7 @@ public class TApp extends TShell implements Runnable {
         canvas.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                TKeyEvent event = TEventAdapter.ofKeyPressedEvent(e, '\0');
+                EventKeyboard event = EventAwtAdapter.ofKeyPressedEvent(e, '\0');
                 // First try to handle as hotkey
                 if (keyDown(event)) {
                     forceRepaint();
@@ -100,7 +104,7 @@ public class TApp extends TShell implements Runnable {
                 // Handle actual character input (keyboard layout aware)
                 char ch = e.getKeyChar();
                 if (!Character.isISOControl(ch) || ch == '\b' || ch == '\n') {
-                    TEvent event = TEventAdapter.ofKeyPressedEvent(e, ch);
+                    Event event = EventAwtAdapter.ofKeyPressedEvent(e, ch);
                     if (desktop.handleEvent(event)) {
                         forceRepaint();
                     }
@@ -109,7 +113,7 @@ public class TApp extends TShell implements Runnable {
 
             @Override
             public void keyReleased(KeyEvent e) {
-                TEvent event = TEventAdapter.ofKeyReleasedEvent(e);
+                Event event = EventAwtAdapter.ofKeyReleasedEvent(e);
                 desktop.handleEvent(event);
             }
         });
@@ -144,7 +148,7 @@ public class TApp extends TShell implements Runnable {
     }
 
     @Override
-    protected boolean keyDown(TKeyEvent event) {
+    protected boolean keyDown(EventKeyboard event) {
         // Process menu hotkeys
         if (mainMenu != null) {
             return processMenuHotKey(event.keyCode, mainMenu);
@@ -167,7 +171,7 @@ public class TApp extends TShell implements Runnable {
                 // Check this choice's hotkey
                 if (keyCode == choice.getGlobalScanCode()) {
                     // Send command
-                    handleEvent(new TCmdEvent(choice.getCommand()));
+                    handleEvent(new EventCommand(choice.getCommand()));
                     return true;
                 }
             }

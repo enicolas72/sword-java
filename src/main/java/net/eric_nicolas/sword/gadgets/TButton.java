@@ -2,6 +2,8 @@ package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.mechanism.*;
+import net.eric_nicolas.sword.ui.events.EventCommand;
+import net.eric_nicolas.sword.ui.events.EventMouse;
 
 /**
  * TButton - Base class for clickable buttons.
@@ -107,7 +109,7 @@ public class TButton extends TZone {
     }
 
     @Override
-    protected boolean mouseLDown(TMouseEvent event) {
+    protected boolean mouseLDown(EventMouse event) {
         if (contains(event.where.x, event.where.y) && !hasStatus(SF_DISABLED)) {
             pressed = true;
             return true;
@@ -116,7 +118,7 @@ public class TButton extends TZone {
     }
 
     @Override
-    protected boolean mouseLUp(TMouseEvent event) {
+    protected boolean mouseLUp(EventMouse event) {
         if (pressed) {
             pressed = false;
             if (contains(event.where.x, event.where.y) && !hasStatus(SF_DISABLED)) {
@@ -148,7 +150,7 @@ public class TButton extends TZone {
 
         // Send command event
         if (current != null && current instanceof TObject) {
-            ((TObject) current).handleEvent(new TCmdEvent(cmd));
+            ((TObject) current).handleEvent(new EventCommand(cmd));
         }
     }
 

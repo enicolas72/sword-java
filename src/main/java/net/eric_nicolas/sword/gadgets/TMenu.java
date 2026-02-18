@@ -2,6 +2,10 @@ package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.mechanism.*;
+import net.eric_nicolas.sword.ui.Rect;
+import net.eric_nicolas.sword.ui.events.EventKeyboard;
+import net.eric_nicolas.sword.ui.events.EventMouse;
+
 import java.awt.Graphics2D;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -66,7 +70,7 @@ public class TMenu extends TStdWindow {
      */
     protected void initChoicesHorizontal() {
         // Main menu is a horizontal bar
-        TRect myBounds = getBounds();
+        Rect myBounds = getBounds();
         int height = 24; // Fixed height for main menu bar
         int x = 5;
 
@@ -91,7 +95,7 @@ public class TMenu extends TStdWindow {
                     }
 
                     // Position choice horizontally
-                    TRect choiceBounds = new TRect(
+                    Rect choiceBounds = new Rect(
                         myBounds.a.x + x,
                         myBounds.a.y + 2,
                         myBounds.a.x + x + w,
@@ -120,7 +124,7 @@ public class TMenu extends TStdWindow {
         int height = compHeight();
 
         // Resize menu
-        TRect newBounds = getBounds();
+        Rect newBounds = getBounds();
         newBounds.b.x = newBounds.a.x + width;
         newBounds.b.y = newBounds.a.y + height;
         setBounds(newBounds);
@@ -128,7 +132,7 @@ public class TMenu extends TStdWindow {
         // Position menu choices
         TAtom child = son();
         int y = 26; // Start below title bar
-        TRect myBounds = getBounds();
+        Rect myBounds = getBounds();
         while (child != null) {
             if (child instanceof TMenuChoice) {
                 TMenuChoice choice = (TMenuChoice) child;
@@ -143,7 +147,7 @@ public class TMenu extends TStdWindow {
                 int h = choice.hasOption(TMenuChoice.OP_SEPARATOR) ? 6 : 20;
 
                 // Position choice
-                TRect choiceBounds = new TRect(
+                Rect choiceBounds = new Rect(
                     myBounds.a.x + 7,
                     myBounds.a.y + y,
                     myBounds.a.x + width - 8,
@@ -212,7 +216,7 @@ public class TMenu extends TStdWindow {
     }
 
     @Override
-    protected boolean mouseLDown(TMouseEvent event) {
+    protected boolean mouseLDown(EventMouse event) {
         if (!contains(event.where.x, event.where.y)) {
             // Only close if this is a submenu (has a father menu)
             // Top-level application menus stay open
@@ -225,7 +229,7 @@ public class TMenu extends TStdWindow {
     }
 
     @Override
-    protected boolean keyDown(TKeyEvent event) {
+    protected boolean keyDown(EventKeyboard event) {
         // Handle keyboard navigation
         switch (event.keyCode) {
             case KeyEvent.VK_ESCAPE:

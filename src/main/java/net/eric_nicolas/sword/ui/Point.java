@@ -1,9 +1,9 @@
-package net.eric_nicolas.sword.mechanism;
+package net.eric_nicolas.sword.ui;
 
 /**
  * TPoint - 2D point representation.
  */
-public class TPoint {
+public class Point {
 
     public int x;
     public int y;
@@ -11,7 +11,7 @@ public class TPoint {
     /**
      * Default constructor - creates point at origin (0, 0).
      */
-    public TPoint() {
+    public Point() {
         this(0, 0);
     }
 
@@ -21,7 +21,7 @@ public class TPoint {
      * @param x X coordinate
      * @param y Y coordinate
      */
-    public TPoint(int x, int y) {
+    public Point(int x, int y) {
         this.x = x;
         this.y = y;
     }
@@ -31,7 +31,7 @@ public class TPoint {
      *
      * @param other Point to copy
      */
-    public TPoint(TPoint other) {
+    public Point(Point other) {
         this.x = other.x;
         this.y = other.y;
     }
@@ -61,9 +61,11 @@ public class TPoint {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (!(obj instanceof TPoint)) return false;
-        TPoint other = (TPoint) obj;
-        return x == other.x && y == other.y;
+        if (obj instanceof Point pointObj) {
+            return x == pointObj.x && y == pointObj.y;
+        } else {
+            return false;
+        }
     }
 
     @Override

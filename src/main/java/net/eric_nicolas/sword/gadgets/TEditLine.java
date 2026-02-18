@@ -1,8 +1,10 @@
 package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
-import net.eric_nicolas.sword.mechanism.*;
-import java.awt.Graphics2D;
+import net.eric_nicolas.sword.ui.Point;
+import net.eric_nicolas.sword.ui.events.EventKeyboard;
+import net.eric_nicolas.sword.ui.events.EventMouse;
+
 import java.awt.Font;
 import java.awt.event.KeyEvent;
 import java.lang.reflect.Field;
@@ -90,14 +92,14 @@ public class TEditLine extends TZone {
     }
 
     @Override
-    protected boolean mouseLDown(TMouseEvent event) {
+    protected boolean mouseLDown(EventMouse event) {
         if (contains(event.where.x, event.where.y)) {
             hasFocus = true;
             showCursor = true;
             lastBlinkTime = System.currentTimeMillis();
 
             // Position cursor based on click position
-            TPoint absPos = getAbsolutePosition();
+            Point absPos = getAbsolutePosition();
             int clickX = event.where.x - absPos.x - 4; // Subtract text offset
             if (clickX <= 0) {
                 cursorPos = 0;
@@ -130,7 +132,7 @@ public class TEditLine extends TZone {
     }
 
     @Override
-    protected boolean keyDown(TKeyEvent event) {
+    protected boolean keyDown(EventKeyboard event) {
         if (!hasFocus || hasStatus(SF_DISABLED)) {
             return false;
         }

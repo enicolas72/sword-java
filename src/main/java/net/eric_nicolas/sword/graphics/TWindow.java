@@ -1,8 +1,8 @@
 package net.eric_nicolas.sword.graphics;
 
-import net.eric_nicolas.sword.mechanism.*;
-import java.awt.Graphics2D;
-import java.awt.Color;
+import net.eric_nicolas.sword.ui.Point;
+import net.eric_nicolas.sword.ui.Rect;
+import net.eric_nicolas.sword.ui.events.EventMouse;
 
 /**
  * TWindow - Overlapped window with title and frame.
@@ -11,13 +11,13 @@ public class TWindow extends TZone {
 
     protected String title;
     protected boolean dragging;
-    protected TPoint dragOffset;
+    protected Point dragOffset;
 
     public TWindow(int x, int y, int width, int height, String title) {
         super(x, y, width, height);
         this.title = title;
         this.dragging = false;
-        this.dragOffset = new TPoint();
+        this.dragOffset = new Point();
         setOption(OP_WIN_SIZEABLE | OP_WIN_CLOSEBOX);
     }
 
@@ -38,7 +38,7 @@ public class TWindow extends TZone {
     }
 
     @Override
-    protected boolean mouseLDown(TMouseEvent event) {
+    protected boolean mouseLDown(EventMouse event) {
         if (contains(event.where.x, event.where.y)) {
             // Bring window to front
             bringToFront();
@@ -57,7 +57,7 @@ public class TWindow extends TZone {
     }
 
     @Override
-    protected boolean mouseLUp(TMouseEvent event) {
+    protected boolean mouseLUp(EventMouse event) {
         if (dragging) {
             dragging = false;
             return true;
@@ -66,7 +66,7 @@ public class TWindow extends TZone {
     }
 
     @Override
-    protected boolean mouseMove(TMouseEvent event) {
+    protected boolean mouseMove(EventMouse event) {
         if (dragging) {
             // Calculate new position (relative to parent/desktop)
             int newX = event.where.x - dragOffset.x;
@@ -77,7 +77,7 @@ public class TWindow extends TZone {
             int height = bounds.height();
             bounds.a.set(newX, newY);
             bounds.b.set(newX + width, newY + height);
-            clipRect = new TRect(bounds);
+            clipRect = new Rect(bounds);
 
             // Children don't need to be moved - they maintain relative positions
             return true;

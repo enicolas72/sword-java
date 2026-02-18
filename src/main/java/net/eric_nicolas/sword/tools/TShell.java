@@ -1,6 +1,7 @@
 package net.eric_nicolas.sword.tools;
 
 import net.eric_nicolas.sword.mechanism.*;
+import net.eric_nicolas.sword.ui.events.EventKeyboard;
 
 /**
  * TShell - Base shell object for applications.
@@ -18,7 +19,7 @@ public class TShell extends TObject {
      * Subclasses can override these as needed.
      */
     @Override
-    protected boolean keyDown(TKeyEvent event) {
+    protected boolean keyDown(EventKeyboard event) {
         // Default: do nothing, let subclasses handle
         return false;
     }

@@ -1,5 +1,10 @@
 package net.eric_nicolas.sword.mechanism;
 
+import net.eric_nicolas.sword.ui.events.EventCommand;
+import net.eric_nicolas.sword.ui.events.Event;
+import net.eric_nicolas.sword.ui.events.EventKeyboard;
+import net.eric_nicolas.sword.ui.events.EventMouse;
+
 /**
  * TObject - Core application object with event handling.
  * Extends TAtom with event dispatching, command processing, and status management.
@@ -46,15 +51,15 @@ public class TObject extends TAtom {
     /**
      * Handle event - deals to children first (in reverse z-order), then treats locally.
      */
-    public boolean handleEvent(TEvent event) {
+    public boolean handleEvent(Event event) {
         // Deal event to children (in reverse order - last to first, front to back)
-        if (_Son != null && event.what != TEvent.EV_NOTHING) {
+        if (_Son != null && event.what != Event.EV_NOTHING) {
             TAtom child = _Son.last(); // Start from last child (topmost in z-order)
-            while (child != null && event.what != TEvent.EV_NOTHING) {
+            while (child != null && event.what != Event.EV_NOTHING) {
                 if (child instanceof TObject) {
                     if (((TObject) child).handleEvent(event)) {
                         // Event was handled, clear it to stop propagation
-                        event.what = TEvent.EV_NOTHING;
+                        event.what = Event.EV_NOTHING;
                         return true;
                     }
                 }
@@ -63,36 +68,36 @@ public class TObject extends TAtom {
         }
 
         // If event not handled by children, treat it here
-        if (event.what == TEvent.EV_NOTHING) {
+        if (event.what == Event.EV_NOTHING) {
             return false;
         }
 
         boolean handled = false;
         switch (event.what) {
-            case TEvent.EV_MOUSE_LDOWN: handled = mouseLDown((TMouseEvent) event); break;
-            case TEvent.EV_MOUSE_LUP:  handled = mouseLUp((TMouseEvent) event); break;
-            case TEvent.EV_MOUSE_RDOWN: handled = mouseRDown((TMouseEvent) event); break;
-            case TEvent.EV_MOUSE_RUP:  handled = mouseRUp((TMouseEvent) event); break;
-            case TEvent.EV_MOUSE_MOVE: handled = mouseMove((TMouseEvent) event); break;
-            case TEvent.EV_KEY_DOWN:   handled = keyDown((TKeyEvent) event); break;
-            case TEvent.EV_KEY_UP:     handled = keyUp((TKeyEvent) event); break;
-            case TEvent.EV_COMMAND:    handled = command(((TCmdEvent) event).commandId); break;
+            case EventMouse.EV_MOUSE_LDOWN: handled = mouseLDown((EventMouse) event); break;
+            case EventMouse.EV_MOUSE_LUP:  handled = mouseLUp((EventMouse) event); break;
+            case EventMouse.EV_MOUSE_RDOWN: handled = mouseRDown((EventMouse) event); break;
+            case EventMouse.EV_MOUSE_RUP:  handled = mouseRUp((EventMouse) event); break;
+            case EventMouse.EV_MOUSE_MOVE: handled = mouseMove((EventMouse) event); break;
+            case EventKeyboard.EV_KEY_DOWN:   handled = keyDown((EventKeyboard) event); break;
+            case EventKeyboard.EV_KEY_UP:     handled = keyUp((EventKeyboard) event); break;
+            case EventCommand.EV_COMMAND:    handled = command(((EventCommand) event).commandId); break;
             default: handled = false;
         }
 
         if (handled) {
-            event.what = TEvent.EV_NOTHING;
+            event.what = Event.EV_NOTHING;
         }
         return handled;
     }
 
-    protected boolean mouseLDown(TMouseEvent event) { return false; }
-    protected boolean mouseLUp(TMouseEvent event) { return false; }
-    protected boolean mouseRDown(TMouseEvent event) { return false; }
-    protected boolean mouseRUp(TMouseEvent event) { return false; }
-    protected boolean mouseMove(TMouseEvent event) { return false; }
-    protected boolean keyDown(TKeyEvent event) { return false; }
-    protected boolean keyUp(TKeyEvent event) { return false; }
+    protected boolean mouseLDown(EventMouse event) { return false; }
+    protected boolean mouseLUp(EventMouse event) { return false; }
+    protected boolean mouseRDown(EventMouse event) { return false; }
+    protected boolean mouseRUp(EventMouse event) { return false; }
+    protected boolean mouseMove(EventMouse event) { return false; }
+    protected boolean keyDown(EventKeyboard event) { return false; }
+    protected boolean keyUp(EventKeyboard event) { return false; }
     protected boolean command(int commandId) { return false; }
 
     public boolean hasOption(int flag) { return (options & flag) != 0; }

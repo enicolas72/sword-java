@@ -1,6 +1,7 @@
 package net.eric_nicolas.sword.graphics;
 
-import net.eric_nicolas.sword.mechanism.*;
+import net.eric_nicolas.sword.ui.Point;
+import net.eric_nicolas.sword.ui.Rect;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,7 +25,7 @@ class TZoneTest {
     @Test
     void testInitialBounds() {
         TZone zone = new TZone(10, 20, 100, 80);
-        TRect bounds = zone.getBounds();
+        Rect bounds = zone.getBounds();
 
         assertEquals(10, bounds.a.x);
         assertEquals(20, bounds.a.y);
@@ -34,7 +35,7 @@ class TZoneTest {
 
     @Test
     void testAbsolutePositionWithNoParent() {
-        TPoint abs = child.getAbsolutePosition();
+        Point abs = child.getAbsolutePosition();
         assertEquals(10, abs.x);
         assertEquals(20, abs.y);
     }
@@ -42,7 +43,7 @@ class TZoneTest {
     @Test
     void testAbsolutePositionWithOneParent() {
         child.insertIn(parent);
-        TPoint abs = child.getAbsolutePosition();
+        Point abs = child.getAbsolutePosition();
 
         // Child at (10, 20) + parent at (100, 100) = (110, 120)
         assertEquals(110, abs.x);
@@ -53,7 +54,7 @@ class TZoneTest {
     void testAbsolutePositionWithGrandparent() {
         child.insertIn(parent);
         grandchild.insertIn(child);
-        TPoint abs = grandchild.getAbsolutePosition();
+        Point abs = grandchild.getAbsolutePosition();
 
         // Grandchild at (5, 5) + child at (10, 20) + parent at (100, 100) = (115, 125)
         assertEquals(115, abs.x);
@@ -99,10 +100,10 @@ class TZoneTest {
 
     @Test
     void testSetBounds() {
-        TRect newBounds = new TRect(50, 60, 150, 160);
+        Rect newBounds = new Rect(50, 60, 150, 160);
         parent.setBounds(newBounds);
 
-        TRect bounds = parent.getBounds();
+        Rect bounds = parent.getBounds();
         assertEquals(50, bounds.a.x);
         assertEquals(60, bounds.a.y);
         assertEquals(150, bounds.b.x);
