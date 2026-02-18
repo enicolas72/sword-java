@@ -25,14 +25,13 @@ public class TDesktop extends TZone {
     protected boolean command(int commandId) {
         // Route commands to application if not handled locally
         if (application != null) {
-            TEvent event = TEvent.ofCommand(commandId);
-            return application.handleEvent(event);
+            return application.handleEvent(new TCmdEvent(commandId));
         }
         return false;
     }
 
     @Override
-    protected boolean mouseLDown(TEvent event) {
+    protected boolean mouseLDown(TMouseEvent event) {
         // Desktop should not consume mouse events - let windows on top handle them
         // Only consume if clicking on empty space (not on any child window)
         return false;

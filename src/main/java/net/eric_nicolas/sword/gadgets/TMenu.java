@@ -212,7 +212,7 @@ public class TMenu extends TStdWindow {
     }
 
     @Override
-    protected boolean mouseLDown(TEvent event) {
+    protected boolean mouseLDown(TMouseEvent event) {
         if (!contains(event.where.x, event.where.y)) {
             // Only close if this is a submenu (has a father menu)
             // Top-level application menus stay open
@@ -225,9 +225,9 @@ public class TMenu extends TStdWindow {
     }
 
     @Override
-    protected boolean keyDown(TEvent event) {
+    protected boolean keyDown(TKeyEvent event) {
         // Handle keyboard navigation
-        switch (event.message) {
+        switch (event.keyCode) {
             case KeyEvent.VK_ESCAPE:
                 closeMenu();
                 return true;
@@ -257,8 +257,8 @@ public class TMenu extends TStdWindow {
         }
 
         // Check local shortcuts (single letter after &)
-        if (event.message >= KeyEvent.VK_A && event.message <= KeyEvent.VK_Z) {
-            char key = Character.toLowerCase((char) event.message);
+        if (event.keyCode >= KeyEvent.VK_A && event.keyCode <= KeyEvent.VK_Z) {
+            char key = Character.toLowerCase((char) event.keyCode);
             TMenuChoice choice = firstChoice();
             while (choice != null) {
                 if (choice.localScanCode == key) {

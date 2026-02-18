@@ -83,7 +83,7 @@ public class TApp extends TShell implements Runnable {
         canvas.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                TEvent event = TEventAdapter.ofKeyPressedEvent(e, '\0');
+                TKeyEvent event = TEventAdapter.ofKeyPressedEvent(e, '\0');
                 // First try to handle as hotkey
                 if (keyDown(event)) {
                     forceRepaint();
@@ -144,10 +144,10 @@ public class TApp extends TShell implements Runnable {
     }
 
     @Override
-    protected boolean keyDown(TEvent event) {
+    protected boolean keyDown(TKeyEvent event) {
         // Process menu hotkeys
         if (mainMenu != null) {
-            return processMenuHotKey(event.message, mainMenu);
+            return processMenuHotKey(event.keyCode, mainMenu);
         }
         return false;
     }
@@ -167,8 +167,7 @@ public class TApp extends TShell implements Runnable {
                 // Check this choice's hotkey
                 if (keyCode == choice.getGlobalScanCode()) {
                     // Send command
-                    TEvent cmdEvent = TEvent.ofCommand(choice.getCommand());
-                    handleEvent(cmdEvent);
+                    handleEvent(new TCmdEvent(choice.getCommand()));
                     return true;
                 }
             }

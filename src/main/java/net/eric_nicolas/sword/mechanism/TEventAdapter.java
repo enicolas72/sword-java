@@ -6,38 +6,36 @@ import java.awt.event.MouseEvent;
 
 public class TEventAdapter {
 
-    public static TEvent ofMousePressedEvent(MouseEvent e) {
-        int eventType;
-        if (e.getButton() == MouseEvent.BUTTON1) eventType = TEvent.EV_MOUSE_LDOWN;
-        else if (e.getButton() == MouseEvent.BUTTON3) eventType = TEvent.EV_MOUSE_RDOWN;
-        else eventType = TEvent.EV_MOUSE_MDOWN;
-
-        return new TEvent(eventType, e.getX(), e.getY(), getButtons(e), getModifiers(e));
+    public static TMouseEvent ofMousePressedEvent(MouseEvent e) {
+        int what;
+        if (e.getButton() == MouseEvent.BUTTON1) what = TEvent.EV_MOUSE_LDOWN;
+        else if (e.getButton() == MouseEvent.BUTTON3) what = TEvent.EV_MOUSE_RDOWN;
+        else what = TEvent.EV_MOUSE_MDOWN;
+        return new TMouseEvent(what, e.getX(), e.getY(), getButtons(e), getModifiers(e));
     }
 
-    public static TEvent ofMouseReleasedEvent(MouseEvent e) {
-        int eventType;
-        if (e.getButton() == MouseEvent.BUTTON1) eventType = TEvent.EV_MOUSE_LUP;
-        else if (e.getButton() == MouseEvent.BUTTON3) eventType = TEvent.EV_MOUSE_RUP;
-        else eventType = TEvent.EV_MOUSE_MUP;
-
-        return new TEvent(eventType, e.getX(), e.getY(), getButtons(e), getModifiers(e));
+    public static TMouseEvent ofMouseReleasedEvent(MouseEvent e) {
+        int what;
+        if (e.getButton() == MouseEvent.BUTTON1) what = TEvent.EV_MOUSE_LUP;
+        else if (e.getButton() == MouseEvent.BUTTON3) what = TEvent.EV_MOUSE_RUP;
+        else what = TEvent.EV_MOUSE_MUP;
+        return new TMouseEvent(what, e.getX(), e.getY(), getButtons(e), getModifiers(e));
     }
 
-    public static TEvent ofMouseMouseEvent(MouseEvent e) {
-        return new TEvent(TEvent.EV_MOUSE_MOVE, e.getX(), e.getY(), 0, getModifiers(e));
+    public static TMouseEvent ofMouseMouseEvent(MouseEvent e) {
+        return new TMouseEvent(TEvent.EV_MOUSE_MOVE, e.getX(), e.getY(), 0, getModifiers(e));
     }
 
-    public static TEvent ofMouseDraggedEvent(MouseEvent e) {
-        return new TEvent(TEvent.EV_MOUSE_MOVE, e.getX(), e.getY(), getButtons(e), getModifiers(e));
+    public static TMouseEvent ofMouseDraggedEvent(MouseEvent e) {
+        return new TMouseEvent(TEvent.EV_MOUSE_MOVE, e.getX(), e.getY(), getButtons(e), getModifiers(e));
     }
 
-    public static TEvent ofKeyPressedEvent(KeyEvent e, char ch) {
-        return new TEvent(TEvent.EV_KEY_DOWN, e.getKeyCode(), ch, getModifiers(e));
+    public static TKeyEvent ofKeyPressedEvent(KeyEvent e, char ch) {
+        return new TKeyEvent(TEvent.EV_KEY_DOWN, e.getKeyCode(), ch, getModifiers(e));
     }
 
-    public static TEvent ofKeyReleasedEvent(KeyEvent e) {
-        return new TEvent(TEvent.EV_KEY_UP, e.getKeyCode(), '\0', getModifiers(e));
+    public static TKeyEvent ofKeyReleasedEvent(KeyEvent e) {
+        return new TKeyEvent(TEvent.EV_KEY_UP, e.getKeyCode(), '\0', getModifiers(e));
     }
 
     private static int getButtons(MouseEvent e) {

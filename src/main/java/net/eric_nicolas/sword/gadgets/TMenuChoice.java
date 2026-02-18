@@ -140,7 +140,7 @@ public class TMenuChoice extends TZone {
     }
 
     @Override
-    protected boolean mouseLDown(TEvent event) {
+    protected boolean mouseLDown(TMouseEvent event) {
         if (contains(event.where.x, event.where.y) && !hasStatus(SF_DISABLED)) {
             activate();
             return true;
@@ -149,7 +149,7 @@ public class TMenuChoice extends TZone {
     }
 
     @Override
-    protected boolean mouseMove(TEvent event) {
+    protected boolean mouseMove(TMouseEvent event) {
         boolean wasIn = hasStatus(SF_MOUSE_IN);
         boolean isIn = contains(event.where.x, event.where.y);
 
@@ -229,8 +229,7 @@ public class TMenuChoice extends TZone {
 
         // If we found desktop, send command from there so it reaches TApp
         if (current != null && current instanceof TDesktop) {
-            TEvent event = TEvent.ofCommand(cmd);
-            ((TObject) current).handleEvent(event);
+            ((TObject) current).handleEvent(new TCmdEvent(cmd));
         }
     }
 

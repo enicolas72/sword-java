@@ -69,14 +69,14 @@ public class TObject extends TAtom {
 
         boolean handled = false;
         switch (event.what) {
-            case TEvent.EV_MOUSE_LDOWN: handled = mouseLDown(event); break;
-            case TEvent.EV_MOUSE_LUP: handled = mouseLUp(event); break;
-            case TEvent.EV_MOUSE_RDOWN: handled = mouseRDown(event); break;
-            case TEvent.EV_MOUSE_RUP: handled = mouseRUp(event); break;
-            case TEvent.EV_MOUSE_MOVE: handled = mouseMove(event); break;
-            case TEvent.EV_KEY_DOWN: handled = keyDown(event); break;
-            case TEvent.EV_KEY_UP: handled = keyUp(event); break;
-            case TEvent.EV_COMMAND: handled = command(event.message); break;
+            case TEvent.EV_MOUSE_LDOWN: handled = mouseLDown((TMouseEvent) event); break;
+            case TEvent.EV_MOUSE_LUP:  handled = mouseLUp((TMouseEvent) event); break;
+            case TEvent.EV_MOUSE_RDOWN: handled = mouseRDown((TMouseEvent) event); break;
+            case TEvent.EV_MOUSE_RUP:  handled = mouseRUp((TMouseEvent) event); break;
+            case TEvent.EV_MOUSE_MOVE: handled = mouseMove((TMouseEvent) event); break;
+            case TEvent.EV_KEY_DOWN:   handled = keyDown((TKeyEvent) event); break;
+            case TEvent.EV_KEY_UP:     handled = keyUp((TKeyEvent) event); break;
+            case TEvent.EV_COMMAND:    handled = command(((TCmdEvent) event).commandId); break;
             default: handled = false;
         }
 
@@ -86,13 +86,13 @@ public class TObject extends TAtom {
         return handled;
     }
 
-    protected boolean mouseLDown(TEvent event) { return false; }
-    protected boolean mouseLUp(TEvent event) { return false; }
-    protected boolean mouseRDown(TEvent event) { return false; }
-    protected boolean mouseRUp(TEvent event) { return false; }
-    protected boolean mouseMove(TEvent event) { return false; }
-    protected boolean keyDown(TEvent event) { return false; }
-    protected boolean keyUp(TEvent event) { return false; }
+    protected boolean mouseLDown(TMouseEvent event) { return false; }
+    protected boolean mouseLUp(TMouseEvent event) { return false; }
+    protected boolean mouseRDown(TMouseEvent event) { return false; }
+    protected boolean mouseRUp(TMouseEvent event) { return false; }
+    protected boolean mouseMove(TMouseEvent event) { return false; }
+    protected boolean keyDown(TKeyEvent event) { return false; }
+    protected boolean keyUp(TKeyEvent event) { return false; }
     protected boolean command(int commandId) { return false; }
 
     public boolean hasOption(int flag) { return (options & flag) != 0; }

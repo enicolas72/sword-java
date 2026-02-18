@@ -18,7 +18,7 @@ public class TShell extends TObject {
      * Subclasses can override these as needed.
      */
     @Override
-    protected boolean keyDown(TEvent event) {
+    protected boolean keyDown(TKeyEvent event) {
         // Default: do nothing, let subclasses handle
         return false;
     }

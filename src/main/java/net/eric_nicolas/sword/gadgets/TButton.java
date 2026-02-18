@@ -107,7 +107,7 @@ public class TButton extends TZone {
     }
 
     @Override
-    protected boolean mouseLDown(TEvent event) {
+    protected boolean mouseLDown(TMouseEvent event) {
         if (contains(event.where.x, event.where.y) && !hasStatus(SF_DISABLED)) {
             pressed = true;
             return true;
@@ -116,7 +116,7 @@ public class TButton extends TZone {
     }
 
     @Override
-    protected boolean mouseLUp(TEvent event) {
+    protected boolean mouseLUp(TMouseEvent event) {
         if (pressed) {
             pressed = false;
             if (contains(event.where.x, event.where.y) && !hasStatus(SF_DISABLED)) {
@@ -148,8 +148,7 @@ public class TButton extends TZone {
 
         // Send command event
         if (current != null && current instanceof TObject) {
-            TEvent event = TEvent.ofCommand(cmd);
-            ((TObject) current).handleEvent(event);
+            ((TObject) current).handleEvent(new TCmdEvent(cmd));
         }
     }
 

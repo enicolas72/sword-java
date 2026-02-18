@@ -90,7 +90,7 @@ public class TEditLine extends TZone {
     }
 
     @Override
-    protected boolean mouseLDown(TEvent event) {
+    protected boolean mouseLDown(TMouseEvent event) {
         if (contains(event.where.x, event.where.y)) {
             hasFocus = true;
             showCursor = true;
@@ -130,7 +130,7 @@ public class TEditLine extends TZone {
     }
 
     @Override
-    protected boolean keyDown(TEvent event) {
+    protected boolean keyDown(TKeyEvent event) {
         if (!hasFocus || hasStatus(SF_DISABLED)) {
             return false;
         }
@@ -159,7 +159,7 @@ public class TEditLine extends TZone {
             }
         } else {
             // Handle special keys (navigation, etc.) using key codes
-            switch (event.message) {
+            switch (event.keyCode) {
                 case KeyEvent.VK_LEFT:
                     if (cursorPos > 0) {
                         cursorPos--;

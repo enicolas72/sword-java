@@ -38,7 +38,7 @@ public class TWindow extends TZone {
     }
 
     @Override
-    protected boolean mouseLDown(TEvent event) {
+    protected boolean mouseLDown(TMouseEvent event) {
         if (contains(event.where.x, event.where.y)) {
             // Bring window to front
             bringToFront();
@@ -57,7 +57,7 @@ public class TWindow extends TZone {
     }
 
     @Override
-    protected boolean mouseLUp(TEvent event) {
+    protected boolean mouseLUp(TMouseEvent event) {
         if (dragging) {
             dragging = false;
             return true;
@@ -66,7 +66,7 @@ public class TWindow extends TZone {
     }
 
     @Override
-    protected boolean mouseMove(TEvent event) {
+    protected boolean mouseMove(TMouseEvent event) {
         if (dragging) {
             // Calculate new position (relative to parent/desktop)
             int newX = event.where.x - dragOffset.x;
