@@ -44,11 +44,10 @@ public class Dialog {
         @Override
         protected void createMenuChoices(Menu menu) {
             // Add Test Dialog menu item
-            new MenuChoice("&Test Dialog", 0, CM_DIALOG_TEST).insertIn(menu);
-            // Add separator
-            new MenuChoice().insertIn(menu);
-            // Add Quit menu item
-            new MenuChoice("&Quit", 0, CM_QUIT).insertIn(menu);
+            Canvas mc = menu.getCanvas();
+            mc.add(new MenuChoice("&Test Dialog", 0, CM_DIALOG_TEST));
+            mc.add(new MenuChoice());
+            mc.add(new MenuChoice("&Quit", 0, CM_QUIT));
         }
 
         @Override

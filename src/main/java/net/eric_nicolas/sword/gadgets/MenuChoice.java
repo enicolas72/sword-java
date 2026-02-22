@@ -6,11 +6,13 @@ import net.eric_nicolas.sword.ui.events.EventCommand;
 import net.eric_nicolas.sword.ui.events.EventMouse;
 
 import java.awt.Font;
+import java.util.List;
 
 /**
  * TMenuChoice - A single menu item with text, hotkey, and command.
+ * Lives in a Menu's Canvas.
  */
-public class MenuChoice extends TZone {
+public class MenuChoice extends Widget {
 
     public static final int OP_SEPARATOR = 0x0100;
     public static final int SF_MENU_CHOICE_DOWN = 0x0100;
@@ -75,12 +77,10 @@ public class MenuChoice extends TZone {
         setOption(options);
         setStatus(status);
 
-        // Calculate hotkey text
         if (globalScanCode != 0) {
             hotText = makeHotText(globalScanCode);
         }
 
-        // Calculate local scan code (for & shortcuts like &Quit -> Q)
         if (text != null) {
             int ampIndex = text.indexOf('&');
             if (ampIndex >= 0 && ampIndex < text.length() - 1) {
@@ -89,13 +89,16 @@ public class MenuChoice extends TZone {
         }
     }
 
-    /**
-     * Convert scan code to hotkey text (simplified version).
-     */
     protected String makeHotText(int scanCode) {
-        // This is a simplified version - in full implementation would handle
-        // various key combinations like Ctrl+X, Alt+F, F1-F10, etc.
         return "";
+    }
+
+    /** Walk up Canvas → Menu to find the containing menu. */
+    private Menu containingMenu() {
+        TAtom canvas = father();          // the Menu's Canvas
+        if (canvas == null) return null;
+        TAtom menu = canvas.father();     // the Menu (Window)
+        return menu instanceof Menu m ? m : null;
     }
 
     @Override
@@ -104,13 +107,11 @@ public class MenuChoice extends TZone {
         int height = bounds.height();
 
         if (hasOption(OP_SEPARATOR)) {
-            // Draw separator
             ctx.setColor(TColors.DARK_GRAY);
             ctx.drawLine(0, 2, width - 1, 2);
             ctx.setColor(TColors.LIGHT_GRAY);
             ctx.drawLine(0, 3, width - 1, 3);
         } else {
-            // Draw menu choice background
             if (hasStatus(SF_MENU_CHOICE_DOWN)) {
                 ctx.setColor(TColors.DARK_GRAY);
             } else {
@@ -118,7 +119,6 @@ public class MenuChoice extends TZone {
             }
             ctx.fillRect(0, 0, width, height);
 
-            // Draw text
             ctx.setFont(menuFont);
             if (hasStatus(SF_DISABLED)) {
                 ctx.setColor(TColors.MEDIUM_GRAY);
@@ -128,11 +128,9 @@ public class MenuChoice extends TZone {
                 ctx.setColor(TColors.BLACK);
             }
 
-            // Remove & from displayed text
             String displayText = text != null ? text.replace("&", "") : "";
             ctx.drawString(5, 14, displayText);
 
-            // Draw hotkey or >> for submenus
             if (subMenu != null) {
                 ctx.drawString(width - 20, 14, ">>");
             } else if (hotText != null && !hotText.isEmpty()) {
@@ -178,18 +176,12 @@ public class MenuChoice extends TZone {
 
     protected void down() {
         if (!hasStatus(SF_DISABLED) && !hasStatus(SF_MENU_CHOICE_DOWN)) {
-            // Lift all other choices
-            TAtom myFather = father();
-            if (myFather instanceof Menu) {
-                TAtom sibling = myFather.son();
-                while (sibling != null) {
-                    if (sibling instanceof MenuChoice siblingMenuChoice && sibling != this) {
-                        siblingMenuChoice.up();
-                    }
-                    sibling = sibling.next();
+            Menu menu = containingMenu();
+            if (menu != null) {
+                for (MenuChoice mc : menu.getChoices()) {
+                    if (mc != this) mc.up();
                 }
             }
-            // Set this choice down
             setStatus(SF_MENU_CHOICE_DOWN);
         }
     }
@@ -202,56 +194,44 @@ public class MenuChoice extends TZone {
 
     protected void activate() {
         if (command != 0) {
-            // Trigger command
             sendCommand(command);
-            // Only close the menu if it's a submenu (not a top-level menu)
-            TAtom myFather = father();
-            if (myFather instanceof Menu fatherMenu) {
-                // Only close if this menu has a father menu (i.e., it's a submenu)
-                // Top-level menus stay open
-                if (fatherMenu.fatherMenu != null) {
-                    fatherMenu.closeMenu();
-                }
+            Menu menu = containingMenu();
+            if (menu != null && menu.fatherMenu != null) {
+                menu.closeMenu();
             }
         } else if (subMenu != null) {
             // Show submenu (not implemented yet)
         }
     }
 
-    /**
-     * Send command up the hierarchy.
-     */
     protected void sendCommand(int cmd) {
-        // Find the desktop first
         TAtom current = this;
         while (current != null && !(current instanceof Desktop)) {
             current = current.father();
         }
-
-        // If we found desktop, send command from there so it reaches TApp
         if (current instanceof Desktop desktop) {
             desktop.handleEvent(new EventCommand(cmd));
         }
     }
 
     public MenuChoice nextChoice() {
-        TAtom next = next();
-        while (next != null) {
-            if (next instanceof MenuChoice && !((MenuChoice) next).hasStatus(SF_DISABLED)) {
-                return (MenuChoice) next;
-            }
-            next = next.next();
+        Menu menu = containingMenu();
+        if (menu == null) return null;
+        List<MenuChoice> choices = menu.getChoices();
+        int idx = choices.indexOf(this);
+        for (int i = idx + 1; i < choices.size(); i++) {
+            if (!choices.get(i).hasStatus(SF_DISABLED)) return choices.get(i);
         }
         return null;
     }
 
     public MenuChoice prevChoice() {
-        TAtom prev = previous();
-        while (prev != null) {
-            if (prev instanceof MenuChoice && !((MenuChoice) prev).hasStatus(SF_DISABLED)) {
-                return (MenuChoice) prev;
-            }
-            prev = prev.previous();
+        Menu menu = containingMenu();
+        if (menu == null) return null;
+        List<MenuChoice> choices = menu.getChoices();
+        int idx = choices.indexOf(this);
+        for (int i = idx - 1; i >= 0; i--) {
+            if (!choices.get(i).hasStatus(SF_DISABLED)) return choices.get(i);
         }
         return null;
     }

@@ -49,11 +49,10 @@ public class Hello {
         @Override
         protected void createMenuChoices(Menu menu) {
             // Add Hello Window menu item
-            new MenuChoice("&Hello Window", 0, CM_HELLO_WINDOW).insertIn(menu);
-            // Add separator
-            new MenuChoice().insertIn(menu);
-            // Add Quit menu item
-            new MenuChoice("&Quit", 0, CM_QUIT).insertIn(menu);
+            Canvas mc = menu.getCanvas();
+            mc.add(new MenuChoice("&Hello Window", 0, CM_HELLO_WINDOW));
+            mc.add(new MenuChoice());
+            mc.add(new MenuChoice("&Quit", 0, CM_QUIT));
         }
 
         @Override

@@ -11,10 +11,12 @@ import java.awt.Graphics2D;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * TMenu - Menu container with choices.
- * Horizontal menu bar that can contain menu choices.
+ * Horizontal menu bar that can contain MenuChoice widgets in its Canvas.
  */
 public class Menu extends Window {
 
@@ -25,16 +27,10 @@ public class Menu extends Window {
     protected Menu fatherMenu;
     protected Font menuFont;
 
-    /**
-     * Default constructor.
-     */
     public Menu() {
         this("Menu", 0);
     }
 
-    /**
-     * Constructor with title and options.
-     */
     public Menu(String title, int options) {
         super((options & OP_MAIN_MENU) != 0 ? 0 : 5,
               (options & OP_MAIN_MENU) != 0 ? 0 : 5,
@@ -55,9 +51,15 @@ public class Menu extends Window {
         setBackgroundColor(TColors.FACE_GRAY);
     }
 
-    /**
-     * Initialize menu choices - calculate sizes and positions.
-     */
+    /** All MenuChoices living in this menu's canvas. */
+    List<MenuChoice> getChoices() {
+        List<MenuChoice> result = new ArrayList<>();
+        for (Widget w : getCanvas().getWidgets()) {
+            if (w instanceof MenuChoice mc) result.add(mc);
+        }
+        return result;
+    }
+
     public void initChoices() {
         if (hasOption(OP_MAIN_MENU)) {
             initChoicesHorizontal();
@@ -66,144 +68,92 @@ public class Menu extends Window {
         }
     }
 
-    /**
-     * Initialize menu choices horizontally (for main menu bar).
-     */
     protected void initChoicesHorizontal() {
-        // Main menu is a horizontal bar
         Rect myBounds = getBounds();
-        int height = 24; // Fixed height for main menu bar
+        int height = 24;
         int x = 5;
 
-        // Calculate total width needed
         java.awt.image.BufferedImage tempImage = new java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_RGB);
         Graphics2D g = tempImage.createGraphics();
         g.setFont(menuFont);
         java.awt.FontMetrics fm = g.getFontMetrics();
 
-        TAtom child = son();
-        while (child != null) {
-            if (child instanceof MenuChoice choice) {
-                if (!choice.hasOption(MenuChoice.OP_SEPARATOR)) {
-                    String displayText = choice.text != null ? choice.text.replace("&", "") : "";
-                    int width = fm.stringWidth(displayText) + 20; // Add padding
+        for (MenuChoice choice : getChoices()) {
+            if (!choice.hasOption(MenuChoice.OP_SEPARATOR)) {
+                String displayText = choice.text != null ? choice.text.replace("&", "") : "";
+                int width = fm.stringWidth(displayText) + 20;
 
-                    // Handle submenu
-                    if (choice.getSubMenu() != null) {
-                        choice.getSubMenu().fatherMenu = this;
-                        choice.getSubMenu().initChoices();
-                    }
-
-                    // Position choice horizontally
-                    Rect choiceBounds = new Rect(Point.plus(myBounds.origin(), x, 2), width, height - 4);
-                    choice.setBounds(choiceBounds);
-
-                    x += width;
-                }
-            }
-            child = child.next();
-        }
-        g.dispose();
-
-        // Set menu bounds to span the width
-        myBounds = new Rect(myBounds.origin(), x + 5, height);
-        setBounds(myBounds);
-    }
-
-    /**
-     * Initialize menu choices vertically (for dropdown menus).
-     */
-    protected void initChoicesVertical() {
-        int width = compWidth();
-        int height = compHeight();
-
-        // Resize menu
-        Rect newBounds = getBounds();
-        newBounds = new Rect(newBounds.origin(), width, height);
-        setBounds(newBounds);
-
-        // Position menu choices
-        TAtom child = son();
-        int y = 26; // Start below title bar
-        Rect myBounds = getBounds();
-        while (child != null) {
-            if (child instanceof MenuChoice choice) {
-                // Handle submenu
                 if (choice.getSubMenu() != null) {
                     choice.getSubMenu().fatherMenu = this;
                     choice.getSubMenu().initChoices();
                 }
 
-                // Set choice height
-                int h = choice.hasOption(MenuChoice.OP_SEPARATOR) ? 6 : 20;
-
-                // Position choice
-                Rect choiceBounds = new Rect(Point.plus(myBounds.origin(), 7, y), width - 15, h);
+                Rect choiceBounds = new Rect(Point.plus(myBounds.origin(), x, 2), width, height - 4);
                 choice.setBounds(choiceBounds);
-
-                y += h;
+                x += width;
             }
-            child = child.next();
+        }
+        g.dispose();
+
+        myBounds = new Rect(myBounds.origin(), x + 5, height);
+        setBounds(myBounds);
+    }
+
+    protected void initChoicesVertical() {
+        int width = compWidth();
+        int height = compHeight();
+
+        Rect newBounds = getBounds();
+        newBounds = new Rect(newBounds.origin(), width, height);
+        setBounds(newBounds);
+
+        int y = 26;
+        Rect myBounds = getBounds();
+        for (MenuChoice choice : getChoices()) {
+            if (choice.getSubMenu() != null) {
+                choice.getSubMenu().fatherMenu = this;
+                choice.getSubMenu().initChoices();
+            }
+
+            int h = choice.hasOption(MenuChoice.OP_SEPARATOR) ? 6 : 20;
+            Rect choiceBounds = new Rect(Point.plus(myBounds.origin(), 7, y), width - 15, h);
+            choice.setBounds(choiceBounds);
+            y += h;
         }
     }
 
-    /**
-     * Compute menu width based on choices.
-     */
     protected int compWidth() {
         textWidth = 0;
-        hotTextWidth = 40; // Minimum for ">>" or hotkeys
+        hotTextWidth = 40;
 
-        // Create temporary graphics for text measurement
         java.awt.image.BufferedImage tempImage = new java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_RGB);
         Graphics2D g = tempImage.createGraphics();
         g.setFont(menuFont);
         FontMetrics fm = g.getFontMetrics();
 
-        TAtom child = son();
-        while (child != null) {
-            if (child instanceof MenuChoice choice) {
-                if (choice.text != null) {
-                    String displayText = choice.text.replace("&", "");
-                    int w = fm.stringWidth(displayText);
-                    if (w > textWidth) {
-                        textWidth = w;
-                    }
-                }
+        for (MenuChoice choice : getChoices()) {
+            if (choice.text != null) {
+                String displayText = choice.text.replace("&", "");
+                int w = fm.stringWidth(displayText);
+                if (w > textWidth) textWidth = w;
             }
-            child = child.next();
         }
         g.dispose();
 
         return textWidth + hotTextWidth + 40;
     }
 
-    /**
-     * Compute menu height based on choices.
-     */
     protected int compHeight() {
-        int h = 32; // Title bar + margins
-
-        TAtom child = son();
-        while (child != null) {
-            if (child instanceof MenuChoice choice) {
-                if (choice.hasOption(MenuChoice.OP_SEPARATOR)) {
-                    h += 6;
-                } else {
-                    h += 20;
-                }
-            }
-            child = child.next();
+        int h = 32;
+        for (MenuChoice choice : getChoices()) {
+            h += choice.hasOption(MenuChoice.OP_SEPARATOR) ? 6 : 20;
         }
-
         return h;
     }
 
     @Override
     protected boolean mouseLDown(EventMouse event) {
         if (!contains(event.where)) {
-            // Only close if this is a submenu (has a father menu)
-            // Top-level application menus stay open
             if (fatherMenu != null) {
                 closeMenu();
                 return true;
@@ -214,7 +164,6 @@ public class Menu extends Window {
 
     @Override
     protected boolean keyDown(EventKeyboard event) {
-        // Handle keyboard navigation
         switch (event.keyCode) {
             case KeyEvent.VK_ESCAPE:
                 closeMenu();
@@ -244,17 +193,14 @@ public class Menu extends Window {
                 return true;
         }
 
-        // Check local shortcuts (single letter after &)
         if (event.keyCode >= KeyEvent.VK_A && event.keyCode <= KeyEvent.VK_Z) {
             char key = Character.toLowerCase((char) event.keyCode);
-            MenuChoice choice = firstChoice();
-            while (choice != null) {
+            for (MenuChoice choice : getChoices()) {
                 if (choice.localScanCode == key) {
                     choice.down();
                     choice.activate();
                     return true;
                 }
-                choice = choice.nextChoice();
             }
         }
 
@@ -263,19 +209,10 @@ public class Menu extends Window {
 
     public void closeMenu() {
         if (!hasOption(OP_MAIN_MENU)) {
-            // Remove from desktop
             remove();
-
-            // Deactivate all choices
-            TAtom child = son();
-            while (child != null) {
-                if (child instanceof MenuChoice) {
-                    ((MenuChoice) child).up();
-                }
-                child = child.next();
+            for (MenuChoice mc : getChoices()) {
+                mc.up();
             }
-
-            // Close parent menu if this is a submenu
             if (fatherMenu != null) {
                 fatherMenu.closeMenu();
             }
@@ -283,41 +220,25 @@ public class Menu extends Window {
     }
 
     public MenuChoice activeChoice() {
-        TAtom child = son();
-        while (child != null) {
-            if (child instanceof MenuChoice choice) {
-                if (!choice.hasStatus(TObject.SF_DISABLED) && choice.hasStatus(MenuChoice.SF_MENU_CHOICE_DOWN)) {
-                    return choice;
-                }
+        for (MenuChoice mc : getChoices()) {
+            if (!mc.hasStatus(TObject.SF_DISABLED) && mc.hasStatus(MenuChoice.SF_MENU_CHOICE_DOWN)) {
+                return mc;
             }
-            child = child.next();
         }
         return null;
     }
 
     public MenuChoice firstChoice() {
-        TAtom child = son();
-        while (child != null) {
-            if (child instanceof MenuChoice choice) {
-                if (!choice.hasStatus(TObject.SF_DISABLED)) {
-                    return choice;
-                }
-            }
-            child = child.next();
+        for (MenuChoice mc : getChoices()) {
+            if (!mc.hasStatus(TObject.SF_DISABLED)) return mc;
         }
         return null;
     }
 
     public MenuChoice lastChoice() {
-        TAtom child = son();
-        if (child != null) child = child.last();
-        while (child != null) {
-            if (child instanceof MenuChoice choice) {
-                if (!choice.hasStatus(TObject.SF_DISABLED)) {
-                    return choice;
-                }
-            }
-            child = child.previous();
+        List<MenuChoice> choices = getChoices();
+        for (int i = choices.size() - 1; i >= 0; i--) {
+            if (!choices.get(i).hasStatus(TObject.SF_DISABLED)) return choices.get(i);
         }
         return null;
     }
@@ -325,23 +246,18 @@ public class Menu extends Window {
     @Override
     protected void paint(PaintContext ctx) {
         if (hasOption(OP_MAIN_MENU)) {
-            // Main menu - draw as horizontal bar
             ctx.setColor(TColors.FACE_GRAY);
             ctx.fillRect(0, 0, bounds.width(), bounds.height());
 
-            // Draw bottom border
             ctx.setColor(TColors.DARK_GRAY);
             ctx.drawLine(0, -1, bounds.width() - 1, bounds.height() - 1);
         } else {
-            // Dropdown menu - draw with frame and title bar
             ctx.setColor(TColors.FACE_GRAY);
             ctx.fillRect(0, 0, bounds.width(), bounds.height());
 
-            // Draw frame
             ctx.setColor(TColors.DARK_GRAY);
             ctx.drawRect(0, 0, bounds.width() - 1, bounds.height() - 1);
 
-            // Draw title bar
             ctx.setColor(TColors.DARK_GRAY);
             ctx.fillRect(1, 1, bounds.width() - 2, 20);
 

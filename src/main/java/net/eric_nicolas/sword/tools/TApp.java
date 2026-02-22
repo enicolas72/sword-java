@@ -145,7 +145,7 @@ public class TApp extends TShell implements Runnable {
      * Default implementation adds just a Quit option.
      */
     protected void createMenuChoices(Menu menu) {
-        new MenuChoice("&Quit", 0, CM_QUIT).insertIn(menu);
+        menu.getCanvas().add(new MenuChoice("&Quit", 0, CM_QUIT));
     }
 
     @Override
