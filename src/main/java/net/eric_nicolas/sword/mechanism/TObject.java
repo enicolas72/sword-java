@@ -6,10 +6,9 @@ import net.eric_nicolas.sword.ui.events.EventKeyboard;
 import net.eric_nicolas.sword.ui.events.EventMouse;
 
 /**
- * TObject - Core application object with event handling.
- * Extends TAtom with event dispatching, command processing, and status management.
+ * TObject - Core application object with event handling and parent reference.
  */
-public class TObject extends TAtom {
+public class TObject {
 
     // Option flags (bitmasks)
     public static final int OP_DRAWABLE = 0x0001;
@@ -39,18 +38,20 @@ public class TObject extends TAtom {
     public static final int CM_FILE_SAVE_AS = 13;
     public static final int CM_FILE_QUIT = 14;
 
+    protected TObject _Father;
     protected int options;
     protected int status;
 
     public TObject() {
-        super();
+        this._Father = null;
         this.options = 0;
         this.status = SF_VISIBLE;
     }
 
-    /**
-     * Handle event - deals to children first (in reverse z-order), then treats locally.
-     */
+    public TObject father() {
+        return _Father;
+    }
+
     public boolean handleEvent(Event event) {
         // If event not handled by children, treat it here
         if (event.what == Event.EV_NOTHING) {
@@ -101,6 +102,4 @@ public class TObject extends TAtom {
         if (selected) setStatus(SF_SELECTED);
         else clearStatus(SF_SELECTED);
     }
-
-
 }

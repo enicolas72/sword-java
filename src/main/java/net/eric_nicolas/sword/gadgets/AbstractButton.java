@@ -143,7 +143,7 @@ public class AbstractButton extends Widget {
      */
     protected void sendCommand(int cmd) {
         // Find the desktop or dialog
-        TAtom current = this;
+        TObject current = this;
         while (current != null && !(current instanceof Desktop) && !(current instanceof Dialog)) {
             current = current.father();
         }

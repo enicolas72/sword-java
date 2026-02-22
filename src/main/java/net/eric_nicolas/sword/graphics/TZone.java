@@ -66,8 +66,8 @@ public class TZone extends TObject {
         // Override in subclasses
     }
 
-    /** Package-private: set parent reference without TAtom tree insertion. */
-    void setParent(TAtom parent) {
+    /** Package-private: set parent reference. */
+    void setParent(TObject parent) {
         _Father = parent;
     }
 
@@ -96,7 +96,7 @@ public class TZone extends TObject {
     protected Point getAbsolutePosition() {
         Point p = new Point(bounds.origin());
 
-        TAtom parent = father();
+        TObject parent = father();
         while (parent instanceof TZone parentZone) {
             p = Point.plus(p, parentZone.bounds.origin());
             parent = parent.father();

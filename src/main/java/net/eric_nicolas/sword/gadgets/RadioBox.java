@@ -1,7 +1,7 @@
 package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
-import net.eric_nicolas.sword.mechanism.TAtom;
+import net.eric_nicolas.sword.mechanism.TObject;
 
 /**
  * TRadioBox - Radio button control.
@@ -52,7 +52,7 @@ public class RadioBox extends ItemBox {
     @Override
     protected void action() {
         if (!hasStatus(SF_DISABLED)) {
-            TAtom parentAtom = father();
+            TObject parentAtom = father();
             if (parentAtom instanceof GroupBox parentGroupBox) {
                 parentGroupBox.value = this.value;
             }
@@ -60,7 +60,7 @@ public class RadioBox extends ItemBox {
     }
 
     public boolean isRadioSelected() {
-        TAtom parentAtom = father();
+        TObject parentAtom = father();
         if (parentAtom instanceof GroupBox parentGroupBox) {
             return parentGroupBox.value == this.value;
         }

@@ -1,6 +1,5 @@
 package net.eric_nicolas.sword.graphics;
 
-import net.eric_nicolas.sword.mechanism.TAtom;
 import net.eric_nicolas.sword.ui.Point;
 import net.eric_nicolas.sword.ui.events.Event;
 

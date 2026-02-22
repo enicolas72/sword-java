@@ -95,9 +95,9 @@ public class MenuChoice extends Widget {
 
     /** Walk up Canvas → Menu to find the containing menu. */
     private Menu containingMenu() {
-        TAtom canvas = father();          // the Menu's Canvas
+        TObject canvas = father();          // the Menu's Canvas
         if (canvas == null) return null;
-        TAtom menu = canvas.father();     // the Menu (Window)
+        TObject menu = canvas.father();     // the Menu (Window)
         return menu instanceof Menu m ? m : null;
     }
 
@@ -205,7 +205,7 @@ public class MenuChoice extends Widget {
     }
 
     protected void sendCommand(int cmd) {
-        TAtom current = this;
+        TObject current = this;
         while (current != null && !(current instanceof Desktop)) {
             current = current.father();
         }

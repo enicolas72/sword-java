@@ -1,7 +1,7 @@
 package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
-import net.eric_nicolas.sword.mechanism.TAtom;
+import net.eric_nicolas.sword.mechanism.TObject;
 
 /**
  * TCheckBox - Checkbox control with bitmask state.
@@ -65,7 +65,7 @@ public class CheckBox extends ItemBox {
     }
 
     protected void updateParentValue() {
-        TAtom parentAtom = father();
+        TObject parentAtom = father();
         if (parentAtom instanceof GroupBox parent) {
             if (checked) {
                 parent.value |= mask; // Set bit
