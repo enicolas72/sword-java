@@ -137,7 +137,7 @@ public class TApp extends TShell implements Runnable {
         mainMenu = new Menu("Menu", 0);
         createMenuChoices(mainMenu);
         mainMenu.initChoices();
-        mainMenu.insertIn(desktop);
+        desktop.add(mainMenu);
     }
 
     /**

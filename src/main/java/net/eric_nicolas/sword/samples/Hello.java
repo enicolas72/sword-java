@@ -85,7 +85,7 @@ public class Hello {
             window.getCanvas().add(hello);
 
             // Insert window in desktop
-            window.insertIn(getDesktop());
+            getDesktop().add(window);
 
             helloCounter++;
             return true;

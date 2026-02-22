@@ -1,5 +1,6 @@
 package net.eric_nicolas.sword.graphics;
 
+import net.eric_nicolas.sword.mechanism.TAtom;
 import net.eric_nicolas.sword.ui.Point;
 import net.eric_nicolas.sword.ui.Rect;
 import net.eric_nicolas.sword.ui.events.EventMouse;
@@ -93,6 +94,26 @@ public class Window extends TZone {
             return true;
         }
         return false;
+    }
+
+    /** Package-private: called by Desktop.add() to set _Father without TAtom.insertIn. */
+    void setParent(TAtom parent) {
+        _Father = parent;
+    }
+
+    @Override
+    public void bringToFront() {
+        if (_Father instanceof Desktop desktop) {
+            desktop.bringToFront(this);
+        }
+    }
+
+    @Override
+    public void remove() {
+        if (_Father instanceof Desktop desktop) {
+            _Father = null;
+            desktop.remove(this);
+        }
     }
 
     public String getTitle() {

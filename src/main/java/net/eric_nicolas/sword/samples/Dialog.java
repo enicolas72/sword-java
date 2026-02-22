@@ -109,7 +109,7 @@ public class Dialog {
             dc.add(editLine);
 
             // Insert dialog in desktop
-            dialog.insertIn(getDesktop());
+            getDesktop().add(dialog);
 
             // Execute the dialog modally
             dialogResult = dialog.execDialog(dialogData);
