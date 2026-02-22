@@ -1,7 +1,6 @@
 package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
-import net.eric_nicolas.sword.mechanism.*;
 
 /**
  * TDialog - Standard dialog box for modal and modeless dialogs.
@@ -113,48 +112,19 @@ public class Dialog extends Window {
         return dialogResult;
     }
 
-    /**
-     * Set data to all child controls.
-     */
     @Override
     public void setData(Object data) {
-        TAtom child = son();
-        while (child != null) {
-            if (child instanceof TZone) {
-                ((TZone) child).setData(data);
-            }
-            child = child.next();
-        }
+        canvas.setData(data);
     }
 
-    /**
-     * Get data from all child controls.
-     */
     @Override
     public void getData(Object data) {
-        TAtom child = son();
-        while (child != null) {
-            if (child instanceof TZone) {
-                ((TZone) child).getData(data);
-            }
-            child = child.next();
-        }
+        canvas.getData(data);
     }
 
-    /**
-     * Get total data size needed for all child controls.
-     */
     @Override
     public long dataSize() {
-        long size = 0;
-        TAtom child = son();
-        while (child != null) {
-            if (child instanceof TZone) {
-                size += ((TZone) child).dataSize();
-            }
-            child = child.next();
-        }
-        return size;
+        return canvas.dataSize();
     }
 
     public int getDialogResult() {

@@ -1,8 +1,8 @@
 package net.eric_nicolas.sword.graphics;
 
-import net.eric_nicolas.sword.mechanism.TAtom;
 import net.eric_nicolas.sword.ui.Point;
 import net.eric_nicolas.sword.ui.Rect;
+import net.eric_nicolas.sword.ui.events.Event;
 import net.eric_nicolas.sword.ui.events.EventMouse;
 
 /**
@@ -23,7 +23,7 @@ public class Window extends TZone {
         this.dragOffset = null;
         setOption(OP_WIN_SIZEABLE | OP_WIN_CLOSEBOX);
         this.canvas = new Canvas(0, 0, width, height);
-        this.canvas.insertIn(this);
+        this.canvas.setParent(this);
     }
 
     public Window(int x, int y, int width, int height, String title, int options) {
@@ -96,19 +96,27 @@ public class Window extends TZone {
         return false;
     }
 
-    /** Package-private: called by Desktop.add() to set _Father without TAtom.insertIn. */
-    void setParent(TAtom parent) {
-        _Father = parent;
+    @Override
+    public void draw(PaintContext ctx) {
+        super.draw(ctx);   // fill background + paint() (frame/title)
+        canvas.draw(ctx);  // draw widgets inside this window
     }
 
     @Override
+    public boolean handleEvent(Event event) {
+        if (canvas.handleEvent(event)) {
+            event.what = Event.EV_NOTHING;
+            return true;
+        }
+        return super.handleEvent(event);
+    }
+
     public void bringToFront() {
         if (_Father instanceof Desktop desktop) {
             desktop.bringToFront(this);
         }
     }
 
-    @Override
     public void remove() {
         if (_Father instanceof Desktop desktop) {
             _Father = null;

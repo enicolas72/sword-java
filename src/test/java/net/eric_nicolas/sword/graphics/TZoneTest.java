@@ -42,7 +42,7 @@ class TZoneTest {
 
     @Test
     void testAbsolutePositionWithOneParent() {
-        child.insertIn(parent);
+        child.setParent(parent);
         Point abs = child.getAbsolutePosition();
 
         // Child at (10, 20) + parent at (100, 100) = (110, 120)
@@ -52,8 +52,8 @@ class TZoneTest {
 
     @Test
     void testAbsolutePositionWithGrandparent() {
-        child.insertIn(parent);
-        grandchild.insertIn(child);
+        child.setParent(parent);
+        grandchild.setParent(child);
         Point abs = grandchild.getAbsolutePosition();
 
         // Grandchild at (5, 5) + child at (10, 20) + parent at (100, 100) = (115, 125)
@@ -63,7 +63,7 @@ class TZoneTest {
 
     @Test
     void testContains() {
-        child.insertIn(parent);
+        child.setParent(parent);
 
         // Child is at relative (10, 20), absolute (110, 120)
         // Size is 50x40, so absolute bounds are (110, 120) to (160, 160)

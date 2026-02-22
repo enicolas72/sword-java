@@ -60,21 +60,15 @@ public class TZone extends TObject {
 
         // Draw content in local coordinates
         paint(localCtx);
-
-        // Draw children — each child computes its own absolute position
-        if (_Son != null) {
-            TAtom child = _Son;
-            while (child != null) {
-                if (child instanceof TZone) {
-                    ((TZone) child).draw(ctx);
-                }
-                child = child.next();
-            }
-        }
     }
 
     protected void paint(PaintContext ctx) {
         // Override in subclasses
+    }
+
+    /** Package-private: set parent reference without TAtom tree insertion. */
+    void setParent(TAtom parent) {
+        _Father = parent;
     }
 
     public void setBackgroundColor(Color color) {

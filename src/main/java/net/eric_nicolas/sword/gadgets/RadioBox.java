@@ -1,7 +1,7 @@
 package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
-import net.eric_nicolas.sword.mechanism.*;
+import net.eric_nicolas.sword.mechanism.TAtom;
 import java.lang.reflect.Field;
 
 /**
@@ -53,19 +53,8 @@ public class RadioBox extends ItemBox {
     @Override
     protected void action() {
         if (!hasStatus(SF_DISABLED)) {
-            // Deselect all other radio buttons in group
             TAtom parentAtom = father();
             if (parentAtom instanceof GroupBox parentGroupBox) {
-                // Deselect all siblings
-                TAtom sibling = parentGroupBox.son();
-                while (sibling != null) {
-                    if (sibling instanceof RadioBox && sibling != this) {
-                        // Just update parent value, no need to clear individual state
-                    }
-                    sibling = sibling.next();
-                }
-
-                // Select this radio button
                 parentGroupBox.value = this.value;
             }
         }

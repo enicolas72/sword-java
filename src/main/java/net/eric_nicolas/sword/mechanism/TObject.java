@@ -52,21 +52,6 @@ public class TObject extends TAtom {
      * Handle event - deals to children first (in reverse z-order), then treats locally.
      */
     public boolean handleEvent(Event event) {
-        // Deal event to children (in reverse order - last to first, front to back)
-        if (_Son != null && event.what != Event.EV_NOTHING) {
-            TAtom child = _Son.last(); // Start from last child (topmost in z-order)
-            while (child != null && event.what != Event.EV_NOTHING) {
-                if (child instanceof TObject) {
-                    if (((TObject) child).handleEvent(event)) {
-                        // Event was handled, clear it to stop propagation
-                        event.what = Event.EV_NOTHING;
-                        return true;
-                    }
-                }
-                child = child.previous(); // Go backwards (front to back)
-            }
-        }
-
         // If event not handled by children, treat it here
         if (event.what == Event.EV_NOTHING) {
             return false;
