@@ -7,13 +7,13 @@ import net.eric_nicolas.sword.ui.events.EventMouse;
 /**
  * TWindow - Overlapped window with title and frame.
  */
-public class TWindow extends TZone {
+public class Window extends TZone {
 
     protected String title;
     protected boolean dragging;
     protected Point dragOffset;
 
-    public TWindow(int x, int y, int width, int height, String title) {
+    public Window(int x, int y, int width, int height, String title) {
         super(x, y, width, height);
         this.title = title;
         this.dragging = false;
@@ -21,7 +21,7 @@ public class TWindow extends TZone {
         setOption(OP_WIN_SIZEABLE | OP_WIN_CLOSEBOX);
     }
 
-    public TWindow(int x, int y, int width, int height, String title, int options) {
+    public Window(int x, int y, int width, int height, String title, int options) {
         this(x, y, width, height, title);
         setOption(options);
     }

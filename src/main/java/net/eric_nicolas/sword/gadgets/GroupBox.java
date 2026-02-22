@@ -2,14 +2,13 @@ package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.mechanism.*;
-import java.awt.Graphics2D;
 import java.awt.Font;
 
 /**
  * TGroupBox - Container for grouping related controls (checkboxes, radio buttons).
  * Handles data exchange for child ItemBox controls.
  */
-public class TGroupBox extends TZone {
+public class GroupBox extends TZone {
 
     protected String text;
     protected Font groupFont;
@@ -18,14 +17,14 @@ public class TGroupBox extends TZone {
     /**
      * Default constructor.
      */
-    public TGroupBox() {
+    public GroupBox() {
         this(0, 0, 150, 100, null);
     }
 
     /**
      * Constructor with position, size, and optional title.
      */
-    public TGroupBox(int x, int y, int width, int height, String text) {
+    public GroupBox(int x, int y, int width, int height, String text) {
         super(x, y, width, height);
         this.text = text;
         this.value = 0;
@@ -36,7 +35,7 @@ public class TGroupBox extends TZone {
     /**
      * Constructor without title.
      */
-    public TGroupBox(int x, int y, int width, int height) {
+    public GroupBox(int x, int y, int width, int height) {
         this(x, y, width, height, null);
     }
 

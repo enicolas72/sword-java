@@ -7,13 +7,13 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for TEditLine - text editing control.
  */
-class TEditLineTest {
+class EditLineTest {
 
-    private TEditLine edit;
+    private EditLine edit;
 
     @BeforeEach
     void setUp() {
-        edit = new TEditLine(10, 10, 200, 60, 0);
+        edit = new EditLine(10, 10, 200, 60, 0);
     }
 
     @Test
@@ -35,7 +35,7 @@ class TEditLineTest {
 
     @Test
     void testTextWithMaxLength() {
-        TEditLine shortEdit = new TEditLine(10, 10, 200, 10, 0);
+        EditLine shortEdit = new EditLine(10, 10, 200, 10, 0);
         shortEdit.setText("This is a very long text");
 
         // Text should be stored as-is initially

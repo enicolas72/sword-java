@@ -8,7 +8,7 @@ import java.awt.FontMetrics;
 /**
  * TStaticText - Non-interactive text label.
  */
-public class TStaticText extends TZone {
+public class Label extends TZone {
 
     protected String text;
     protected Font textFont;
@@ -16,14 +16,14 @@ public class TStaticText extends TZone {
     /**
      * Default constructor.
      */
-    public TStaticText() {
+    public Label() {
         this(0, 0, 100, 20, "Text");
     }
 
     /**
      * Constructor with position, size, and text.
      */
-    public TStaticText(int x, int y, int width, int height, String text) {
+    public Label(int x, int y, int width, int height, String text) {
         super(x, y, width, height);
         this.text = text != null ? text : "";
         this.textFont = new Font("SansSerif", Font.PLAIN, 12);

@@ -7,13 +7,13 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for TDialog - dialog result codes.
  */
-class TDialogTest {
+class DialogTest {
 
-    private TDialog dialog;
+    private Dialog dialog;
 
     @BeforeEach
     void setUp() {
-        dialog = new TDialog(100, 100, 300, 200, "Test Dialog");
+        dialog = new Dialog(100, 100, 300, 200, "Test Dialog");
     }
 
     @Test
@@ -23,26 +23,26 @@ class TDialogTest {
 
     @Test
     void testOKResult() {
-        dialog.doQuitDialog(TDialog.CM_OK);
-        assertEquals(TDialog.CM_OK, dialog.getDialogResult());
+        dialog.doQuitDialog(Dialog.CM_OK);
+        assertEquals(Dialog.CM_OK, dialog.getDialogResult());
     }
 
     @Test
     void testCancelResult() {
-        dialog.doQuitDialog(TDialog.CM_CANCEL);
-        assertEquals(TDialog.CM_CANCEL, dialog.getDialogResult());
+        dialog.doQuitDialog(Dialog.CM_CANCEL);
+        assertEquals(Dialog.CM_CANCEL, dialog.getDialogResult());
     }
 
     @Test
     void testYesResult() {
-        dialog.doQuitDialog(TDialog.CM_YES);
-        assertEquals(TDialog.CM_YES, dialog.getDialogResult());
+        dialog.doQuitDialog(Dialog.CM_YES);
+        assertEquals(Dialog.CM_YES, dialog.getDialogResult());
     }
 
     @Test
     void testNoResult() {
-        dialog.doQuitDialog(TDialog.CM_NO);
-        assertEquals(TDialog.CM_NO, dialog.getDialogResult());
+        dialog.doQuitDialog(Dialog.CM_NO);
+        assertEquals(Dialog.CM_NO, dialog.getDialogResult());
     }
 
     @Test

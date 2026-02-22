@@ -8,7 +8,7 @@ import java.awt.FontMetrics;
 /**
  * TStdButton - Standard button with text label.
  */
-public class TStdButton extends TButton {
+public class Button extends AbstractButton {
 
     protected String text;
     protected Font buttonFont;
@@ -16,14 +16,14 @@ public class TStdButton extends TButton {
     /**
      * Default constructor.
      */
-    public TStdButton() {
+    public Button() {
         this(0, 0, 80, 25, 0, 0, 0, "Button");
     }
 
     /**
      * Constructor with position, size, command, options, and text.
      */
-    public TStdButton(int x, int y, int width, int height, long command, int scanCode, int options, String text) {
+    public Button(int x, int y, int width, int height, long command, int scanCode, int options, String text) {
         super(x, y, width, height, command, scanCode, options);
         this.text = text != null ? text : "Button";
         this.buttonFont = new Font("SansSerif", Font.PLAIN, 12);

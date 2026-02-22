@@ -68,7 +68,7 @@ public class Hello {
             String title = "Hello World #" + helloCounter + " !";
 
             // Create window with THello inside
-            TWindow window = new TWindow(
+            Window window = new Window(
                 100 + (helloCounter - 1) * 30,
                 100 + (helloCounter - 1) * 30,
                 300, 200, title,

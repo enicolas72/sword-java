@@ -1,9 +1,7 @@
 package net.eric_nicolas.sword.samples;
 
 import net.eric_nicolas.sword.tools.TApp;
-import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.gadgets.*;
-import net.eric_nicolas.sword.mechanism.*;
 
 /**
  * Dialog - Sample application demonstrating dialog boxes and controls.
@@ -43,13 +41,13 @@ public class Dialog {
         }
 
         @Override
-        protected void createMenuChoices(TMenu menu) {
+        protected void createMenuChoices(Menu menu) {
             // Add Test Dialog menu item
-            new TMenuChoice("&Test Dialog", 0, CM_DIALOG_TEST).insertIn(menu);
+            new MenuChoice("&Test Dialog", 0, CM_DIALOG_TEST).insertIn(menu);
             // Add separator
-            new TMenuChoice().insertIn(menu);
+            new MenuChoice().insertIn(menu);
             // Add Quit menu item
-            new TMenuChoice("&Quit", 0, CM_QUIT).insertIn(menu);
+            new MenuChoice("&Quit", 0, CM_QUIT).insertIn(menu);
         }
 
         @Override
@@ -65,47 +63,47 @@ public class Dialog {
             // Size is 270x300, compute position to center it on the screen
             int dX = (640 - 270) / 2;
             int dY = (480 - 300) / 2;
-            TDialog dialog = new TDialog(dX, dY, 270, 300, "Dialog sample");
+            net.eric_nicolas.sword.gadgets.Dialog dialog = new net.eric_nicolas.sword.gadgets.Dialog(dX, dY, 270, 300, "Dialog sample");
 
             // Insert controls in the dialog
             // One "Other Button" button, disabled for interactions
-            TStdButton otherBtn = new TStdButton(10, 30, 80, 23, 0, 0, TButton.BO_DISABLED, "Other");
+            Button otherBtn = new Button(10, 30, 80, 23, 0, 0, AbstractButton.BO_DISABLED, "Other");
             otherBtn.insertIn(dialog);
 
             // One Cancel Button
-            TCancelButton cancelBtn = new TCancelButton(95, 30);
+            Button cancelBtn = StandardButtons.cancelButton(95, 30);
             cancelBtn.insertIn(dialog);
 
             // One OK button
-            TOKButton okBtn = new TOKButton(180, 30);
+            Button okBtn = StandardButtons.okButton(180, 30);
             okBtn.insertIn(dialog);
 
             // One Static text
-            TStaticText staticText = new TStaticText(10, 60, 250, 20, "Sample application from SWORD package");
+            Label staticText = new Label(10, 60, 250, 20, "Sample application from SWORD package");
             staticText.insertIn(dialog);
 
             // Check boxes
-            TGroupBox checkGroup = new TGroupBox(10, 85, 250, 65);
-            TCheckBox checkA = new TCheckBox(10, 15, 100, TButton.BO_NO_CASE, 1, "Check Box &A");
+            GroupBox checkGroup = new GroupBox(10, 85, 250, 65);
+            CheckBox checkA = new CheckBox(10, 15, 100, AbstractButton.BO_NO_CASE, 1, "Check Box &A");
             checkA.insertIn(checkGroup);
-            TCheckBox checkB = new TCheckBox(10, 40, 100, TButton.BO_NO_CASE, 2, "Check Box &B");
+            CheckBox checkB = new CheckBox(10, 40, 100, AbstractButton.BO_NO_CASE, 2, "Check Box &B");
             checkB.insertIn(checkGroup);
             checkGroup.insertIn(dialog);
 
             // Radio buttons
-            TGroupBox radioGroup = new TGroupBox(10, 160, 250, 80, "Radio buttons group");
-            TRadioBox radioC = new TRadioBox(10, 25, 100, TButton.BO_NO_CASE, 1, "Radio &C");
+            GroupBox radioGroup = new GroupBox(10, 160, 250, 80, "Radio buttons group");
+            RadioBox radioC = new RadioBox(10, 25, 100, AbstractButton.BO_NO_CASE, 1, "Radio &C");
             radioC.insertIn(radioGroup);
-            TRadioBox radioD = new TRadioBox(120, 25, 100, TButton.BO_NO_CASE | TButton.BO_DISABLED, 2, "Radio &D");
+            RadioBox radioD = new RadioBox(120, 25, 100, AbstractButton.BO_NO_CASE | AbstractButton.BO_DISABLED, 2, "Radio &D");
             radioD.insertIn(radioGroup);
-            TRadioBox radioE = new TRadioBox(10, 50, 100, TButton.BO_NO_CASE, 3, "Radio &E");
+            RadioBox radioE = new RadioBox(10, 50, 100, AbstractButton.BO_NO_CASE, 3, "Radio &E");
             radioE.insertIn(radioGroup);
-            TRadioBox radioF = new TRadioBox(120, 50, 100, TButton.BO_NO_CASE, 4, "Radio &F");
+            RadioBox radioF = new RadioBox(120, 50, 100, AbstractButton.BO_NO_CASE, 4, "Radio &F");
             radioF.insertIn(radioGroup);
             radioGroup.insertIn(dialog);
 
             // Edit Line
-            TEditLine editLine = new TEditLine(10, 265, 250, 60, 10);
+            EditLine editLine = new EditLine(10, 265, 250, 60, 10);
             editLine.insertIn(dialog);
 
             // Insert dialog in desktop
@@ -140,10 +138,10 @@ public class Dialog {
         System.out.println("\n'Dialog' application finished.");
         System.out.println("You quit the dialog last time by clicking on ");
         switch (app.getDialogResult()) {
-            case TDialog.CM_OK:
+            case net.eric_nicolas.sword.gadgets.Dialog.CM_OK:
                 System.out.println("OK");
                 break;
-            case TDialog.CM_CANCEL:
+            case net.eric_nicolas.sword.gadgets.Dialog.CM_CANCEL:
                 System.out.println("Cancel");
                 break;
             default:

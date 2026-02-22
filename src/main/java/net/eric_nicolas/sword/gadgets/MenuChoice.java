@@ -10,7 +10,7 @@ import java.awt.Font;
 /**
  * TMenuChoice - A single menu item with text, hotkey, and command.
  */
-public class TMenuChoice extends TZone {
+public class MenuChoice extends TZone {
 
     public static final int OP_SEPARATOR = 0x0100;
     public static final int SF_MENU_CHOICE_DOWN = 0x0100;
@@ -19,14 +19,14 @@ public class TMenuChoice extends TZone {
     protected String hotText;
     protected int globalScanCode;
     protected int command;
-    protected TMenu subMenu;
+    protected Menu subMenu;
     protected int localScanCode;
     protected Font menuFont;
 
     /**
      * Constructor for separator.
      */
-    public TMenuChoice() {
+    public MenuChoice() {
         super(0, 0, 100, 6);
         defaults();
         setOption(OP_SEPARATOR);
@@ -35,7 +35,7 @@ public class TMenuChoice extends TZone {
     /**
      * Constructor for menu item with command.
      */
-    public TMenuChoice(String text, int globalScanCode, int command, int status, int options) {
+    public MenuChoice(String text, int globalScanCode, int command, int status, int options) {
         super(0, 0, 100, 20);
         defaults();
         init(text, globalScanCode, command, null, status, options);
@@ -44,14 +44,14 @@ public class TMenuChoice extends TZone {
     /**
      * Constructor for menu item with command (default status/options).
      */
-    public TMenuChoice(String text, int globalScanCode, int command) {
+    public MenuChoice(String text, int globalScanCode, int command) {
         this(text, globalScanCode, command, 0, 0);
     }
 
     /**
      * Constructor for menu item with submenu.
      */
-    public TMenuChoice(String text, TMenu subMenu, int status) {
+    public MenuChoice(String text, Menu subMenu, int status) {
         super(0, 0, 100, 20);
         defaults();
         init(text, 0, 0, subMenu, status, 0);
@@ -67,7 +67,7 @@ public class TMenuChoice extends TZone {
         menuFont = new Font("SansSerif", Font.PLAIN, 12);
     }
 
-    protected void init(String text, int globalScanCode, int command, TMenu subMenu, int status, int options) {
+    protected void init(String text, int globalScanCode, int command, Menu subMenu, int status, int options) {
         this.text = text;
         this.globalScanCode = globalScanCode;
         this.command = command;
@@ -180,10 +180,10 @@ public class TMenuChoice extends TZone {
         if (!hasStatus(SF_DISABLED) && !hasStatus(SF_MENU_CHOICE_DOWN)) {
             // Lift all other choices
             TAtom myFather = father();
-            if (myFather instanceof TMenu) {
+            if (myFather instanceof Menu) {
                 TAtom sibling = myFather.son();
                 while (sibling != null) {
-                    if (sibling instanceof TMenuChoice siblingMenuChoice && sibling != this) {
+                    if (sibling instanceof MenuChoice siblingMenuChoice && sibling != this) {
                         siblingMenuChoice.up();
                     }
                     sibling = sibling.next();
@@ -206,7 +206,7 @@ public class TMenuChoice extends TZone {
             sendCommand(command);
             // Only close the menu if it's a submenu (not a top-level menu)
             TAtom myFather = father();
-            if (myFather instanceof TMenu fatherMenu) {
+            if (myFather instanceof Menu fatherMenu) {
                 // Only close if this menu has a father menu (i.e., it's a submenu)
                 // Top-level menus stay open
                 if (fatherMenu.fatherMenu != null) {
@@ -224,32 +224,32 @@ public class TMenuChoice extends TZone {
     protected void sendCommand(int cmd) {
         // Find the desktop first
         TAtom current = this;
-        while (current != null && !(current instanceof TDesktop)) {
+        while (current != null && !(current instanceof Desktop)) {
             current = current.father();
         }
 
         // If we found desktop, send command from there so it reaches TApp
-        if (current instanceof TDesktop desktop) {
+        if (current instanceof Desktop desktop) {
             desktop.handleEvent(new EventCommand(cmd));
         }
     }
 
-    public TMenuChoice nextChoice() {
+    public MenuChoice nextChoice() {
         TAtom next = next();
         while (next != null) {
-            if (next instanceof TMenuChoice && !((TMenuChoice) next).hasStatus(SF_DISABLED)) {
-                return (TMenuChoice) next;
+            if (next instanceof MenuChoice && !((MenuChoice) next).hasStatus(SF_DISABLED)) {
+                return (MenuChoice) next;
             }
             next = next.next();
         }
         return null;
     }
 
-    public TMenuChoice prevChoice() {
+    public MenuChoice prevChoice() {
         TAtom prev = previous();
         while (prev != null) {
-            if (prev instanceof TMenuChoice && !((TMenuChoice) prev).hasStatus(SF_DISABLED)) {
-                return (TMenuChoice) prev;
+            if (prev instanceof MenuChoice && !((MenuChoice) prev).hasStatus(SF_DISABLED)) {
+                return (MenuChoice) prev;
             }
             prev = prev.previous();
         }
@@ -264,7 +264,7 @@ public class TMenuChoice extends TZone {
         return globalScanCode;
     }
 
-    public TMenu getSubMenu() {
+    public Menu getSubMenu() {
         return subMenu;
     }
 }

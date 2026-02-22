@@ -1,15 +1,13 @@
 package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
-import net.eric_nicolas.sword.mechanism.*;
-import java.awt.Graphics2D;
 import java.awt.Font;
 
 /**
  * TItemBox - Base class for checkbox and radio button items.
  * Provides special handling for item boxes within group boxes.
  */
-public class TItemBox extends TButton {
+public class ItemBox extends AbstractButton {
 
     protected String text;
     protected Font itemFont;
@@ -17,14 +15,14 @@ public class TItemBox extends TButton {
     /**
      * Default constructor.
      */
-    public TItemBox() {
+    public ItemBox() {
         this(0, 0, 100, 0, "");
     }
 
     /**
      * Constructor with position, size, options, and text.
      */
-    public TItemBox(int x, int y, int width, int options, String text) {
+    public ItemBox(int x, int y, int width, int options, String text) {
         super(x, y, width, 20, 0, 0, options);
         this.text = text != null ? text : "";
         this.itemFont = new Font("SansSerif", Font.PLAIN, 12);

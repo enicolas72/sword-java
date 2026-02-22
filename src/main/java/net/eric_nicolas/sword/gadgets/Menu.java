@@ -16,7 +16,7 @@ import java.awt.event.KeyEvent;
  * TMenu - Menu container with choices.
  * Horizontal menu bar that can contain menu choices.
  */
-public class Menu extends TWindow {
+public class Menu extends Window {
 
     public static final int OP_MAIN_MENU = 0x0200;
 

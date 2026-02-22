@@ -1,6 +1,7 @@
 package net.eric_nicolas.sword.tools;
 
-import net.eric_nicolas.sword.graphics.*;
+import net.eric_nicolas.sword.gadgets.Menu;
+import net.eric_nicolas.sword.graphics.Desktop;
 import net.eric_nicolas.sword.graphics.PaintContext;
 import net.eric_nicolas.sword.gadgets.*;
 import net.eric_nicolas.sword.ui.events.EventCommand;
@@ -18,17 +19,17 @@ public class TApp extends TShell implements Runnable {
     public static final int CM_QUIT = 100;
 
     protected Frame frame;
-    protected TDesktop desktop;
+    protected Desktop desktop;
     protected Canvas canvas;
     protected BufferedImage backBuffer;
     protected Graphics2D backGraphics;
     protected boolean running;
-    protected TMenu mainMenu;
+    protected Menu mainMenu;
 
     public TApp(String title, int width, int height) {
         super();
         frame = new Frame(title);
-        desktop = new TDesktop(width, height);
+        desktop = new Desktop(width, height);
         desktop.setApplication(this); // Set this as the application for command routing
         frame.setSize(width, height);
         frame.setResizable(false);
@@ -133,7 +134,7 @@ public class TApp extends TShell implements Runnable {
 
     protected void initializeMenu() {
         // Create main menu (regular window, stays visible)
-        mainMenu = new TMenu("Menu", 0);
+        mainMenu = new Menu("Menu", 0);
         createMenuChoices(mainMenu);
         mainMenu.initChoices();
         mainMenu.insertIn(desktop);
@@ -143,8 +144,8 @@ public class TApp extends TShell implements Runnable {
      * Override this method to create menu choices.
      * Default implementation adds just a Quit option.
      */
-    protected void createMenuChoices(TMenu menu) {
-        new TMenuChoice("&Quit", 0, CM_QUIT).insertIn(menu);
+    protected void createMenuChoices(Menu menu) {
+        new MenuChoice("&Quit", 0, CM_QUIT).insertIn(menu);
     }
 
     @Override
@@ -159,8 +160,8 @@ public class TApp extends TShell implements Runnable {
     /**
      * Process menu hotkeys recursively.
      */
-    protected boolean processMenuHotKey(int keyCode, TMenu menu) {
-        TMenuChoice choice = menu.firstChoice();
+    protected boolean processMenuHotKey(int keyCode, Menu menu) {
+        MenuChoice choice = menu.firstChoice();
         while (choice != null) {
             if (choice.getSubMenu() != null) {
                 // Check submenu hotkeys
@@ -200,7 +201,7 @@ public class TApp extends TShell implements Runnable {
         return true;
     }
 
-    public TDesktop getDesktop() {
+    public Desktop getDesktop() {
         return desktop;
     }
 

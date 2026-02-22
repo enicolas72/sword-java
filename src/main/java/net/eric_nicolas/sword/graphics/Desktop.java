@@ -7,11 +7,11 @@ import net.eric_nicolas.sword.ui.events.EventMouse;
 /**
  * TDesktop - Main application desktop/background.
  */
-public class TDesktop extends TZone {
+public class Desktop extends TZone {
 
     private TObject application;
 
-    public TDesktop(int width, int height) {
+    public Desktop(int width, int height) {
         super(0, 0, width, height);
         setBackgroundColor(TColors.DESKTOP_BG);
     }

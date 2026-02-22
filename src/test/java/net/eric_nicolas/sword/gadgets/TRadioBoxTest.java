@@ -10,17 +10,17 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class TRadioBoxTest {
 
-    private TGroupBox group;
-    private TRadioBox radioA;
-    private TRadioBox radioB;
-    private TRadioBox radioC;
+    private GroupBox group;
+    private RadioBox radioA;
+    private RadioBox radioB;
+    private RadioBox radioC;
 
     @BeforeEach
     void setUp() {
-        group = new TGroupBox(10, 10, 200, 100);
-        radioA = new TRadioBox(10, 10, 100, TButton.BO_NO_CASE, 1, "Radio A");
-        radioB = new TRadioBox(10, 30, 100, TButton.BO_NO_CASE, 2, "Radio B");
-        radioC = new TRadioBox(10, 50, 100, TButton.BO_NO_CASE, 3, "Radio C");
+        group = new GroupBox(10, 10, 200, 100);
+        radioA = new RadioBox(10, 10, 100, AbstractButton.BO_NO_CASE, 1, "Radio A");
+        radioB = new RadioBox(10, 30, 100, AbstractButton.BO_NO_CASE, 2, "Radio B");
+        radioC = new RadioBox(10, 50, 100, AbstractButton.BO_NO_CASE, 3, "Radio C");
 
         radioA.insertIn(group);
         radioB.insertIn(group);
@@ -70,7 +70,7 @@ class TRadioBoxTest {
 
     @Test
     void testDisabledRadio() {
-        TRadioBox disabled = new TRadioBox(10, 70, 100, TButton.BO_DISABLED, 4, "Disabled");
+        RadioBox disabled = new RadioBox(10, 70, 100, AbstractButton.BO_DISABLED, 4, "Disabled");
         disabled.insertIn(group);
 
         assertTrue(disabled.hasStatus(TObject.SF_DISABLED));

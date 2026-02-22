@@ -7,7 +7,7 @@ import net.eric_nicolas.sword.mechanism.*;
  * TDialog - Standard dialog box for modal and modeless dialogs.
  * Supports data exchange with controls via SetData/GetData pattern.
  */
-public class Dialog extends TWindow {
+public class Dialog extends Window {
 
     // Dialog result codes
     public static final int CM_OK = 3101;

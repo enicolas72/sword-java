@@ -8,17 +8,17 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for TCheckBox - checkbox state management.
  */
-class TCheckBoxTest {
+class CheckBoxTest {
 
-    private TGroupBox group;
-    private TCheckBox checkA;
-    private TCheckBox checkB;
+    private GroupBox group;
+    private CheckBox checkA;
+    private CheckBox checkB;
 
     @BeforeEach
     void setUp() {
-        group = new TGroupBox(10, 10, 200, 100);
-        checkA = new TCheckBox(10, 10, 100, TButton.BO_NO_CASE, 1, "Check A");
-        checkB = new TCheckBox(10, 30, 100, TButton.BO_NO_CASE, 2, "Check B");
+        group = new GroupBox(10, 10, 200, 100);
+        checkA = new CheckBox(10, 10, 100, AbstractButton.BO_NO_CASE, 1, "Check A");
+        checkB = new CheckBox(10, 30, 100, AbstractButton.BO_NO_CASE, 2, "Check B");
 
         checkA.insertIn(group);
         checkB.insertIn(group);
@@ -61,7 +61,7 @@ class TCheckBoxTest {
 
     @Test
     void testDisabled() {
-        TCheckBox disabled = new TCheckBox(10, 50, 100, TButton.BO_DISABLED, 4, "Disabled");
+        CheckBox disabled = new CheckBox(10, 50, 100, AbstractButton.BO_DISABLED, 4, "Disabled");
         disabled.insertIn(group);
 
         assertTrue(disabled.hasStatus(TObject.SF_DISABLED));

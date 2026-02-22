@@ -2,15 +2,13 @@ package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.mechanism.*;
-import java.awt.Graphics2D;
-import java.awt.Font;
 import java.lang.reflect.Field;
 
 /**
  * TCheckBox - Checkbox control with bitmask state.
  * Works with TGroupBox parent to exchange data.
  */
-public class TCheckBox extends TItemBox {
+public class CheckBox extends ItemBox {
 
     protected int mask; // Bit mask for this checkbox
     protected boolean checked;
@@ -18,7 +16,7 @@ public class TCheckBox extends TItemBox {
     /**
      * Constructor with position, size, options, mask, and text.
      */
-    public TCheckBox(int x, int y, int width, int options, int mask, String text) {
+    public CheckBox(int x, int y, int width, int options, int mask, String text) {
         super(x, y, width, options, text);
         this.mask = mask;
         this.checked = false;
@@ -69,8 +67,7 @@ public class TCheckBox extends TItemBox {
 
     protected void updateParentValue() {
         TAtom parentAtom = father();
-        if (parentAtom instanceof TGroupBox) {
-            TGroupBox parent = (TGroupBox) parentAtom;
+        if (parentAtom instanceof GroupBox parent) {
             if (checked) {
                 parent.value |= mask; // Set bit
             } else {
@@ -83,9 +80,7 @@ public class TCheckBox extends TItemBox {
     public void setData(Object data) {
         // Read checked state from parent group box value
         TAtom parentAtom = father();
-        if (parentAtom instanceof TGroupBox) {
-            TGroupBox parent = (TGroupBox) parentAtom;
-
+        if (parentAtom instanceof GroupBox parent) {
             // If data is provided and has a field matching the data structure
             if (data != null) {
                 try {
@@ -114,9 +109,7 @@ public class TCheckBox extends TItemBox {
         updateParentValue();
 
         TAtom parentAtom = father();
-        if (parentAtom instanceof TGroupBox && data != null) {
-            TGroupBox parent = (TGroupBox) parentAtom;
-
+        if (parentAtom instanceof GroupBox parent && data != null) {
             try {
                 // Look for a field named "Checks" (or similar pattern)
                 Field[] fields = data.getClass().getDeclaredFields();

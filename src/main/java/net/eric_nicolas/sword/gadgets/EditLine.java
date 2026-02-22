@@ -13,7 +13,7 @@ import java.lang.reflect.Field;
  * TEditLine - Single-line text edit control.
  * Supports keyboard input, cursor, and data exchange.
  */
-public class TEditLine extends TZone {
+public class EditLine extends TZone {
 
     protected String text;
     protected int maxLength;
@@ -27,7 +27,7 @@ public class TEditLine extends TZone {
     /**
      * Constructor with position, size, max length, and initial offset.
      */
-    public TEditLine(int x, int y, int width, int maxLength, int offset, boolean border) {
+    public EditLine(int x, int y, int width, int maxLength, int offset, boolean border) {
         super(x, y, width, 20);
         this.text = "";
         this.maxLength = maxLength;
@@ -43,7 +43,7 @@ public class TEditLine extends TZone {
     /**
      * Constructor with default border.
      */
-    public TEditLine(int x, int y, int width, int maxLength, int offset) {
+    public EditLine(int x, int y, int width, int maxLength, int offset) {
         this(x, y, width, maxLength, offset, true);
     }
 

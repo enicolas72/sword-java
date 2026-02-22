@@ -8,7 +8,7 @@ import net.eric_nicolas.sword.ui.events.EventMouse;
 /**
  * TButton - Base class for clickable buttons.
  */
-public class TButton extends TZone {
+public class AbstractButton extends TZone {
 
     // Button options
     public static final int BO_DISABLED = 0x0001;
@@ -24,14 +24,14 @@ public class TButton extends TZone {
     /**
      * Default constructor.
      */
-    public TButton() {
+    public AbstractButton() {
         this(0, 0, 80, 25, 0, 0, 0);
     }
 
     /**
      * Constructor with position, size, command, and options.
      */
-    public TButton(int x, int y, int width, int height, long command, int scanCode, int options) {
+    public AbstractButton(int x, int y, int width, int height, long command, int scanCode, int options) {
         super(x, y, width, height);
         defaults();
         init(command, scanCode, options);
@@ -144,7 +144,7 @@ public class TButton extends TZone {
     protected void sendCommand(int cmd) {
         // Find the desktop or dialog
         TAtom current = this;
-        while (current != null && !(current instanceof TDesktop) && !(current instanceof TDialog)) {
+        while (current != null && !(current instanceof Desktop) && !(current instanceof Dialog)) {
             current = current.father();
         }
 
