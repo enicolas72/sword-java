@@ -149,8 +149,8 @@ public class TButton extends TZone {
         }
 
         // Send command event
-        if (current != null && current instanceof TObject) {
-            ((TObject) current).handleEvent(new EventCommand(cmd));
+        if (current instanceof TObject currentObject) {
+            currentObject.handleEvent(new EventCommand(cmd));
         }
     }
 

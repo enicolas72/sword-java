@@ -44,10 +44,10 @@ public class TWindow extends TZone {
             bringToFront();
 
             // Check if clicking title bar
-            if (event.where.y() >= bounds.a().y() &&
-                event.where.y() < bounds.a().y() + 20) {
+            if (event.where.y() >= bounds.origin().y() &&
+                event.where.y() < bounds.origin().y() + 20) {
                 dragging = true;
-                dragOffset = Point.minus(event.where, bounds.a());
+                dragOffset = Point.minus(event.where, bounds.origin());
                 return true;
             }
             return true; // Consume event even if not on title bar
@@ -73,7 +73,7 @@ public class TWindow extends TZone {
             // Update window bounds (stored as relative coordinates)
             int width = bounds.width();
             int height = bounds.height();
-            bounds = new Rect(newP, Point.plus(newP, width, height));
+            bounds = new Rect(newP, width, height);
             clipRect = new Rect(bounds);
 
             // Children don't need to be moved - they maintain relative positions

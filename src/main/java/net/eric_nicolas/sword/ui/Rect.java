@@ -2,32 +2,35 @@ package net.eric_nicolas.sword.ui;
 
 /**
  * Rect - Rectangle representation.
- * Uses top-left corner (a) and bottom-right corner (b).
+ * Stored as top-left origin plus width and height.
  */
 public final class Rect {
 
     /**
-     * Constructor with coordinates.
+     * Constructor with origin and size.
      *
-     * @param x1 Left coordinate
-     * @param y1 Top coordinate
-     * @param x2 Right coordinate
-     * @param y2 Bottom coordinate
+     * @param x Left coordinate
+     * @param y Top coordinate
+     * @param width Width
+     * @param height Height
      */
-    public Rect(int x1, int y1, int x2, int y2) {
-        this.a = new Point(x1, y1);
-        this.b = new Point(x2, y2);
+    public Rect(int x, int y, int width, int height) {
+        this.origin = new Point(x, y);
+        this.width = width;
+        this.height = height;
     }
 
     /**
-     * Constructor with points.
+     * Constructor with origin point and size.
      *
-     * @param a Top-left corner
-     * @param b Bottom-right corner
+     * @param p Top-left corner
+     * @param width Width
+     * @param height Height
      */
-    public Rect(Point a, Point b) {
-        this.a = new Point(a);
-        this.b = new Point(b);
+    public Rect(Point p, int width, int height) {
+        this.origin = new Point(p);
+        this.width = width;
+        this.height = height;
     }
 
     /**
@@ -36,8 +39,9 @@ public final class Rect {
      * @param other Rectangle to copy
      */
     public Rect(Rect other) {
-        this.a = new Point(other.a);
-        this.b = new Point(other.b);
+        this.origin = new Point(other.origin);
+        this.width = other.width;
+        this.height = other.height;
     }
 
     /**
@@ -46,7 +50,7 @@ public final class Rect {
      * @return Width
      */
     public int width() {
-        return b.x() - a.x();
+        return width;
     }
 
     /**
@@ -55,15 +59,12 @@ public final class Rect {
      * @return Height
      */
     public int height() {
-        return b.y() - a.y();
+        return height;
     }
 
-    public Point a() {
-        return a;
-    }
-
-    public Point b() {
-        return b;
+    /** Top-left corner. */
+    public Point origin() {
+        return origin;
     }
 
     /**
@@ -72,7 +73,7 @@ public final class Rect {
      * @return true if empty
      */
     public boolean isEmpty() {
-        return width() <= 0 || height() <= 0;
+        return width <= 0 || height <= 0;
     }
 
     /**
@@ -93,71 +94,70 @@ public final class Rect {
      * @return true if point is inside
      */
     public boolean contains(int x, int y) {
-        return x >= a.x() && x < b.x() && y >= a.y() && y < b.y();
+        return x >= origin.x() && x < origin.x() + width &&
+               y >= origin.y() && y < origin.y() + height;
     }
 
     /**
-     * Adds the given amounts to a rectangle coordinates
+     * Adds the given amounts to a rectangle's origin.
      *
-     * @param a The rectangle to move
+     * @param r The rectangle to move
      * @param dx X offset
      * @param dy Y offset
-     * @return the offsetted rectangle
+     * @return the translated rectangle
      */
-    public static Rect plus(Rect a, int dx, int dy) {
-        return new Rect(
-                Point.plus(a.a, dx, dy),
-                Point.plus(a.b, dx, dy));
+    public static Rect plus(Rect r, int dx, int dy) {
+        return new Rect(Point.plus(r.origin, dx, dy), r.width, r.height);
     }
 
     /**
      * Grow a rectangle by given amounts in all directions.
      *
-     * @param a The rectangle to grow
-     * @param dx Horizontal growth
-     * @param dy Vertical growth
+     * @param r The rectangle to grow
+     * @param dx Horizontal growth (applied to each side)
+     * @param dy Vertical growth (applied to each side)
      * @return the grown rectangle
      */
-    public static Rect grow(Rect a, int dx, int dy) {
-        return new Rect(
-                Point.minus(a.a, dx, dy),
-                Point.plus(a.b, dx, dy));
+    public static Rect grow(Rect r, int dx, int dy) {
+        return new Rect(Point.minus(r.origin, dx, dy), r.width + 2 * dx, r.height + 2 * dy);
     }
 
     /**
      * Intersect one rectangle with another.
      *
-     * @param a First rectangle for the intersection
-     * @param b Second rectangle for the intersection
+     * @param a First rectangle
+     * @param b Second rectangle
      * @return the rectangle intersection of a and b
      */
     public static Rect intersect(Rect a, Rect b) {
-        return new Rect(
-                Point.max(a.a, b.a),
-                Point.min(a.b, b.b));
+        Point newA = Point.max(a.origin, b.origin);
+        Point newB = Point.min(Point.plus(a.origin, a.width, a.height),
+                               Point.plus(b.origin, b.width, b.height));
+        return new Rect(newA, newB.x() - newA.x(), newB.y() - newA.y());
     }
 
     /**
      * Union one rectangle with another.
      *
-     * @param a First rectangle to union with
-     * @param b Second rectangle to union with
+     * @param a First rectangle
+     * @param b Second rectangle
      * @return the rectangle union of a and b
      */
     public static Rect union(Rect a, Rect b) {
         if (b.isEmpty()) return a;
         if (a.isEmpty()) return b;
 
-        return new Rect(
-            Point.min(a.a, b.a),
-            Point.max(a.b, b.b));
+        Point newA = Point.min(a.origin, b.origin);
+        Point newB = Point.max(Point.plus(a.origin, a.width, a.height),
+                               Point.plus(b.origin, b.width, b.height));
+        return new Rect(newA, newB.x() - newA.x(), newB.y() - newA.y());
     }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj instanceof Rect objRect) {
-            return a.equals(objRect.a) && b.equals(objRect.b);
+            return origin.equals(objRect.origin) && width == objRect.width && height == objRect.height;
         } else {
             return false;
         }
@@ -165,16 +165,17 @@ public final class Rect {
 
     @Override
     public int hashCode() {
-        return 31 * a.hashCode() + b.hashCode();
+        return 31 * (31 * origin.hashCode() + width) + height;
     }
 
     @Override
     public String toString() {
-        return "TRect(" + a.x() + ", " + a.y() + ", " + b.x() + ", " + b.y() + ")";
+        return "TRect(" + origin.x() + ", " + origin.y() + ", " + width + ", " + height + ")";
     }
 
     //
 
-    private Point a;  // Top-left corner
-    private Point b;  // Bottom-right corner
+    private final Point origin;  // Top-left corner
+    private final int width;
+    private final int height;
 }

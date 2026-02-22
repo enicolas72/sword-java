@@ -18,7 +18,7 @@ public class TZone extends TObject {
 
     public TZone(int x, int y, int width, int height) {
         super();
-        this.bounds = new Rect(x, y, x + width, y + height);
+        this.bounds = new Rect(x, y, width, height);
         this.clipRect = new Rect(bounds);
         this.bgColor = TColors.WINDOW_BG;
         this.fgColor = TColors.BLACK;
@@ -87,14 +87,12 @@ public class TZone extends TObject {
 
     public boolean contains(int x, int y) {
         Point absPos = getAbsolutePosition();
-        return x >= absPos.x() && x < absPos.x() + bounds.width() &&
-               y >= absPos.y() && y < absPos.y() + bounds.height();
+        Rect absRect = new Rect(absPos, bounds.width(), bounds.height());
+        return absRect.contains(x, y);
     }
 
     public boolean contains(Point p) {
-        Point absPos = getAbsolutePosition();
-        return p.x() >= absPos.x() && p.x() < absPos.x() + bounds.width() &&
-                p.y() >= absPos.y() && p.y() < absPos.y() + bounds.height();
+        return contains(p.x(), p.y());
     }
 
     /**
@@ -102,11 +100,11 @@ public class TZone extends TObject {
      * In C++ this is MakeGlobal().
      */
     protected Point getAbsolutePosition() {
-        Point p = new Point(bounds.a());
+        Point p = new Point(bounds.origin());
 
         TAtom parent = father();
         while (parent instanceof TZone parentZone) {
-            p = Point.plus(p, parentZone.bounds.a());
+            p = Point.plus(p, parentZone.bounds.origin());
             parent = parent.father();
         }
 

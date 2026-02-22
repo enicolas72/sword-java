@@ -27,10 +27,10 @@ class TZoneTest {
         TZone zone = new TZone(10, 20, 100, 80);
         Rect bounds = zone.getBounds();
 
-        assertEquals(10, bounds.a().x());
-        assertEquals(20, bounds.a().y());
-        assertEquals(110, bounds.b().x());  // x + width
-        assertEquals(100, bounds.b().y());  // y + height
+        assertEquals(10, bounds.origin().x());
+        assertEquals(20, bounds.origin().y());
+        assertEquals(100, bounds.width());  // x + width
+        assertEquals(80, bounds.height());  // y + height
     }
 
     @Test
@@ -100,13 +100,13 @@ class TZoneTest {
 
     @Test
     void testSetBounds() {
-        Rect newBounds = new Rect(50, 60, 150, 160);
+        Rect newBounds = new Rect(50, 60, 100, 100);
         parent.setBounds(newBounds);
 
         Rect bounds = parent.getBounds();
-        assertEquals(50, bounds.a().x());
-        assertEquals(60, bounds.a().y());
-        assertEquals(150, bounds.b().x());
-        assertEquals(160, bounds.b().y());
+        assertEquals(50, bounds.origin().x());
+        assertEquals(60, bounds.origin().y());
+        assertEquals(100, bounds.width());
+        assertEquals(100, bounds.height());
     }
 }

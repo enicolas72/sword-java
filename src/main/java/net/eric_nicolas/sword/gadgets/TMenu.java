@@ -87,7 +87,7 @@ public class TMenu extends TStdWindow {
                 TMenuChoice choice = (TMenuChoice) child;
                 if (!choice.hasOption(TMenuChoice.OP_SEPARATOR)) {
                     String displayText = choice.text != null ? choice.text.replace("&", "") : "";
-                    int w = fm.stringWidth(displayText) + 20; // Add padding
+                    int width = fm.stringWidth(displayText) + 20; // Add padding
 
                     // Handle submenu
                     if (choice.getSubMenu() != null) {
@@ -96,13 +96,10 @@ public class TMenu extends TStdWindow {
                     }
 
                     // Position choice horizontally
-                    Rect choiceBounds = new Rect(
-                        Point.plus(myBounds.a(), x, 2),
-                        Point.plus(myBounds.a(), x + w, height - 2)
-                    );
+                    Rect choiceBounds = new Rect(Point.plus(myBounds.origin(), x, 2), width, height - 4);
                     choice.setBounds(choiceBounds);
 
-                    x += w;
+                    x += width;
                 }
             }
             child = child.next();
@@ -110,7 +107,7 @@ public class TMenu extends TStdWindow {
         g.dispose();
 
         // Set menu bounds to span the width
-        myBounds = new Rect(myBounds.a(), Point.plus(myBounds.a(), x + 5, height));
+        myBounds = new Rect(myBounds.origin(), x + 5, height);
         setBounds(myBounds);
     }
 
@@ -123,7 +120,7 @@ public class TMenu extends TStdWindow {
 
         // Resize menu
         Rect newBounds = getBounds();
-        newBounds = new Rect(newBounds.a(), Point.plus(newBounds.a(), width, height));
+        newBounds = new Rect(newBounds.origin(), width, height);
         setBounds(newBounds);
 
         // Position menu choices
@@ -144,10 +141,7 @@ public class TMenu extends TStdWindow {
                 int h = choice.hasOption(TMenuChoice.OP_SEPARATOR) ? 6 : 20;
 
                 // Position choice
-                Rect choiceBounds = new Rect(
-                    Point.plus(myBounds.a(), 7, y),
-                        Point.plus(myBounds.a(), width - 8, y + h)
-                );
+                Rect choiceBounds = new Rect(Point.plus(myBounds.origin(), 7, y), width - 15, h);
                 choice.setBounds(choiceBounds);
 
                 y += h;
