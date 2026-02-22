@@ -20,8 +20,8 @@ class CheckBoxTest {
         checkA = new CheckBox(10, 10, 100, AbstractButton.BO_NO_CASE, 1, "Check A");
         checkB = new CheckBox(10, 30, 100, AbstractButton.BO_NO_CASE, 2, "Check B");
 
-        checkA.insertIn(group);
-        checkB.insertIn(group);
+        group.add(checkA);
+        group.add(checkB);
     }
 
     @Test
@@ -62,7 +62,7 @@ class CheckBoxTest {
     @Test
     void testDisabled() {
         CheckBox disabled = new CheckBox(10, 50, 100, AbstractButton.BO_DISABLED, 4, "Disabled");
-        disabled.insertIn(group);
+        group.add(disabled);
 
         assertTrue(disabled.hasStatus(TObject.SF_DISABLED));
     }

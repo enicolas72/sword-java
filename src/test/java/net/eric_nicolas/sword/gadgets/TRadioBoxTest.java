@@ -22,9 +22,9 @@ class TRadioBoxTest {
         radioB = new RadioBox(10, 30, 100, AbstractButton.BO_NO_CASE, 2, "Radio B");
         radioC = new RadioBox(10, 50, 100, AbstractButton.BO_NO_CASE, 3, "Radio C");
 
-        radioA.insertIn(group);
-        radioB.insertIn(group);
-        radioC.insertIn(group);
+        group.add(radioA);
+        group.add(radioB);
+        group.add(radioC);
     }
 
     @Test
@@ -71,7 +71,7 @@ class TRadioBoxTest {
     @Test
     void testDisabledRadio() {
         RadioBox disabled = new RadioBox(10, 70, 100, AbstractButton.BO_DISABLED, 4, "Disabled");
-        disabled.insertIn(group);
+        group.add(disabled);
 
         assertTrue(disabled.hasStatus(TObject.SF_DISABLED));
     }
