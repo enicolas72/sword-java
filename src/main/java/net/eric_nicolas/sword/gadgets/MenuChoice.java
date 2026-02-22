@@ -180,11 +180,11 @@ public class TMenuChoice extends TZone {
         if (!hasStatus(SF_DISABLED) && !hasStatus(SF_MENU_CHOICE_DOWN)) {
             // Lift all other choices
             TAtom myFather = father();
-            if (myFather != null && myFather instanceof TMenu) {
+            if (myFather instanceof TMenu) {
                 TAtom sibling = myFather.son();
                 while (sibling != null) {
-                    if (sibling instanceof TMenuChoice && sibling != this) {
-                        ((TMenuChoice) sibling).up();
+                    if (sibling instanceof TMenuChoice siblingMenuChoice && sibling != this) {
+                        siblingMenuChoice.up();
                     }
                     sibling = sibling.next();
                 }
@@ -206,12 +206,11 @@ public class TMenuChoice extends TZone {
             sendCommand(command);
             // Only close the menu if it's a submenu (not a top-level menu)
             TAtom myFather = father();
-            if (myFather != null && myFather instanceof TMenu) {
-                TMenu menu = (TMenu) myFather;
+            if (myFather instanceof TMenu fatherMenu) {
                 // Only close if this menu has a father menu (i.e., it's a submenu)
                 // Top-level menus stay open
-                if (menu.fatherMenu != null) {
-                    menu.closeMenu();
+                if (fatherMenu.fatherMenu != null) {
+                    fatherMenu.closeMenu();
                 }
             }
         } else if (subMenu != null) {
@@ -230,8 +229,8 @@ public class TMenuChoice extends TZone {
         }
 
         // If we found desktop, send command from there so it reaches TApp
-        if (current != null && current instanceof TDesktop) {
-            ((TObject) current).handleEvent(new EventCommand(cmd));
+        if (current instanceof TDesktop desktop) {
+            desktop.handleEvent(new EventCommand(cmd));
         }
     }
 

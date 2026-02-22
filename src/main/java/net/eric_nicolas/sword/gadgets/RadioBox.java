@@ -2,8 +2,6 @@ package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.mechanism.*;
-import java.awt.Graphics2D;
-import java.awt.Font;
 import java.lang.reflect.Field;
 
 /**
@@ -57,11 +55,9 @@ public class TRadioBox extends TItemBox {
         if (!hasStatus(SF_DISABLED)) {
             // Deselect all other radio buttons in group
             TAtom parentAtom = father();
-            if (parentAtom instanceof TGroupBox) {
-                TGroupBox parent = (TGroupBox) parentAtom;
-
+            if (parentAtom instanceof TGroupBox parentGroupBox) {
                 // Deselect all siblings
-                TAtom sibling = parent.son();
+                TAtom sibling = parentGroupBox.son();
                 while (sibling != null) {
                     if (sibling instanceof TRadioBox && sibling != this) {
                         // Just update parent value, no need to clear individual state
@@ -70,16 +66,15 @@ public class TRadioBox extends TItemBox {
                 }
 
                 // Select this radio button
-                parent.value = this.value;
+                parentGroupBox.value = this.value;
             }
         }
     }
 
     public boolean isRadioSelected() {
         TAtom parentAtom = father();
-        if (parentAtom instanceof TGroupBox) {
-            TGroupBox parent = (TGroupBox) parentAtom;
-            return parent.value == this.value;
+        if (parentAtom instanceof TGroupBox parentGroupBox) {
+            return parentGroupBox.value == this.value;
         }
         return false;
     }
@@ -88,9 +83,7 @@ public class TRadioBox extends TItemBox {
     public void setData(Object data) {
         // Read selected value from parent group box
         TAtom parentAtom = father();
-        if (parentAtom instanceof TGroupBox) {
-            TGroupBox parent = (TGroupBox) parentAtom;
-
+        if (parentAtom instanceof TGroupBox parentGroupBox) {
             // If data is provided, read from appropriate field
             if (data != null) {
                 try {
@@ -100,7 +93,7 @@ public class TRadioBox extends TItemBox {
                         if (field.getName().equalsIgnoreCase("radios") ||
                             field.getName().toLowerCase().contains("radio")) {
                             field.setAccessible(true);
-                            parent.value = field.getInt(data);
+                            parentGroupBox.value = field.getInt(data);
                             break;
                         }
                     }
@@ -115,9 +108,7 @@ public class TRadioBox extends TItemBox {
     public void getData(Object data) {
         // Write selected value to data structure
         TAtom parentAtom = father();
-        if (parentAtom instanceof TGroupBox && data != null) {
-            TGroupBox parent = (TGroupBox) parentAtom;
-
+        if (parentAtom instanceof TGroupBox parentGroupBox && data != null) {
             try {
                 // Look for a field named "Radios" (or similar pattern)
                 Field[] fields = data.getClass().getDeclaredFields();
@@ -125,7 +116,7 @@ public class TRadioBox extends TItemBox {
                     if (field.getName().equalsIgnoreCase("radios") ||
                         field.getName().toLowerCase().contains("radio")) {
                         field.setAccessible(true);
-                        field.setInt(data, parent.value);
+                        field.setInt(data, parentGroupBox.value);
                         break;
                     }
                 }

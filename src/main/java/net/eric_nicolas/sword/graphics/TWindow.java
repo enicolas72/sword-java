@@ -21,10 +21,15 @@ public class TWindow extends TZone {
         setOption(OP_WIN_SIZEABLE | OP_WIN_CLOSEBOX);
     }
 
+    public TWindow(int x, int y, int width, int height, String title, int options) {
+        this(x, y, width, height, title);
+        setOption(options);
+    }
+
     @Override
     protected void paint(PaintContext ctx) {
         // Draw frame
-        ctx.setColor(TColors.WINDOW_FRAME);
+        ctx.setColor(TColors.DARK_GRAY);
         ctx.drawRect(0, 0, bounds.width() - 1, bounds.height() - 1);
 
         // Draw title bar

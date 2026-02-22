@@ -7,7 +7,7 @@ import net.eric_nicolas.sword.mechanism.*;
  * TDialog - Standard dialog box for modal and modeless dialogs.
  * Supports data exchange with controls via SetData/GetData pattern.
  */
-public class TDialog extends TStdWindow {
+public class Dialog extends TWindow {
 
     // Dialog result codes
     public static final int CM_OK = 3101;
@@ -21,14 +21,14 @@ public class TDialog extends TStdWindow {
     /**
      * Default constructor.
      */
-    public TDialog() {
+    public Dialog() {
         this(0, 0, 200, 150, "Dialog");
     }
 
     /**
      * Constructor with position, size, and title.
      */
-    public TDialog(int x, int y, int width, int height, String title) {
+    public Dialog(int x, int y, int width, int height, String title) {
         super(x, y, width, height, title, OP_WIN_CLOSEBOX);
         defaults();
         init(title);

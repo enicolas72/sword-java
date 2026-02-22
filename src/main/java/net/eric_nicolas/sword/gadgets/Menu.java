@@ -16,26 +16,26 @@ import java.awt.event.KeyEvent;
  * TMenu - Menu container with choices.
  * Horizontal menu bar that can contain menu choices.
  */
-public class TMenu extends TStdWindow {
+public class Menu extends TWindow {
 
     public static final int OP_MAIN_MENU = 0x0200;
 
     protected int textWidth;
     protected int hotTextWidth;
-    protected TMenu fatherMenu;
+    protected Menu fatherMenu;
     protected Font menuFont;
 
     /**
      * Default constructor.
      */
-    public TMenu() {
+    public Menu() {
         this("Menu", 0);
     }
 
     /**
      * Constructor with title and options.
      */
-    public TMenu(String title, int options) {
+    public Menu(String title, int options) {
         super((options & OP_MAIN_MENU) != 0 ? 0 : 5,
               (options & OP_MAIN_MENU) != 0 ? 0 : 5,
               100, 50, title, options);
@@ -83,9 +83,8 @@ public class TMenu extends TStdWindow {
 
         TAtom child = son();
         while (child != null) {
-            if (child instanceof TMenuChoice) {
-                TMenuChoice choice = (TMenuChoice) child;
-                if (!choice.hasOption(TMenuChoice.OP_SEPARATOR)) {
+            if (child instanceof MenuChoice choice) {
+                if (!choice.hasOption(MenuChoice.OP_SEPARATOR)) {
                     String displayText = choice.text != null ? choice.text.replace("&", "") : "";
                     int width = fm.stringWidth(displayText) + 20; // Add padding
 
@@ -128,9 +127,7 @@ public class TMenu extends TStdWindow {
         int y = 26; // Start below title bar
         Rect myBounds = getBounds();
         while (child != null) {
-            if (child instanceof TMenuChoice) {
-                TMenuChoice choice = (TMenuChoice) child;
-
+            if (child instanceof MenuChoice choice) {
                 // Handle submenu
                 if (choice.getSubMenu() != null) {
                     choice.getSubMenu().fatherMenu = this;
@@ -138,7 +135,7 @@ public class TMenu extends TStdWindow {
                 }
 
                 // Set choice height
-                int h = choice.hasOption(TMenuChoice.OP_SEPARATOR) ? 6 : 20;
+                int h = choice.hasOption(MenuChoice.OP_SEPARATOR) ? 6 : 20;
 
                 // Position choice
                 Rect choiceBounds = new Rect(Point.plus(myBounds.origin(), 7, y), width - 15, h);
@@ -165,8 +162,7 @@ public class TMenu extends TStdWindow {
 
         TAtom child = son();
         while (child != null) {
-            if (child instanceof TMenuChoice) {
-                TMenuChoice choice = (TMenuChoice) child;
+            if (child instanceof MenuChoice choice) {
                 if (choice.text != null) {
                     String displayText = choice.text.replace("&", "");
                     int w = fm.stringWidth(displayText);
@@ -190,9 +186,8 @@ public class TMenu extends TStdWindow {
 
         TAtom child = son();
         while (child != null) {
-            if (child instanceof TMenuChoice) {
-                TMenuChoice choice = (TMenuChoice) child;
-                if (choice.hasOption(TMenuChoice.OP_SEPARATOR)) {
+            if (child instanceof MenuChoice choice) {
+                if (choice.hasOption(MenuChoice.OP_SEPARATOR)) {
                     h += 6;
                 } else {
                     h += 20;
@@ -226,15 +221,15 @@ public class TMenu extends TStdWindow {
                 return true;
 
             case KeyEvent.VK_UP:
-                TMenuChoice current = activeChoice();
-                TMenuChoice prev = (current != null) ? current.prevChoice() : lastChoice();
+                MenuChoice current = activeChoice();
+                MenuChoice prev = (current != null) ? current.prevChoice() : lastChoice();
                 if (prev == null) prev = lastChoice();
                 if (prev != null) prev.down();
                 return true;
 
             case KeyEvent.VK_DOWN:
                 current = activeChoice();
-                TMenuChoice next = (current != null) ? current.nextChoice() : firstChoice();
+                MenuChoice next = (current != null) ? current.nextChoice() : firstChoice();
                 if (next == null) next = firstChoice();
                 if (next != null) next.down();
                 return true;
@@ -252,7 +247,7 @@ public class TMenu extends TStdWindow {
         // Check local shortcuts (single letter after &)
         if (event.keyCode >= KeyEvent.VK_A && event.keyCode <= KeyEvent.VK_Z) {
             char key = Character.toLowerCase((char) event.keyCode);
-            TMenuChoice choice = firstChoice();
+            MenuChoice choice = firstChoice();
             while (choice != null) {
                 if (choice.localScanCode == key) {
                     choice.down();
@@ -274,8 +269,8 @@ public class TMenu extends TStdWindow {
             // Deactivate all choices
             TAtom child = son();
             while (child != null) {
-                if (child instanceof TMenuChoice) {
-                    ((TMenuChoice) child).up();
+                if (child instanceof MenuChoice) {
+                    ((MenuChoice) child).up();
                 }
                 child = child.next();
             }
@@ -287,12 +282,11 @@ public class TMenu extends TStdWindow {
         }
     }
 
-    public TMenuChoice activeChoice() {
+    public MenuChoice activeChoice() {
         TAtom child = son();
         while (child != null) {
-            if (child instanceof TMenuChoice) {
-                TMenuChoice choice = (TMenuChoice) child;
-                if (!choice.hasStatus(TObject.SF_DISABLED) && choice.hasStatus(TMenuChoice.SF_MENU_CHOICE_DOWN)) {
+            if (child instanceof MenuChoice choice) {
+                if (!choice.hasStatus(TObject.SF_DISABLED) && choice.hasStatus(MenuChoice.SF_MENU_CHOICE_DOWN)) {
                     return choice;
                 }
             }
@@ -301,11 +295,10 @@ public class TMenu extends TStdWindow {
         return null;
     }
 
-    public TMenuChoice firstChoice() {
+    public MenuChoice firstChoice() {
         TAtom child = son();
         while (child != null) {
-            if (child instanceof TMenuChoice) {
-                TMenuChoice choice = (TMenuChoice) child;
+            if (child instanceof MenuChoice choice) {
                 if (!choice.hasStatus(TObject.SF_DISABLED)) {
                     return choice;
                 }
@@ -315,12 +308,11 @@ public class TMenu extends TStdWindow {
         return null;
     }
 
-    public TMenuChoice lastChoice() {
+    public MenuChoice lastChoice() {
         TAtom child = son();
         if (child != null) child = child.last();
         while (child != null) {
-            if (child instanceof TMenuChoice) {
-                TMenuChoice choice = (TMenuChoice) child;
+            if (child instanceof MenuChoice choice) {
                 if (!choice.hasStatus(TObject.SF_DISABLED)) {
                     return choice;
                 }

@@ -47,13 +47,13 @@ public class Hello {
         }
 
         @Override
-        protected void createMenuChoices(TMenu menu) {
+        protected void createMenuChoices(Menu menu) {
             // Add Hello Window menu item
-            new TMenuChoice("&Hello Window", 0, CM_HELLO_WINDOW).insertIn(menu);
+            new MenuChoice("&Hello Window", 0, CM_HELLO_WINDOW).insertIn(menu);
             // Add separator
-            new TMenuChoice().insertIn(menu);
+            new MenuChoice().insertIn(menu);
             // Add Quit menu item
-            new TMenuChoice("&Quit", 0, CM_QUIT).insertIn(menu);
+            new MenuChoice("&Quit", 0, CM_QUIT).insertIn(menu);
         }
 
         @Override
@@ -68,7 +68,7 @@ public class Hello {
             String title = "Hello World #" + helloCounter + " !";
 
             // Create window with THello inside
-            TStdWindow window = new TStdWindow(
+            TWindow window = new TWindow(
                 100 + (helloCounter - 1) * 30,
                 100 + (helloCounter - 1) * 30,
                 300, 200, title,
