@@ -2,6 +2,7 @@ package net.eric_nicolas.sword.samples;
 
 import net.eric_nicolas.sword.tools.TApp;
 import net.eric_nicolas.sword.gadgets.*;
+import net.eric_nicolas.sword.graphics.Canvas;
 
 /**
  * Dialog - Sample application demonstrating dialog boxes and controls.
@@ -67,44 +68,46 @@ public class Dialog {
 
             // Insert controls in the dialog
             // One "Other Button" button, disabled for interactions
+            Canvas dc = dialog.getCanvas();
+
             Button otherBtn = new Button(10, 30, 80, 23, 0, 0, AbstractButton.BO_DISABLED, "Other");
-            otherBtn.insertIn(dialog);
+            dc.add(otherBtn);
 
             // One Cancel Button
             Button cancelBtn = StandardButtons.cancelButton(95, 30);
-            cancelBtn.insertIn(dialog);
+            dc.add(cancelBtn);
 
             // One OK button
             Button okBtn = StandardButtons.okButton(180, 30);
-            okBtn.insertIn(dialog);
+            dc.add(okBtn);
 
             // One Static text
             Label staticText = new Label(10, 60, 250, 20, "Sample application from SWORD package");
-            staticText.insertIn(dialog);
+            dc.add(staticText);
 
             // Check boxes
             GroupBox checkGroup = new GroupBox(10, 85, 250, 65);
             CheckBox checkA = new CheckBox(10, 15, 100, AbstractButton.BO_NO_CASE, 1, "Check Box &A");
-            checkA.insertIn(checkGroup);
+            checkGroup.add(checkA);
             CheckBox checkB = new CheckBox(10, 40, 100, AbstractButton.BO_NO_CASE, 2, "Check Box &B");
-            checkB.insertIn(checkGroup);
-            checkGroup.insertIn(dialog);
+            checkGroup.add(checkB);
+            dc.add(checkGroup);
 
             // Radio buttons
             GroupBox radioGroup = new GroupBox(10, 160, 250, 80, "Radio buttons group");
             RadioBox radioC = new RadioBox(10, 25, 100, AbstractButton.BO_NO_CASE, 1, "Radio &C");
-            radioC.insertIn(radioGroup);
+            radioGroup.add(radioC);
             RadioBox radioD = new RadioBox(120, 25, 100, AbstractButton.BO_NO_CASE | AbstractButton.BO_DISABLED, 2, "Radio &D");
-            radioD.insertIn(radioGroup);
+            radioGroup.add(radioD);
             RadioBox radioE = new RadioBox(10, 50, 100, AbstractButton.BO_NO_CASE, 3, "Radio &E");
-            radioE.insertIn(radioGroup);
+            radioGroup.add(radioE);
             RadioBox radioF = new RadioBox(120, 50, 100, AbstractButton.BO_NO_CASE, 4, "Radio &F");
-            radioF.insertIn(radioGroup);
-            radioGroup.insertIn(dialog);
+            radioGroup.add(radioF);
+            dc.add(radioGroup);
 
             // Edit Line
             EditLine editLine = new EditLine(10, 265, 250, 60, 10);
-            editLine.insertIn(dialog);
+            dc.add(editLine);
 
             // Insert dialog in desktop
             dialog.insertIn(getDesktop());

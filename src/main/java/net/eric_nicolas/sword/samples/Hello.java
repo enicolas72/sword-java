@@ -17,7 +17,7 @@ public class Hello {
     /**
      * THello - Custom zone that draws "Hello World!" text.
      */
-    static class THello extends TZone {
+    static class THello extends Widget {
         private Font bigFont;
 
         public THello(int x, int y, int width, int height) {
@@ -83,7 +83,7 @@ public class Hello {
                 window.getBounds().width() - 4,
                 window.getBounds().height() - 24
             );
-            hello.insertIn(window);
+            window.getCanvas().add(hello);
 
             // Insert window in desktop
             window.insertIn(getDesktop());

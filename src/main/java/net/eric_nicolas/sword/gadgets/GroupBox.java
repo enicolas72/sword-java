@@ -1,14 +1,13 @@
 package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
-import net.eric_nicolas.sword.mechanism.*;
 import java.awt.Font;
 
 /**
  * TGroupBox - Container for grouping related controls (checkboxes, radio buttons).
  * Handles data exchange for child ItemBox controls.
  */
-public class GroupBox extends TZone {
+public class GroupBox extends Canvas {
 
     protected String text;
     protected Font groupFont;
@@ -64,32 +63,6 @@ public class GroupBox extends TZone {
             // Draw simple frame
             ctx.setColor(TColors.DARK_GRAY);
             ctx.drawRect(x, y, w - 1, h - 1);
-        }
-    }
-
-    @Override
-    public void setData(Object data) {
-        // For checkboxes: read bits from integer at data pointer
-        // For radio buttons: read value from integer at data pointer
-        TAtom child = son();
-        while (child != null) {
-            if (child instanceof TZone) {
-                ((TZone) child).setData(data);
-            }
-            child = child.next();
-        }
-    }
-
-    @Override
-    public void getData(Object data) {
-        // For checkboxes: write bits to integer at data pointer
-        // For radio buttons: write value to integer at data pointer
-        TAtom child = son();
-        while (child != null) {
-            if (child instanceof TZone) {
-                ((TZone) child).getData(data);
-            }
-            child = child.next();
         }
     }
 

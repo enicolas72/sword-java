@@ -13,7 +13,7 @@ import java.lang.reflect.Field;
  * TEditLine - Single-line text edit control.
  * Supports keyboard input, cursor, and data exchange.
  */
-public class EditLine extends TZone {
+public class EditLine extends Widget {
 
     protected String text;
     protected int maxLength;

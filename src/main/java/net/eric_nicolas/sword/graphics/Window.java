@@ -6,12 +6,14 @@ import net.eric_nicolas.sword.ui.events.EventMouse;
 
 /**
  * TWindow - Overlapped window with title and frame.
+ * Each Window owns a Canvas that spans its whole surface; insert Widgets into that.
  */
 public class Window extends TZone {
 
     protected String title;
     protected boolean dragging;
     protected Point dragOffset;
+    protected Canvas canvas;
 
     public Window(int x, int y, int width, int height, String title) {
         super(x, y, width, height);
@@ -19,11 +21,17 @@ public class Window extends TZone {
         this.dragging = false;
         this.dragOffset = null;
         setOption(OP_WIN_SIZEABLE | OP_WIN_CLOSEBOX);
+        this.canvas = new Canvas(0, 0, width, height);
+        this.canvas.insertIn(this);
     }
 
     public Window(int x, int y, int width, int height, String title, int options) {
         this(x, y, width, height, title);
         setOption(options);
+    }
+
+    public Canvas getCanvas() {
+        return canvas;
     }
 
     @Override

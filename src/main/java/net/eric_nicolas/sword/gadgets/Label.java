@@ -8,7 +8,7 @@ import java.awt.FontMetrics;
 /**
  * TStaticText - Non-interactive text label.
  */
-public class Label extends TZone {
+public class Label extends Widget {
 
     protected String text;
     protected Font textFont;

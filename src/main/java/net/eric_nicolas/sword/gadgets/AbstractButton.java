@@ -8,7 +8,7 @@ import net.eric_nicolas.sword.ui.events.EventMouse;
 /**
  * TButton - Base class for clickable buttons.
  */
-public class AbstractButton extends TZone {
+public class AbstractButton extends Widget {
 
     // Button options
     public static final int BO_DISABLED = 0x0001;
