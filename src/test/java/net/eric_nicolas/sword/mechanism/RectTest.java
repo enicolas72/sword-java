@@ -10,31 +10,22 @@ import static org.junit.jupiter.api.Assertions.*;
 class RectTest {
 
     @Test
-    void testDefaultConstructor() {
-        Rect r = new Rect();
-        assertEquals(0, r.a.x);
-        assertEquals(0, r.a.y);
-        assertEquals(0, r.b.x);
-        assertEquals(0, r.b.y);
-    }
-
-    @Test
     void testParameterizedConstructor() {
         Rect r = new Rect(10, 20, 30, 40);
-        assertEquals(10, r.a.x);
-        assertEquals(20, r.a.y);
-        assertEquals(30, r.b.x);
-        assertEquals(40, r.b.y);
+        assertEquals(10, r.a().x());
+        assertEquals(20, r.a().y());
+        assertEquals(30, r.b().x());
+        assertEquals(40, r.b().y());
     }
 
     @Test
     void testCopyConstructor() {
         Rect r1 = new Rect(5, 10, 15, 20);
         Rect r2 = new Rect(r1);
-        assertEquals(5, r2.a.x);
-        assertEquals(10, r2.a.y);
-        assertEquals(15, r2.b.x);
-        assertEquals(20, r2.b.y);
+        assertEquals(5, r2.a().x());
+        assertEquals(10, r2.a().y());
+        assertEquals(15, r2.b().x());
+        assertEquals(20, r2.b().y());
     }
 
     @Test
@@ -75,12 +66,12 @@ class RectTest {
     @Test
     void testOffset() {
         Rect r = new Rect(10, 20, 30, 40);
-        r.offset(5, -3);
+        r = r.offset(5, -3);
 
-        assertEquals(15, r.a.x);
-        assertEquals(17, r.a.y);
-        assertEquals(35, r.b.x);
-        assertEquals(37, r.b.y);
+        assertEquals(15, r.a().x());
+        assertEquals(17, r.a().y());
+        assertEquals(35, r.b().x());
+        assertEquals(37, r.b().y());
     }
 
     @Test
@@ -88,12 +79,12 @@ class RectTest {
         Rect r1 = new Rect(10, 10, 50, 50);
         Rect r2 = new Rect(30, 30, 70, 70);
 
-        r1.intersect(r2);
+        r1 = r1.intersect(r2);
 
-        assertEquals(30, r1.a.x);
-        assertEquals(30, r1.a.y);
-        assertEquals(50, r1.b.x);
-        assertEquals(50, r1.b.y);
+        assertEquals(30, r1.a().x());
+        assertEquals(30, r1.a().y());
+        assertEquals(50, r1.b().x());
+        assertEquals(50, r1.b().y());
     }
 
     @Test
@@ -101,7 +92,7 @@ class RectTest {
         Rect r1 = new Rect(10, 10, 30, 30);
         Rect r2 = new Rect(40, 40, 60, 60);
 
-        r1.intersect(r2);
+        r1 = r1.intersect(r2);
 
         assertTrue(r1.isEmpty());
     }
@@ -113,10 +104,10 @@ class RectTest {
 
         r1.union(r2);
 
-        assertEquals(10, r1.a.x);
-        assertEquals(10, r1.a.y);
-        assertEquals(50, r1.b.x);
-        assertEquals(50, r1.b.y);
+        assertEquals(10, r1.a().x());
+        assertEquals(10, r1.a().y());
+        assertEquals(50, r1.b().x());
+        assertEquals(50, r1.b().y());
     }
 
     @Test

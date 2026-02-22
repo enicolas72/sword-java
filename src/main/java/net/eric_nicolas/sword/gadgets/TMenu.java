@@ -96,10 +96,8 @@ public class TMenu extends TStdWindow {
 
                     // Position choice horizontally
                     Rect choiceBounds = new Rect(
-                        myBounds.a.x + x,
-                        myBounds.a.y + 2,
-                        myBounds.a.x + x + w,
-                        myBounds.a.y + height - 2
+                        myBounds.a().plus(x, 2),
+                        myBounds.a().plus(x + w, height - 2)
                     );
                     choice.setBounds(choiceBounds);
 
@@ -111,8 +109,7 @@ public class TMenu extends TStdWindow {
         g.dispose();
 
         // Set menu bounds to span the width
-        myBounds.b.x = myBounds.a.x + x + 5;
-        myBounds.b.y = myBounds.a.y + height;
+        myBounds = new Rect(myBounds.a(), myBounds.a().plus(x + 5, height));
         setBounds(myBounds);
     }
 
@@ -125,8 +122,7 @@ public class TMenu extends TStdWindow {
 
         // Resize menu
         Rect newBounds = getBounds();
-        newBounds.b.x = newBounds.a.x + width;
-        newBounds.b.y = newBounds.a.y + height;
+        newBounds = new Rect(newBounds.a(), newBounds.a().plus(width, height));
         setBounds(newBounds);
 
         // Position menu choices
@@ -148,10 +144,8 @@ public class TMenu extends TStdWindow {
 
                 // Position choice
                 Rect choiceBounds = new Rect(
-                    myBounds.a.x + 7,
-                    myBounds.a.y + y,
-                    myBounds.a.x + width - 8,
-                    myBounds.a.y + y + h
+                    myBounds.a().plus(7, y),
+                    myBounds.a().plus(width - 8, y + h)
                 );
                 choice.setBounds(choiceBounds);
 
@@ -217,7 +211,7 @@ public class TMenu extends TStdWindow {
 
     @Override
     protected boolean mouseLDown(EventMouse event) {
-        if (!contains(event.where.x, event.where.y)) {
+        if (!contains(event.where)) {
             // Only close if this is a submenu (has a father menu)
             // Top-level application menus stay open
             if (fatherMenu != null) {
@@ -346,27 +340,27 @@ public class TMenu extends TStdWindow {
         if (hasOption(OP_MAIN_MENU)) {
             // Main menu - draw as horizontal bar
             ctx.setColor(TColors.FACE_GRAY);
-            ctx.fillRect(bounds.a.x, bounds.a.y, bounds.width(), bounds.height());
+            ctx.fillRect(bounds.a(), bounds.width(), bounds.height());
 
             // Draw bottom border
             ctx.setColor(TColors.DARK_GRAY);
-            ctx.drawLine(bounds.a.x, bounds.b.y - 1, bounds.b.x - 1, bounds.b.y - 1);
+            ctx.drawLine(bounds.a().plus(0, -1), bounds.b().plus(-1, -1));
         } else {
             // Dropdown menu - draw with frame and title bar
             ctx.setColor(TColors.FACE_GRAY);
-            ctx.fillRect(bounds.a.x, bounds.a.y, bounds.width(), bounds.height());
+            ctx.fillRect(bounds.a(), bounds.width(), bounds.height());
 
             // Draw frame
             ctx.setColor(TColors.DARK_GRAY);
-            ctx.drawRect(bounds.a.x, bounds.a.y, bounds.width() - 1, bounds.height() - 1);
+            ctx.drawRect(bounds.a(), bounds.width() - 1, bounds.height() - 1);
 
             // Draw title bar
             ctx.setColor(TColors.DARK_GRAY);
-            ctx.fillRect(bounds.a.x + 1, bounds.a.y + 1, bounds.width() - 2, 20);
+            ctx.fillRect(bounds.a().plus(1, 1), bounds.width() - 2, 20);
 
             ctx.setColor(TColors.WHITE);
             ctx.setFont(menuFont);
-            ctx.drawString(bounds.a.x + 5, bounds.a.y + 15, title);
+            ctx.drawString(bounds.a().plus(5, 15), title);
         }
     }
 }

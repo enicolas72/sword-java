@@ -24,8 +24,8 @@ public class TRadioBox extends TItemBox {
 
     @Override
     protected void drawInside(PaintContext ctx, int offset) {
-        int x = bounds.a.x;
-        int y = bounds.a.y;
+        int x = bounds.a().x();
+        int y = bounds.a().y();
 
         // Draw radio button circle (12x12)
         ctx.setColor(TColors.WHITE);

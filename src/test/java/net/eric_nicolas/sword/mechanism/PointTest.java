@@ -10,41 +10,33 @@ import static org.junit.jupiter.api.Assertions.*;
 class PointTest {
 
     @Test
-    void testDefaultConstructor() {
-        Point p = new Point();
-        assertEquals(0, p.x);
-        assertEquals(0, p.y);
-    }
-
-    @Test
     void testParameterizedConstructor() {
         Point p = new Point(10, 20);
-        assertEquals(10, p.x);
-        assertEquals(20, p.y);
+        assertEquals(10, p.x());
+        assertEquals(20, p.y());
     }
 
     @Test
     void testCopyConstructor() {
         Point p1 = new Point(15, 25);
         Point p2 = new Point(p1);
-        assertEquals(15, p2.x);
-        assertEquals(25, p2.y);
+        assertEquals(15, p2.x());
+        assertEquals(25, p2.y());
     }
 
     @Test
     void testSet() {
-        Point p = new Point();
-        p.set(30, 40);
-        assertEquals(30, p.x);
-        assertEquals(40, p.y);
+        Point p = new Point(30, 40);
+        assertEquals(30, p.x());
+        assertEquals(40, p.y());
     }
 
     @Test
-    void testOffset() {
+    void testPlus() {
         Point p = new Point(10, 20);
-        p.offset(5, -3);
-        assertEquals(15, p.x);
-        assertEquals(17, p.y);
+        p = p.plus(5, -3);
+        assertEquals(15, p.x());
+        assertEquals(17, p.y());
     }
 
     @Test

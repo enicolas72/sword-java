@@ -1,7 +1,7 @@
 package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
-import java.awt.Graphics2D;
+
 import java.awt.Font;
 import java.awt.FontMetrics;
 
@@ -46,10 +46,9 @@ public class TStdButton extends TButton {
         int textWidth = fm.stringWidth(text);
         int textHeight = fm.getHeight();
 
-        int x = bounds.a.x + (bounds.width() - textWidth) / 2 + offset;
-        int y = bounds.a.y + (bounds.height() + textHeight) / 2 - fm.getDescent() + offset;
-
-        ctx.drawString(x, y, text);
+        int dx = (bounds.width() - textWidth) / 2 + offset;
+        int dy = (bounds.height() + textHeight) / 2 - fm.getDescent() + offset;
+        ctx.drawString(bounds.a().plus(dx, dy), text);
     }
 
     public String getText() {

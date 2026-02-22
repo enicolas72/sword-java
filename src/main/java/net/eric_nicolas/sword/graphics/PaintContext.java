@@ -1,5 +1,7 @@
 package net.eric_nicolas.sword.graphics;
 
+import net.eric_nicolas.sword.ui.Point;
+
 import java.awt.Graphics2D;
 import java.awt.Color;
 import java.awt.Font;
@@ -57,6 +59,10 @@ public class PaintContext {
         g.setClip(x, y, width, height);
     }
 
+    public void setClip(Point p, int width, int height) {
+        setClip(p.x(), p.y(), width, height);
+    }
+
     // ===== Drawing operations (coordinates first) =====
 
     /**
@@ -67,6 +73,15 @@ public class PaintContext {
      */
     public void drawString(int x, int y, String text) {
         g.drawString(text, x, y);
+    }
+
+    /**
+     * Draw a string at the specified position.
+     * @param p X,Y coordinates
+     * @param text Text to draw
+     */
+    public void drawString(Point p, String text) {
+        drawString(p.x(), p.y(), text);
     }
 
     /**
@@ -91,6 +106,16 @@ public class PaintContext {
     }
 
     /**
+     * Draw a rectangle outline.
+     * @param p X,Y coordinate
+     * @param width Width
+     * @param height Height
+     */
+    public void drawRect(Point p, int width, int height) {
+        drawRect(p.x(), p.y(), width, height);
+    }
+
+    /**
      * Fill a rectangle.
      * @param x X coordinate
      * @param y Y coordinate
@@ -102,6 +127,16 @@ public class PaintContext {
     }
 
     /**
+     * Fill a rectangle.
+     * @param p the top left corner coordinates
+     * @param width Width
+     * @param height Height
+     */
+    public void fillRect(Point p, int width, int height) {
+        fillRect(p.x(), p.y(), width, height);
+    }
+
+    /**
      * Draw a line.
      * @param x1 Start X coordinate
      * @param y1 Start Y coordinate
@@ -110,6 +145,15 @@ public class PaintContext {
      */
     public void drawLine(int x1, int y1, int x2, int y2) {
         g.drawLine(x1, y1, x2, y2);
+    }
+
+    /**
+     * Draw a line.
+     * @param p1 Start X,Y coordinate
+     * @param p2 End X,Y coordinate
+     */
+    public void drawLine(Point p1, Point p2) {
+        drawLine(p1.x(), p1.y(), p2.x(), p2.y());
     }
 
     /**

@@ -49,8 +49,8 @@ public class TEditLine extends TZone {
 
     @Override
     protected void paint(PaintContext ctx) {
-        int x = bounds.a.x;
-        int y = bounds.a.y;
+        int x = bounds.a().x();
+        int y = bounds.a().y();
         int w = bounds.width();
         int h = bounds.height();
 
@@ -93,14 +93,14 @@ public class TEditLine extends TZone {
 
     @Override
     protected boolean mouseLDown(EventMouse event) {
-        if (contains(event.where.x, event.where.y)) {
+        if (contains(event.where)) {
             hasFocus = true;
             showCursor = true;
             lastBlinkTime = System.currentTimeMillis();
 
             // Position cursor based on click position
             Point absPos = getAbsolutePosition();
-            int clickX = event.where.x - absPos.x - 4; // Subtract text offset
+            int clickX = event.where.x() - absPos.x() - 4; // Subtract text offset
             if (clickX <= 0) {
                 cursorPos = 0;
             } else {

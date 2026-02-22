@@ -1,19 +1,9 @@
 package net.eric_nicolas.sword.ui;
 
 /**
- * TPoint - 2D point representation.
+ * Point - 2D point representation.
  */
 public class Point {
-
-    public int x;
-    public int y;
-
-    /**
-     * Default constructor - creates point at origin (0, 0).
-     */
-    public Point() {
-        this(0, 0);
-    }
 
     /**
      * Constructor with coordinates.
@@ -37,25 +27,79 @@ public class Point {
     }
 
     /**
-     * Set coordinates.
-     *
-     * @param x X coordinate
-     * @param y Y coordinate
-     */
-    public void set(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    /**
-     * Offset this point by given amounts.
+     * Adds the given amounts to this point, returns a new Point
      *
      * @param dx X offset
      * @param dy Y offset
      */
-    public void offset(int dx, int dy) {
-        this.x += dx;
-        this.y += dy;
+    public Point plus(int dx, int dy) {
+        return new Point(x + dx, y + dy);
+    }
+
+    /**
+     * Adds the given point.x, point.y to this point, returns a new Point
+     *
+     * @param dp X,Y offset
+     */
+    public Point plus(Point dp) {
+        return new Point(x + dp.x, y + dp.y);
+    }
+
+    /**
+     * Subtracts the given amounts to this point, returns a new Point
+     *
+     * @param dx X offset
+     * @param dy Y offset
+     */
+    public Point minus(int dx, int dy) {
+        return new Point(x - dx, y - dy);
+    }
+
+    /**
+     * Subtracts the given point.x, point.y to this point, returns a new Point
+     *
+     * @param dp X,Y offset
+     */
+    public Point minus(Point dp) {
+        return new Point(x - dp.x, y - dp.y);
+    }
+
+    /**
+     * Returns a point that has the minimum coordinate of the two provided
+     * @param a first point
+     * @param b second point
+     * @return the new point with minimum coordinates
+     */
+    public static Point min(Point a, Point b) {
+        int x = Math.min(a.x(), b.x());
+        int y = Math.min(a.y(), b.y());
+        return new Point(x, y);
+    }
+
+    /**
+     * Returns a point that has the maximum coordinate of the two provided
+     * @param a first point
+     * @param b second point
+     * @return the new point with maximum coordinates
+     */
+    public static Point max(Point a, Point b) {
+        int x = Math.max(a.x(), b.x());
+        int y = Math.max(a.y(), b.y());
+        return new Point(x, y);
+    }
+
+    /**
+     * @return the x position of the point
+     */
+    public int x() {
+        return x;
+    }
+
+    /**
+     * @return the y position of the point
+     */
+    public int y() {
+        return y;
     }
 
     @Override
@@ -77,4 +121,9 @@ public class Point {
     public String toString() {
         return "TPoint(" + x + ", " + y + ")";
     }
+
+    //
+
+    private int x;
+    private int y;
 }

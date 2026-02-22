@@ -1,21 +1,10 @@
 package net.eric_nicolas.sword.ui;
 
 /**
- * TRect - Rectangle representation.
+ * Rect - Rectangle representation.
  * Uses top-left corner (a) and bottom-right corner (b).
  */
 public class Rect {
-
-    public Point a;  // Top-left corner
-    public Point b;  // Bottom-right corner
-
-    /**
-     * Default constructor - creates empty rectangle at origin.
-     */
-    public Rect() {
-        this.a = new Point(0, 0);
-        this.b = new Point(0, 0);
-    }
 
     /**
      * Constructor with coordinates.
@@ -57,7 +46,7 @@ public class Rect {
      * @return Width
      */
     public int width() {
-        return b.x - a.x;
+        return b.x() - a.x();
     }
 
     /**
@@ -66,7 +55,15 @@ public class Rect {
      * @return Height
      */
     public int height() {
-        return b.y - a.y;
+        return b.y() - a.y();
+    }
+
+    public Point a() {
+        return a;
+    }
+
+    public Point b() {
+        return b;
     }
 
     /**
@@ -85,7 +82,7 @@ public class Rect {
      * @return true if point is inside
      */
     public boolean contains(Point p) {
-        return p.x >= a.x && p.x < b.x && p.y >= a.y && p.y < b.y;
+        return contains(p.x(), p.y());
     }
 
     /**
@@ -96,7 +93,7 @@ public class Rect {
      * @return true if point is inside
      */
     public boolean contains(int x, int y) {
-        return x >= a.x && x < b.x && y >= a.y && y < b.y;
+        return x >= a.x() && x < b.x() && y >= a.y() && y < b.y();
     }
 
     /**
@@ -104,10 +101,12 @@ public class Rect {
      *
      * @param dx X offset
      * @param dy Y offset
+     * @return the offsetted rectangle
      */
-    public void offset(int dx, int dy) {
-        a.offset(dx, dy);
-        b.offset(dx, dy);
+    public Rect offset(int dx, int dy) {
+        return new Rect(
+                a.plus(dx, dy),
+                b.plus(dx, dy));
     }
 
     /**
@@ -115,26 +114,24 @@ public class Rect {
      *
      * @param dx Horizontal growth
      * @param dy Vertical growth
+     * @return the grown rectangle
      */
-    public void grow(int dx, int dy) {
-        a.x -= dx;
-        a.y -= dy;
-        b.x += dx;
-        b.y += dy;
+    public Rect grow(int dx, int dy) {
+        return new Rect(
+                a.plus(-dx, -dy),
+                b.plus(dx, dy));
     }
 
     /**
      * Intersect this rectangle with another.
      *
      * @param r Rectangle to intersect with
-     * @return true if rectangles intersect
+     * @return the intersected rectangle
      */
-    public boolean intersect(Rect r) {
-        if (a.x < r.a.x) a.x = r.a.x;
-        if (a.y < r.a.y) a.y = r.a.y;
-        if (b.x > r.b.x) b.x = r.b.x;
-        if (b.y > r.b.y) b.y = r.b.y;
-        return !isEmpty();
+    public Rect intersect(Rect r) {
+        return new Rect(
+                Point.max(a, r.a),
+                Point.min(b, r.b));
     }
 
     /**
@@ -145,14 +142,12 @@ public class Rect {
     public void union(Rect r) {
         if (r.isEmpty()) return;
         if (isEmpty()) {
-            a.set(r.a.x, r.a.y);
-            b.set(r.b.x, r.b.y);
+            a = new Point(r.a);
+            b = new Point(r.b);
             return;
         }
-        if (r.a.x < a.x) a.x = r.a.x;
-        if (r.a.y < a.y) a.y = r.a.y;
-        if (r.b.x > b.x) b.x = r.b.x;
-        if (r.b.y > b.y) b.y = r.b.y;
+        a = Point.min(a, r.a);
+        b = Point.max(b, r.b);
     }
 
     @Override
@@ -172,6 +167,11 @@ public class Rect {
 
     @Override
     public String toString() {
-        return "TRect(" + a.x + ", " + a.y + ", " + b.x + ", " + b.y + ")";
+        return "TRect(" + a.x() + ", " + a.y() + ", " + b.x() + ", " + b.y() + ")";
     }
+
+    //
+
+    private Point a;  // Top-left corner
+    private Point b;  // Bottom-right corner
 }

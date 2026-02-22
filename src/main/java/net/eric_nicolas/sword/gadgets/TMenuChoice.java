@@ -106,9 +106,9 @@ public class TMenuChoice extends TZone {
         if (hasOption(OP_SEPARATOR)) {
             // Draw separator
             ctx.setColor(TColors.DARK_GRAY);
-            ctx.drawLine(bounds.a.x, bounds.a.y + 2, bounds.a.x + width - 1, bounds.a.y + 2);
+            ctx.drawLine(bounds.a().plus(0, 2), bounds.a().plus(width - 1, 2));
             ctx.setColor(TColors.LIGHT_GRAY);
-            ctx.drawLine(bounds.a.x, bounds.a.y + 3, bounds.a.x + width - 1, bounds.a.y + 3);
+            ctx.drawLine(bounds.a().plus(0, 3), bounds.a().plus(width - 1, 3));
         } else {
             // Draw menu choice background
             if (hasStatus(SF_MENU_CHOICE_DOWN)) {
@@ -116,7 +116,7 @@ public class TMenuChoice extends TZone {
             } else {
                 ctx.setColor(TColors.FACE_GRAY);
             }
-            ctx.fillRect(bounds.a.x, bounds.a.y, width, height);
+            ctx.fillRect(bounds.a(), width, height);
 
             // Draw text
             ctx.setFont(menuFont);
@@ -130,20 +130,20 @@ public class TMenuChoice extends TZone {
 
             // Remove & from displayed text
             String displayText = text != null ? text.replace("&", "") : "";
-            ctx.drawString(bounds.a.x + 5, bounds.a.y + 14, displayText);
+            ctx.drawString(bounds.a().plus(5, 14), displayText);
 
             // Draw hotkey or >> for submenus
             if (subMenu != null) {
-                ctx.drawString(bounds.a.x + width - 20, bounds.a.y + 14, ">>");
+                ctx.drawString(bounds.a().plus(width - 20, 14), ">>");
             } else if (hotText != null && !hotText.isEmpty()) {
-                ctx.drawString(bounds.a.x + width - 50, bounds.a.y + 14, hotText);
+                ctx.drawString(bounds.a().plus(width - 50, 14), hotText);
             }
         }
     }
 
     @Override
     protected boolean mouseLDown(EventMouse event) {
-        if (contains(event.where.x, event.where.y) && !hasStatus(SF_DISABLED)) {
+        if (contains(event.where) && !hasStatus(SF_DISABLED)) {
             activate();
             return true;
         }
@@ -153,7 +153,7 @@ public class TMenuChoice extends TZone {
     @Override
     protected boolean mouseMove(EventMouse event) {
         boolean wasIn = hasStatus(SF_MOUSE_IN);
-        boolean isIn = contains(event.where.x, event.where.y);
+        boolean isIn = contains(event.where);
 
         if (isIn != wasIn) {
             if (isIn) {

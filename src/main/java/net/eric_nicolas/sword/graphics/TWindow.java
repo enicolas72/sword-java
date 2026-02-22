@@ -17,7 +17,7 @@ public class TWindow extends TZone {
         super(x, y, width, height);
         this.title = title;
         this.dragging = false;
-        this.dragOffset = new Point();
+        this.dragOffset = null;
         setOption(OP_WIN_SIZEABLE | OP_WIN_CLOSEBOX);
     }
 
@@ -25,30 +25,29 @@ public class TWindow extends TZone {
     protected void paint(PaintContext ctx) {
         // Draw frame
         ctx.setColor(TColors.WINDOW_FRAME);
-        ctx.drawRect(bounds.a.x, bounds.a.y, bounds.width() - 1, bounds.height() - 1);
+        ctx.drawRect(bounds.a(), bounds.width() - 1, bounds.height() - 1);
 
         // Draw title bar
         ctx.setColor(TColors.DARK_GRAY);
-        ctx.fillRect(bounds.a.x + 1, bounds.a.y + 1, bounds.width() - 2, 20);
+        ctx.fillRect(bounds.a().plus(1, 1), bounds.width() - 2, 20);
 
         // Draw title text with smaller font
         ctx.setColor(TColors.WHITE);
         ctx.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 12));
-        ctx.drawString(bounds.a.x + 5, bounds.a.y + 15, title);
+        ctx.drawString(bounds.a().plus(5, 15), title);
     }
 
     @Override
     protected boolean mouseLDown(EventMouse event) {
-        if (contains(event.where.x, event.where.y)) {
+        if (contains(event.where)) {
             // Bring window to front
             bringToFront();
 
             // Check if clicking title bar
-            if (event.where.y >= bounds.a.y &&
-                event.where.y < bounds.a.y + 20) {
+            if (event.where.y() >= bounds.a().y() &&
+                event.where.y() < bounds.a().y() + 20) {
                 dragging = true;
-                dragOffset.x = event.where.x - bounds.a.x;
-                dragOffset.y = event.where.y - bounds.a.y;
+                dragOffset = event.where.minus(bounds.a());
                 return true;
             }
             return true; // Consume event even if not on title bar
@@ -69,14 +68,12 @@ public class TWindow extends TZone {
     protected boolean mouseMove(EventMouse event) {
         if (dragging) {
             // Calculate new position (relative to parent/desktop)
-            int newX = event.where.x - dragOffset.x;
-            int newY = event.where.y - dragOffset.y;
+            Point newP = event.where.plus(- dragOffset.x(), - dragOffset.y());
 
             // Update window bounds (stored as relative coordinates)
             int width = bounds.width();
             int height = bounds.height();
-            bounds.a.set(newX, newY);
-            bounds.b.set(newX + width, newY + height);
+            bounds = new Rect(newP, newP.plus(width, height));
             clipRect = new Rect(bounds);
 
             // Children don't need to be moved - they maintain relative positions

@@ -27,17 +27,17 @@ class TZoneTest {
         TZone zone = new TZone(10, 20, 100, 80);
         Rect bounds = zone.getBounds();
 
-        assertEquals(10, bounds.a.x);
-        assertEquals(20, bounds.a.y);
-        assertEquals(110, bounds.b.x);  // x + width
-        assertEquals(100, bounds.b.y);  // y + height
+        assertEquals(10, bounds.a().x());
+        assertEquals(20, bounds.a().y());
+        assertEquals(110, bounds.b().x());  // x + width
+        assertEquals(100, bounds.b().y());  // y + height
     }
 
     @Test
     void testAbsolutePositionWithNoParent() {
         Point abs = child.getAbsolutePosition();
-        assertEquals(10, abs.x);
-        assertEquals(20, abs.y);
+        assertEquals(10, abs.x());
+        assertEquals(20, abs.y());
     }
 
     @Test
@@ -46,8 +46,8 @@ class TZoneTest {
         Point abs = child.getAbsolutePosition();
 
         // Child at (10, 20) + parent at (100, 100) = (110, 120)
-        assertEquals(110, abs.x);
-        assertEquals(120, abs.y);
+        assertEquals(110, abs.x());
+        assertEquals(120, abs.y());
     }
 
     @Test
@@ -57,8 +57,8 @@ class TZoneTest {
         Point abs = grandchild.getAbsolutePosition();
 
         // Grandchild at (5, 5) + child at (10, 20) + parent at (100, 100) = (115, 125)
-        assertEquals(115, abs.x);
-        assertEquals(125, abs.y);
+        assertEquals(115, abs.x());
+        assertEquals(125, abs.y());
     }
 
     @Test
@@ -104,9 +104,9 @@ class TZoneTest {
         parent.setBounds(newBounds);
 
         Rect bounds = parent.getBounds();
-        assertEquals(50, bounds.a.x);
-        assertEquals(60, bounds.a.y);
-        assertEquals(150, bounds.b.x);
-        assertEquals(160, bounds.b.y);
+        assertEquals(50, bounds.a().x());
+        assertEquals(60, bounds.a().y());
+        assertEquals(150, bounds.b().x());
+        assertEquals(160, bounds.b().y());
     }
 }

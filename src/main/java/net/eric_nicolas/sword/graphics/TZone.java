@@ -40,7 +40,7 @@ public class TZone extends TObject {
 
     public void setClipRect(Rect r) {
         clipRect = new Rect(r);
-        clipRect.intersect(bounds);
+        clipRect = clipRect.intersect(bounds);
     }
 
     public void draw(PaintContext ctx) {
@@ -50,18 +50,17 @@ public class TZone extends TObject {
         Point absPos = getAbsolutePosition();
 
         // Set clipping
-        ctx.setClip(absPos.x, absPos.y, bounds.width(), bounds.height());
+        ctx.setClip(absPos, bounds.width(), bounds.height());
 
         // Draw background
         ctx.setColor(bgColor);
-        ctx.fillRect(absPos.x, absPos.y, bounds.width(), bounds.height());
+        ctx.fillRect(absPos, bounds.width(), bounds.height());
 
         // Temporarily adjust bounds for painting
         Rect originalBounds = new Rect(bounds);
-        bounds.a.x = absPos.x;
-        bounds.a.y = absPos.y;
-        bounds.b.x = absPos.x + originalBounds.width();
-        bounds.b.y = absPos.y + originalBounds.height();
+        bounds = new Rect(
+            new Point(absPos),
+            absPos.plus(originalBounds.width(), originalBounds.height()));
 
         // Draw content
         paint(ctx);
@@ -95,8 +94,14 @@ public class TZone extends TObject {
 
     public boolean contains(int x, int y) {
         Point absPos = getAbsolutePosition();
-        return x >= absPos.x && x < absPos.x + bounds.width() &&
-               y >= absPos.y && y < absPos.y + bounds.height();
+        return x >= absPos.x() && x < absPos.x() + bounds.width() &&
+               y >= absPos.y() && y < absPos.y() + bounds.height();
+    }
+
+    public boolean contains(Point p) {
+        Point absPos = getAbsolutePosition();
+        return p.x() >= absPos.x() && p.x() < absPos.x() + bounds.width() &&
+                p.y() >= absPos.y() && p.y() < absPos.y() + bounds.height();
     }
 
     /**
@@ -104,18 +109,15 @@ public class TZone extends TObject {
      * In C++ this is MakeGlobal().
      */
     protected Point getAbsolutePosition() {
-        int x = bounds.a.x;
-        int y = bounds.a.y;
+        Point p = new Point(bounds.a());
 
         TAtom parent = father();
-        while (parent instanceof TZone) {
-            TZone parentZone = (TZone) parent;
-            x += parentZone.bounds.a.x;
-            y += parentZone.bounds.a.y;
+        while (parent instanceof TZone parentZone) {
+            p = p.plus(parentZone.bounds.a());
             parent = parent.father();
         }
 
-        return new Point(x, y);
+        return p;
     }
 
     /**

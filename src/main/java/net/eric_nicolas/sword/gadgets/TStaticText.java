@@ -1,7 +1,6 @@
 package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
-import java.awt.Graphics2D;
 import java.awt.Font;
 import java.awt.FontMetrics;
 
@@ -40,9 +39,9 @@ public class TStaticText extends TZone {
         FontMetrics fm = ctx.getFontMetrics();
 
         // Center vertically
-        int y = bounds.a.y + (bounds.height() + fm.getHeight()) / 2 - fm.getDescent();
-
-        ctx.drawString(bounds.a.x + 2, y, text);
+        int dx = 2;
+        int dy = (bounds.height() + fm.getHeight()) / 2 - fm.getDescent();
+        ctx.drawString(bounds.a().plus(dx, dy), text);
     }
 
     public String getText() {

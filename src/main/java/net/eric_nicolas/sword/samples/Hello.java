@@ -31,8 +31,8 @@ public class Hello {
             // Draw text (relative to this zone's bounds)
             ctx.setColor(TColors.BLACK);
             ctx.setFont(bigFont);
-            ctx.drawString(bounds.a.x + 20, bounds.a.y + 40, "Hello World !");
-            ctx.drawString(bounds.a.x + 20, bounds.a.y + 80, "S. W. O. R. D.");
+            ctx.drawString(bounds.a().plus(20, 40), "Hello World !");
+            ctx.drawString(bounds.a().plus(20, 80), "S. W. O. R. D.");
         }
     }
 
