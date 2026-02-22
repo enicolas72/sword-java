@@ -68,17 +68,5 @@ public class Canvas extends Widget {
         }
     }
 
-    @Override
-    public void setData(Object data) {
-        for (Widget widget : widgets) {
-            widget.setData(data);
-        }
-    }
 
-    @Override
-    public void getData(Object data) {
-        for (Widget widget : widgets) {
-            widget.getData(data);
-        }
-    }
 }

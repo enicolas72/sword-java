@@ -102,7 +102,5 @@ public class TObject extends TAtom {
         else clearStatus(SF_SELECTED);
     }
 
-    public void setData(Object data) {}
-    public Object getData() { return null; }
-    public long dataSize() { return 0; }
+
 }

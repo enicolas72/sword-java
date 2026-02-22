@@ -66,12 +66,6 @@ public class GroupBox extends Canvas {
         }
     }
 
-    @Override
-    public long dataSize() {
-        // Group box typically handles one integer (4 bytes)
-        return 4;
-    }
-
     public String getText() {
         return text;
     }

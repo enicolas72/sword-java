@@ -105,19 +105,5 @@ public class TZone extends TObject {
         return p;
     }
 
-    /**
-     * Data exchange methods - override in subclasses that need data exchange.
-     */
-    public void setData(Object data) {
-        // Override in subclasses
-    }
 
-    public void getData(Object data) {
-        // Override in subclasses
-    }
-
-    public long dataSize() {
-        // Override in subclasses
-        return 0;
-    }
 }

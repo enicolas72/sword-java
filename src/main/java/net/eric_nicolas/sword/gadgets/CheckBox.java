@@ -1,8 +1,7 @@
 package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
-import net.eric_nicolas.sword.mechanism.*;
-import java.lang.reflect.Field;
+import net.eric_nicolas.sword.mechanism.TAtom;
 
 /**
  * TCheckBox - Checkbox control with bitmask state.
@@ -72,57 +71,6 @@ public class CheckBox extends ItemBox {
                 parent.value |= mask; // Set bit
             } else {
                 parent.value &= ~mask; // Clear bit
-            }
-        }
-    }
-
-    @Override
-    public void setData(Object data) {
-        // Read checked state from parent group box value
-        TAtom parentAtom = father();
-        if (parentAtom instanceof GroupBox parent) {
-            // If data is provided and has a field matching the data structure
-            if (data != null) {
-                try {
-                    // Look for a field named "Checks" (or similar pattern)
-                    Field[] fields = data.getClass().getDeclaredFields();
-                    for (Field field : fields) {
-                        if (field.getName().equalsIgnoreCase("checks") ||
-                            field.getName().toLowerCase().contains("check")) {
-                            field.setAccessible(true);
-                            parent.value = field.getInt(data);
-                            break;
-                        }
-                    }
-                } catch (Exception e) {
-                    // Ignore reflection errors
-                }
-            }
-
-            checked = (parent.value & mask) != 0;
-        }
-    }
-
-    @Override
-    public void getData(Object data) {
-        // Write checked state to parent group box value
-        updateParentValue();
-
-        TAtom parentAtom = father();
-        if (parentAtom instanceof GroupBox parent && data != null) {
-            try {
-                // Look for a field named "Checks" (or similar pattern)
-                Field[] fields = data.getClass().getDeclaredFields();
-                for (Field field : fields) {
-                    if (field.getName().equalsIgnoreCase("checks") ||
-                        field.getName().toLowerCase().contains("check")) {
-                        field.setAccessible(true);
-                        field.setInt(data, parent.value);
-                        break;
-                    }
-                }
-            } catch (Exception e) {
-                // Ignore reflection errors
             }
         }
     }

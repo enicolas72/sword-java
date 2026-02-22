@@ -2,7 +2,6 @@ package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.mechanism.TAtom;
-import java.lang.reflect.Field;
 
 /**
  * TRadioBox - Radio button control.
@@ -66,53 +65,6 @@ public class RadioBox extends ItemBox {
             return parentGroupBox.value == this.value;
         }
         return false;
-    }
-
-    @Override
-    public void setData(Object data) {
-        // Read selected value from parent group box
-        TAtom parentAtom = father();
-        if (parentAtom instanceof GroupBox parentGroupBox) {
-            // If data is provided, read from appropriate field
-            if (data != null) {
-                try {
-                    // Look for a field named "Radios" (or similar pattern)
-                    Field[] fields = data.getClass().getDeclaredFields();
-                    for (Field field : fields) {
-                        if (field.getName().equalsIgnoreCase("radios") ||
-                            field.getName().toLowerCase().contains("radio")) {
-                            field.setAccessible(true);
-                            parentGroupBox.value = field.getInt(data);
-                            break;
-                        }
-                    }
-                } catch (Exception e) {
-                    // Ignore reflection errors
-                }
-            }
-        }
-    }
-
-    @Override
-    public void getData(Object data) {
-        // Write selected value to data structure
-        TAtom parentAtom = father();
-        if (parentAtom instanceof GroupBox parentGroupBox && data != null) {
-            try {
-                // Look for a field named "Radios" (or similar pattern)
-                Field[] fields = data.getClass().getDeclaredFields();
-                for (Field field : fields) {
-                    if (field.getName().equalsIgnoreCase("radios") ||
-                        field.getName().toLowerCase().contains("radio")) {
-                        field.setAccessible(true);
-                        field.setInt(data, parentGroupBox.value);
-                        break;
-                    }
-                }
-            } catch (Exception e) {
-                // Ignore reflection errors
-            }
-        }
     }
 
     public int getValue() {

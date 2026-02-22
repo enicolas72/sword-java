@@ -7,7 +7,7 @@ import net.eric_nicolas.sword.ui.events.EventMouse;
 
 import java.awt.Font;
 import java.awt.event.KeyEvent;
-import java.lang.reflect.Field;
+
 
 /**
  * TEditLine - Single-line text edit control.
@@ -201,79 +201,6 @@ public class EditLine extends Widget {
         }
 
         return handled;
-    }
-
-    @Override
-    public void setData(Object data) {
-        if (data == null) return;
-
-        try {
-            // Look for a String field
-            Field[] fields = data.getClass().getDeclaredFields();
-            for (Field field : fields) {
-                if (field.getType() == String.class) {
-                    field.setAccessible(true);
-                    String value = (String) field.get(data);
-                    text = value != null ? value : "";
-                    cursorPos = text.length();
-                    break;
-                } else if (field.getType().isArray() && field.getType().getComponentType() == char.class) {
-                    // Handle char[] array
-                    field.setAccessible(true);
-                    char[] chars = (char[]) field.get(data);
-                    if (chars != null) {
-                        // Find null terminator
-                        int len = 0;
-                        while (len < chars.length && chars[len] != 0) {
-                            len++;
-                        }
-                        text = new String(chars, 0, len);
-                        cursorPos = text.length();
-                    }
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            // Ignore reflection errors
-        }
-    }
-
-    @Override
-    public void getData(Object data) {
-        if (data == null) return;
-
-        try {
-            // Look for a String field
-            Field[] fields = data.getClass().getDeclaredFields();
-            for (Field field : fields) {
-                if (field.getType() == String.class) {
-                    field.setAccessible(true);
-                    field.set(data, text);
-                    break;
-                } else if (field.getType().isArray() && field.getType().getComponentType() == char.class) {
-                    // Handle char[] array
-                    field.setAccessible(true);
-                    char[] chars = (char[]) field.get(data);
-                    if (chars != null) {
-                        int len = Math.min(text.length(), chars.length - 1);
-                        for (int i = 0; i < len; i++) {
-                            chars[i] = text.charAt(i);
-                        }
-                        if (len < chars.length) {
-                            chars[len] = 0; // Null terminator
-                        }
-                    }
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            // Ignore reflection errors
-        }
-    }
-
-    @Override
-    public long dataSize() {
-        return maxLength;
     }
 
     public String getText() {
