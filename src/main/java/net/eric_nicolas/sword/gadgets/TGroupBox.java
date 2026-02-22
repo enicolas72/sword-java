@@ -42,8 +42,8 @@ public class TGroupBox extends TZone {
 
     @Override
     protected void paint(PaintContext ctx) {
-        int x = bounds.a().x();
-        int y = bounds.a().y();
+        int x = 0;
+        int y = 0;
         int w = bounds.width();
         int h = bounds.height();
 

@@ -341,27 +341,27 @@ public class TMenu extends TStdWindow {
         if (hasOption(OP_MAIN_MENU)) {
             // Main menu - draw as horizontal bar
             ctx.setColor(TColors.FACE_GRAY);
-            ctx.fillRect(bounds.a(), bounds.width(), bounds.height());
+            ctx.fillRect(0, 0, bounds.width(), bounds.height());
 
             // Draw bottom border
             ctx.setColor(TColors.DARK_GRAY);
-            ctx.drawLine(Point.plus(bounds.a(), 0, -1), Point.plus(bounds.b(), -1, -1));
+            ctx.drawLine(0, -1, bounds.width() - 1, bounds.height() - 1);
         } else {
             // Dropdown menu - draw with frame and title bar
             ctx.setColor(TColors.FACE_GRAY);
-            ctx.fillRect(bounds.a(), bounds.width(), bounds.height());
+            ctx.fillRect(0, 0, bounds.width(), bounds.height());
 
             // Draw frame
             ctx.setColor(TColors.DARK_GRAY);
-            ctx.drawRect(bounds.a(), bounds.width() - 1, bounds.height() - 1);
+            ctx.drawRect(0, 0, bounds.width() - 1, bounds.height() - 1);
 
             // Draw title bar
             ctx.setColor(TColors.DARK_GRAY);
-            ctx.fillRect(Point.plus(bounds.a(), 1, 1), bounds.width() - 2, 20);
+            ctx.fillRect(1, 1, bounds.width() - 2, 20);
 
             ctx.setColor(TColors.WHITE);
             ctx.setFont(menuFont);
-            ctx.drawString(Point.plus(bounds.a(), 5, 15), title);
+            ctx.drawString(5, 15, title);
         }
     }
 }

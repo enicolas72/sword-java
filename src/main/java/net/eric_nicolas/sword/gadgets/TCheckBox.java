@@ -26,8 +26,8 @@ public class TCheckBox extends TItemBox {
 
     @Override
     protected void drawInside(PaintContext ctx, int offset) {
-        int x = bounds.a().x();
-        int y = bounds.a().y();
+        int x = 0;
+        int y = 0;
 
         // Draw checkbox box (12x12)
         ctx.setColor(TColors.WHITE);

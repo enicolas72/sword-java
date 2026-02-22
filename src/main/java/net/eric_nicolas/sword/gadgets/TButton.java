@@ -70,7 +70,7 @@ public class TButton extends TZone {
         } else {
             ctx.setColor(TColors.FACE_GRAY);
         }
-        ctx.fillRect(bounds.a(), width, height);
+        ctx.fillRect(0, 0, width, height);
 
         // Draw 3D frame
         drawFrame(ctx, pressed);
@@ -80,8 +80,8 @@ public class TButton extends TZone {
     }
 
     protected void drawFrame(PaintContext ctx, boolean pressed) {
-        int x = bounds.a().x();
-        int y = bounds.a().y();
+        int x = 0;
+        int y = 0;
         int w = bounds.width();
         int h = bounds.height();
 

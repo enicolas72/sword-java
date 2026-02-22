@@ -46,29 +46,22 @@ public class TZone extends TObject {
     public void draw(PaintContext ctx) {
         if (!isVisible()) return;
 
-        // Get absolute position for drawing
+        // Build a context translated to this zone's absolute position.
+        // All drawing in paint() uses local (0,0)-relative coordinates.
         Point absPos = getAbsolutePosition();
+        PaintContext localCtx = ctx.withOrigin(absPos);
 
-        // Set clipping
-        ctx.setClip(absPos, bounds.width(), bounds.height());
+        // Set clipping to this zone's screen rectangle
+        localCtx.setClip(0, 0, bounds.width(), bounds.height());
 
         // Draw background
-        ctx.setColor(bgColor);
-        ctx.fillRect(absPos, bounds.width(), bounds.height());
+        localCtx.setColor(bgColor);
+        localCtx.fillRect(0, 0, bounds.width(), bounds.height());
 
-        // Temporarily adjust bounds for painting
-        Rect originalBounds = new Rect(bounds);
-        bounds = new Rect(
-            new Point(absPos),
-                Point.plus(absPos, originalBounds.width(), originalBounds.height()));
+        // Draw content in local coordinates
+        paint(localCtx);
 
-        // Draw content
-        paint(ctx);
-
-        // Restore relative bounds
-        bounds = originalBounds;
-
-        // Draw children
+        // Draw children — each child computes its own absolute position
         if (_Son != null) {
             TAtom child = _Son;
             while (child != null) {

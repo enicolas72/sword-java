@@ -11,11 +11,22 @@ import java.awt.RenderingHints;
 /**
  * PaintContext - Abstraction layer for painting operations.
  * Wraps AWT Graphics2D with a cleaner API where coordinates come first.
+ * All drawing coordinates are in local (zone-relative) space; the origin
+ * field holds the absolute screen position that is silently added to every
+ * coordinate before forwarding to Graphics2D.
  */
 public class PaintContext {
 
     public static PaintContext ofAWT(Graphics2D g) {
-        return new PaintContext(g);
+        return new PaintContext(g, new Point(0, 0));
+    }
+
+    /**
+     * Return a new PaintContext with the given absolute origin.
+     * The underlying Graphics2D is shared; only the translation changes.
+     */
+    public PaintContext withOrigin(Point origin) {
+        return new PaintContext(g, origin);
     }
 
     /**
@@ -56,7 +67,7 @@ public class PaintContext {
     // ===== Clipping operations =====
 
     public void setClip(int x, int y, int width, int height) {
-        g.setClip(x, y, width, height);
+        g.setClip(x + origin.x(), y + origin.y(), width, height);
     }
 
     public void setClip(Point p, int width, int height) {
@@ -67,17 +78,17 @@ public class PaintContext {
 
     /**
      * Draw a string at the specified position.
-     * @param x X coordinate
-     * @param y Y coordinate (baseline)
+     * @param x X coordinate (local)
+     * @param y Y coordinate (baseline, local)
      * @param text Text to draw
      */
     public void drawString(int x, int y, String text) {
-        g.drawString(text, x, y);
+        g.drawString(text, x + origin.x(), y + origin.y());
     }
 
     /**
      * Draw a string at the specified position.
-     * @param p X,Y coordinates
+     * @param p X,Y coordinates (local)
      * @param text Text to draw
      */
     public void drawString(Point p, String text) {
@@ -86,28 +97,28 @@ public class PaintContext {
 
     /**
      * Draw a character at the specified position.
-     * @param x X coordinate
-     * @param y Y coordinate (baseline)
+     * @param x X coordinate (local)
+     * @param y Y coordinate (baseline, local)
      * @param ch Character to draw
      */
     public void drawChar(int x, int y, char ch) {
-        g.drawString(String.valueOf(ch), x, y);
+        g.drawString(String.valueOf(ch), x + origin.x(), y + origin.y());
     }
 
     /**
      * Draw a rectangle outline.
-     * @param x X coordinate
-     * @param y Y coordinate
+     * @param x X coordinate (local)
+     * @param y Y coordinate (local)
      * @param width Width
      * @param height Height
      */
     public void drawRect(int x, int y, int width, int height) {
-        g.drawRect(x, y, width, height);
+        g.drawRect(x + origin.x(), y + origin.y(), width, height);
     }
 
     /**
      * Draw a rectangle outline.
-     * @param p X,Y coordinate
+     * @param p X,Y coordinate (local)
      * @param width Width
      * @param height Height
      */
@@ -117,18 +128,18 @@ public class PaintContext {
 
     /**
      * Fill a rectangle.
-     * @param x X coordinate
-     * @param y Y coordinate
+     * @param x X coordinate (local)
+     * @param y Y coordinate (local)
      * @param width Width
      * @param height Height
      */
     public void fillRect(int x, int y, int width, int height) {
-        g.fillRect(x, y, width, height);
+        g.fillRect(x + origin.x(), y + origin.y(), width, height);
     }
 
     /**
      * Fill a rectangle.
-     * @param p the top left corner coordinates
+     * @param p the top left corner coordinates (local)
      * @param width Width
      * @param height Height
      */
@@ -138,19 +149,19 @@ public class PaintContext {
 
     /**
      * Draw a line.
-     * @param x1 Start X coordinate
-     * @param y1 Start Y coordinate
-     * @param x2 End X coordinate
-     * @param y2 End Y coordinate
+     * @param x1 Start X coordinate (local)
+     * @param y1 Start Y coordinate (local)
+     * @param x2 End X coordinate (local)
+     * @param y2 End Y coordinate (local)
      */
     public void drawLine(int x1, int y1, int x2, int y2) {
-        g.drawLine(x1, y1, x2, y2);
+        g.drawLine(x1 + origin.x(), y1 + origin.y(), x2 + origin.x(), y2 + origin.y());
     }
 
     /**
      * Draw a line.
-     * @param p1 Start X,Y coordinate
-     * @param p2 End X,Y coordinate
+     * @param p1 Start X,Y coordinate (local)
+     * @param p2 End X,Y coordinate (local)
      */
     public void drawLine(Point p1, Point p2) {
         drawLine(p1.x(), p1.y(), p2.x(), p2.y());
@@ -158,70 +169,70 @@ public class PaintContext {
 
     /**
      * Draw an oval outline.
-     * @param x X coordinate
-     * @param y Y coordinate
+     * @param x X coordinate (local)
+     * @param y Y coordinate (local)
      * @param width Width
      * @param height Height
      */
     public void drawOval(int x, int y, int width, int height) {
-        g.drawOval(x, y, width, height);
+        g.drawOval(x + origin.x(), y + origin.y(), width, height);
     }
 
     /**
      * Fill an oval.
-     * @param x X coordinate
-     * @param y Y coordinate
+     * @param x X coordinate (local)
+     * @param y Y coordinate (local)
      * @param width Width
      * @param height Height
      */
     public void fillOval(int x, int y, int width, int height) {
-        g.fillOval(x, y, width, height);
+        g.fillOval(x + origin.x(), y + origin.y(), width, height);
     }
 
     /**
      * Draw a rounded rectangle outline.
-     * @param x X coordinate
-     * @param y Y coordinate
+     * @param x X coordinate (local)
+     * @param y Y coordinate (local)
      * @param width Width
      * @param height Height
      * @param arcWidth Arc width
      * @param arcHeight Arc height
      */
     public void drawRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
-        g.drawRoundRect(x, y, width, height, arcWidth, arcHeight);
+        g.drawRoundRect(x + origin.x(), y + origin.y(), width, height, arcWidth, arcHeight);
     }
 
     /**
      * Fill a rounded rectangle.
-     * @param x X coordinate
-     * @param y Y coordinate
+     * @param x X coordinate (local)
+     * @param y Y coordinate (local)
      * @param width Width
      * @param height Height
      * @param arcWidth Arc width
      * @param arcHeight Arc height
      */
     public void fillRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
-        g.fillRoundRect(x, y, width, height, arcWidth, arcHeight);
+        g.fillRoundRect(x + origin.x(), y + origin.y(), width, height, arcWidth, arcHeight);
     }
 
     /**
      * Draw a polygon outline.
-     * @param xPoints Array of X coordinates
-     * @param yPoints Array of Y coordinates
+     * @param xPoints Array of X coordinates (local)
+     * @param yPoints Array of Y coordinates (local)
      * @param nPoints Number of points
      */
     public void drawPolygon(int[] xPoints, int[] yPoints, int nPoints) {
-        g.drawPolygon(xPoints, yPoints, nPoints);
+        g.drawPolygon(translate(xPoints, nPoints, origin.x()), translate(yPoints, nPoints, origin.y()), nPoints);
     }
 
     /**
      * Fill a polygon.
-     * @param xPoints Array of X coordinates
-     * @param yPoints Array of Y coordinates
+     * @param xPoints Array of X coordinates (local)
+     * @param yPoints Array of Y coordinates (local)
      * @param nPoints Number of points
      */
     public void fillPolygon(int[] xPoints, int[] yPoints, int nPoints) {
-        g.fillPolygon(xPoints, yPoints, nPoints);
+        g.fillPolygon(translate(xPoints, nPoints, origin.x()), translate(yPoints, nPoints, origin.y()), nPoints);
     }
 
     // ===== Rendering hints =====
@@ -238,8 +249,17 @@ public class PaintContext {
 
     //
 
-    private PaintContext(Graphics2D g) {
-        this.g = g;
+    private static int[] translate(int[] points, int n, int offset) {
+        int[] result = new int[n];
+        for (int i = 0; i < n; i++) result[i] = points[i] + offset;
+        return result;
     }
+
+    private PaintContext(Graphics2D g, Point origin) {
+        this.g = g;
+        this.origin = origin;
+    }
+
     private final Graphics2D g;
+    private final Point origin;
 }

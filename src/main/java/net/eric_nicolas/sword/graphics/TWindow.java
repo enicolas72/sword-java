@@ -25,16 +25,16 @@ public class TWindow extends TZone {
     protected void paint(PaintContext ctx) {
         // Draw frame
         ctx.setColor(TColors.WINDOW_FRAME);
-        ctx.drawRect(bounds.a(), bounds.width() - 1, bounds.height() - 1);
+        ctx.drawRect(0, 0, bounds.width() - 1, bounds.height() - 1);
 
         // Draw title bar
         ctx.setColor(TColors.DARK_GRAY);
-        ctx.fillRect(Point.plus(bounds.a(), 1, 1), bounds.width() - 2, 20);
+        ctx.fillRect(1, 1, bounds.width() - 2, 20);
 
         // Draw title text with smaller font
         ctx.setColor(TColors.WHITE);
         ctx.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 12));
-        ctx.drawString(Point.plus(bounds.a(), 5, 15), title);
+        ctx.drawString(5, 15, title);
     }
 
     @Override
