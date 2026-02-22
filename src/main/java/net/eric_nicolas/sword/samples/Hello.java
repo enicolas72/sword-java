@@ -4,6 +4,8 @@ import net.eric_nicolas.sword.tools.TApp;
 import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.gadgets.*;
 import net.eric_nicolas.sword.mechanism.*;
+import net.eric_nicolas.sword.ui.Point;
+
 import java.awt.Font;
 
 /**
@@ -31,8 +33,8 @@ public class Hello {
             // Draw text (relative to this zone's bounds)
             ctx.setColor(TColors.BLACK);
             ctx.setFont(bigFont);
-            ctx.drawString(bounds.a().plus(20, 40), "Hello World !");
-            ctx.drawString(bounds.a().plus(20, 80), "S. W. O. R. D.");
+            ctx.drawString(Point.plus(bounds.a(), 20, 40), "Hello World !");
+            ctx.drawString(Point.plus(bounds.a(), 20, 80), "S. W. O. R. D.");
         }
     }
 

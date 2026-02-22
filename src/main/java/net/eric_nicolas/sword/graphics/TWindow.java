@@ -29,12 +29,12 @@ public class TWindow extends TZone {
 
         // Draw title bar
         ctx.setColor(TColors.DARK_GRAY);
-        ctx.fillRect(bounds.a().plus(1, 1), bounds.width() - 2, 20);
+        ctx.fillRect(Point.plus(bounds.a(), 1, 1), bounds.width() - 2, 20);
 
         // Draw title text with smaller font
         ctx.setColor(TColors.WHITE);
         ctx.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 12));
-        ctx.drawString(bounds.a().plus(5, 15), title);
+        ctx.drawString(Point.plus(bounds.a(), 5, 15), title);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class TWindow extends TZone {
             if (event.where.y() >= bounds.a().y() &&
                 event.where.y() < bounds.a().y() + 20) {
                 dragging = true;
-                dragOffset = event.where.minus(bounds.a());
+                dragOffset = Point.minus(event.where, bounds.a());
                 return true;
             }
             return true; // Consume event even if not on title bar
@@ -68,12 +68,12 @@ public class TWindow extends TZone {
     protected boolean mouseMove(EventMouse event) {
         if (dragging) {
             // Calculate new position (relative to parent/desktop)
-            Point newP = event.where.plus(- dragOffset.x(), - dragOffset.y());
+            Point newP = Point.minus(event.where, dragOffset);
 
             // Update window bounds (stored as relative coordinates)
             int width = bounds.width();
             int height = bounds.height();
-            bounds = new Rect(newP, newP.plus(width, height));
+            bounds = new Rect(newP, Point.plus(newP, width, height));
             clipRect = new Rect(bounds);
 
             // Children don't need to be moved - they maintain relative positions

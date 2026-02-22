@@ -3,7 +3,7 @@ package net.eric_nicolas.sword.ui;
 /**
  * Point - 2D point representation.
  */
-public class Point {
+public final class Point {
 
     /**
      * Constructor with coordinates.
@@ -27,32 +27,35 @@ public class Point {
     }
 
     /**
-     * Adds the given amounts to this point, returns a new Point
+     * Adds the given amounts to a point, returns a new Point
      *
+     * @param p The point to move
      * @param dx X offset
      * @param dy Y offset
      */
-    public Point plus(int dx, int dy) {
-        return new Point(x + dx, y + dy);
+    public static Point plus(Point p, int dx, int dy) {
+        return new Point(p.x + dx, p.y + dy);
     }
 
     /**
-     * Adds the given point.x, point.y to this point, returns a new Point
+     * Adds a given point.x, point.y to a point p, returns a new Point
      *
+     * @param p The point to move
      * @param dp X,Y offset
      */
-    public Point plus(Point dp) {
-        return new Point(x + dp.x, y + dp.y);
+    public static Point plus(Point p, Point dp) {
+        return new Point(p.x + dp.x, p.y + dp.y);
     }
 
     /**
-     * Subtracts the given amounts to this point, returns a new Point
+     * Subtracts the given amounts to a point, returns a new Point
      *
+     * @param p The point to move
      * @param dx X offset
      * @param dy Y offset
      */
-    public Point minus(int dx, int dy) {
-        return new Point(x - dx, y - dy);
+    public static Point minus(Point p, int dx, int dy) {
+        return new Point(p.x - dx, p.y - dy);
     }
 
     /**
@@ -60,8 +63,8 @@ public class Point {
      *
      * @param dp X,Y offset
      */
-    public Point minus(Point dp) {
-        return new Point(x - dp.x, y - dp.y);
+    public static Point minus(Point p, Point dp) {
+        return new Point(p.x - dp.x, p.y - dp.y);
     }
 
     /**

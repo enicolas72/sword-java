@@ -34,7 +34,7 @@ class PointTest {
     @Test
     void testPlus() {
         Point p = new Point(10, 20);
-        p = p.plus(5, -3);
+        p = Point.plus(p, 5, -3);
         assertEquals(15, p.x());
         assertEquals(17, p.y());
     }

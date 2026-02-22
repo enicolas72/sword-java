@@ -1,5 +1,7 @@
 package net.eric_nicolas.sword.graphics;
 
+import net.eric_nicolas.sword.ui.Point;
+
 /**
  * TStdWindow - Standard window with title bar and frame.
  * Simplified version - extends TWindow to add standard window features.
@@ -24,15 +26,15 @@ public class TStdWindow extends TWindow {
 
         // Title bar background
         ctx.setColor(TColors.DARK_GRAY);
-        ctx.fillRect(bounds.a().plus(1, 1), bounds.width() - 2, 20);
+        ctx.fillRect(Point.plus(bounds.a(), 1, 1), bounds.width() - 2, 20);
 
         // Title text
         ctx.setColor(TColors.WHITE);
         ctx.setFont(new java.awt.Font("SansSerif", java.awt.Font.PLAIN, 12));
-        ctx.drawString(bounds.a().plus(5, 15), title);
+        ctx.drawString(Point.plus(bounds.a(), 5, 15), title);
 
         // Window background (below title bar)
         ctx.setColor(bgColor);
-        ctx.fillRect(bounds.a().plus(1, 21), bounds.width() - 2, bounds.height() - 22);
+        ctx.fillRect(Point.plus(bounds.a(), 1, 21), bounds.width() - 2, bounds.height() - 22);
     }
 }

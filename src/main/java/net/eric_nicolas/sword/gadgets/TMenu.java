@@ -2,6 +2,7 @@ package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.mechanism.*;
+import net.eric_nicolas.sword.ui.Point;
 import net.eric_nicolas.sword.ui.Rect;
 import net.eric_nicolas.sword.ui.events.EventKeyboard;
 import net.eric_nicolas.sword.ui.events.EventMouse;
@@ -96,8 +97,8 @@ public class TMenu extends TStdWindow {
 
                     // Position choice horizontally
                     Rect choiceBounds = new Rect(
-                        myBounds.a().plus(x, 2),
-                        myBounds.a().plus(x + w, height - 2)
+                        Point.plus(myBounds.a(), x, 2),
+                        Point.plus(myBounds.a(), x + w, height - 2)
                     );
                     choice.setBounds(choiceBounds);
 
@@ -109,7 +110,7 @@ public class TMenu extends TStdWindow {
         g.dispose();
 
         // Set menu bounds to span the width
-        myBounds = new Rect(myBounds.a(), myBounds.a().plus(x + 5, height));
+        myBounds = new Rect(myBounds.a(), Point.plus(myBounds.a(), x + 5, height));
         setBounds(myBounds);
     }
 
@@ -122,7 +123,7 @@ public class TMenu extends TStdWindow {
 
         // Resize menu
         Rect newBounds = getBounds();
-        newBounds = new Rect(newBounds.a(), newBounds.a().plus(width, height));
+        newBounds = new Rect(newBounds.a(), Point.plus(newBounds.a(), width, height));
         setBounds(newBounds);
 
         // Position menu choices
@@ -144,8 +145,8 @@ public class TMenu extends TStdWindow {
 
                 // Position choice
                 Rect choiceBounds = new Rect(
-                    myBounds.a().plus(7, y),
-                    myBounds.a().plus(width - 8, y + h)
+                    Point.plus(myBounds.a(), 7, y),
+                        Point.plus(myBounds.a(), width - 8, y + h)
                 );
                 choice.setBounds(choiceBounds);
 
@@ -344,7 +345,7 @@ public class TMenu extends TStdWindow {
 
             // Draw bottom border
             ctx.setColor(TColors.DARK_GRAY);
-            ctx.drawLine(bounds.a().plus(0, -1), bounds.b().plus(-1, -1));
+            ctx.drawLine(Point.plus(bounds.a(), 0, -1), Point.plus(bounds.b(), -1, -1));
         } else {
             // Dropdown menu - draw with frame and title bar
             ctx.setColor(TColors.FACE_GRAY);
@@ -356,11 +357,11 @@ public class TMenu extends TStdWindow {
 
             // Draw title bar
             ctx.setColor(TColors.DARK_GRAY);
-            ctx.fillRect(bounds.a().plus(1, 1), bounds.width() - 2, 20);
+            ctx.fillRect(Point.plus(bounds.a(), 1, 1), bounds.width() - 2, 20);
 
             ctx.setColor(TColors.WHITE);
             ctx.setFont(menuFont);
-            ctx.drawString(bounds.a().plus(5, 15), title);
+            ctx.drawString(Point.plus(bounds.a(), 5, 15), title);
         }
     }
 }

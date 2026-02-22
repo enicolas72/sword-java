@@ -1,6 +1,8 @@
 package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
+import net.eric_nicolas.sword.ui.Point;
+
 import java.awt.Font;
 import java.awt.FontMetrics;
 
@@ -41,7 +43,7 @@ public class TStaticText extends TZone {
         // Center vertically
         int dx = 2;
         int dy = (bounds.height() + fm.getHeight()) / 2 - fm.getDescent();
-        ctx.drawString(bounds.a().plus(dx, dy), text);
+        ctx.drawString(Point.plus(bounds.a(), dx, dy), text);
     }
 
     public String getText() {

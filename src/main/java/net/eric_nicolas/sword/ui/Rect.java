@@ -4,7 +4,7 @@ package net.eric_nicolas.sword.ui;
  * Rect - Rectangle representation.
  * Uses top-left corner (a) and bottom-right corner (b).
  */
-public class Rect {
+public final class Rect {
 
     /**
      * Constructor with coordinates.
@@ -97,57 +97,60 @@ public class Rect {
     }
 
     /**
-     * Offset rectangle by given amounts.
+     * Adds the given amounts to a rectangle coordinates
      *
+     * @param a The rectangle to move
      * @param dx X offset
      * @param dy Y offset
      * @return the offsetted rectangle
      */
-    public Rect offset(int dx, int dy) {
+    public static Rect plus(Rect a, int dx, int dy) {
         return new Rect(
-                a.plus(dx, dy),
-                b.plus(dx, dy));
+                Point.plus(a.a, dx, dy),
+                Point.plus(a.b, dx, dy));
     }
 
     /**
-     * Grow rectangle by given amounts in all directions.
+     * Grow a rectangle by given amounts in all directions.
      *
+     * @param a The rectangle to grow
      * @param dx Horizontal growth
      * @param dy Vertical growth
      * @return the grown rectangle
      */
-    public Rect grow(int dx, int dy) {
+    public static Rect grow(Rect a, int dx, int dy) {
         return new Rect(
-                a.plus(-dx, -dy),
-                b.plus(dx, dy));
+                Point.minus(a.a, dx, dy),
+                Point.plus(a.b, dx, dy));
     }
 
     /**
-     * Intersect this rectangle with another.
+     * Intersect one rectangle with another.
      *
-     * @param r Rectangle to intersect with
-     * @return the intersected rectangle
+     * @param a First rectangle for the intersection
+     * @param b Second rectangle for the intersection
+     * @return the rectangle intersection of a and b
      */
-    public Rect intersect(Rect r) {
+    public static Rect intersect(Rect a, Rect b) {
         return new Rect(
-                Point.max(a, r.a),
-                Point.min(b, r.b));
+                Point.max(a.a, b.a),
+                Point.min(a.b, b.b));
     }
 
     /**
-     * Union this rectangle with another.
+     * Union one rectangle with another.
      *
-     * @param r Rectangle to union with
+     * @param a First rectangle to union with
+     * @param b Second rectangle to union with
+     * @return the rectangle union of a and b
      */
-    public void union(Rect r) {
-        if (r.isEmpty()) return;
-        if (isEmpty()) {
-            a = new Point(r.a);
-            b = new Point(r.b);
-            return;
-        }
-        a = Point.min(a, r.a);
-        b = Point.max(b, r.b);
+    public static Rect union(Rect a, Rect b) {
+        if (b.isEmpty()) return a;
+        if (a.isEmpty()) return b;
+
+        return new Rect(
+            Point.min(a.a, b.a),
+            Point.max(a.b, b.b));
     }
 
     @Override

@@ -40,7 +40,7 @@ public class TZone extends TObject {
 
     public void setClipRect(Rect r) {
         clipRect = new Rect(r);
-        clipRect = clipRect.intersect(bounds);
+        clipRect = Rect.intersect(clipRect, bounds);
     }
 
     public void draw(PaintContext ctx) {
@@ -60,7 +60,7 @@ public class TZone extends TObject {
         Rect originalBounds = new Rect(bounds);
         bounds = new Rect(
             new Point(absPos),
-            absPos.plus(originalBounds.width(), originalBounds.height()));
+                Point.plus(absPos, originalBounds.width(), originalBounds.height()));
 
         // Draw content
         paint(ctx);
@@ -113,7 +113,7 @@ public class TZone extends TObject {
 
         TAtom parent = father();
         while (parent instanceof TZone parentZone) {
-            p = p.plus(parentZone.bounds.a());
+            p = Point.plus(p, parentZone.bounds.a());
             parent = parent.father();
         }
 

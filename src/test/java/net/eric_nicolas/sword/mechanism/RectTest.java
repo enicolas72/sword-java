@@ -64,9 +64,9 @@ class RectTest {
     }
 
     @Test
-    void testOffset() {
+    void testPlus() {
         Rect r = new Rect(10, 20, 30, 40);
-        r = r.offset(5, -3);
+        r = Rect.plus(r, 5, -3);
 
         assertEquals(15, r.a().x());
         assertEquals(17, r.a().y());
@@ -79,7 +79,7 @@ class RectTest {
         Rect r1 = new Rect(10, 10, 50, 50);
         Rect r2 = new Rect(30, 30, 70, 70);
 
-        r1 = r1.intersect(r2);
+        r1 = Rect.intersect(r1, r2);
 
         assertEquals(30, r1.a().x());
         assertEquals(30, r1.a().y());
@@ -92,7 +92,7 @@ class RectTest {
         Rect r1 = new Rect(10, 10, 30, 30);
         Rect r2 = new Rect(40, 40, 60, 60);
 
-        r1 = r1.intersect(r2);
+        r1 = Rect.intersect(r1, r2);
 
         assertTrue(r1.isEmpty());
     }
@@ -102,7 +102,7 @@ class RectTest {
         Rect r1 = new Rect(10, 10, 30, 30);
         Rect r2 = new Rect(20, 20, 50, 50);
 
-        r1.union(r2);
+        r1 = Rect.union(r1, r2);
 
         assertEquals(10, r1.a().x());
         assertEquals(10, r1.a().y());

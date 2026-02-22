@@ -2,6 +2,7 @@ package net.eric_nicolas.sword.gadgets;
 
 import net.eric_nicolas.sword.graphics.*;
 import net.eric_nicolas.sword.mechanism.*;
+import net.eric_nicolas.sword.ui.Point;
 import net.eric_nicolas.sword.ui.events.EventCommand;
 import net.eric_nicolas.sword.ui.events.EventMouse;
 
@@ -106,9 +107,9 @@ public class TMenuChoice extends TZone {
         if (hasOption(OP_SEPARATOR)) {
             // Draw separator
             ctx.setColor(TColors.DARK_GRAY);
-            ctx.drawLine(bounds.a().plus(0, 2), bounds.a().plus(width - 1, 2));
+            ctx.drawLine(Point.plus(bounds.a(), 0, 2), Point.plus(bounds.a(), width - 1, 2));
             ctx.setColor(TColors.LIGHT_GRAY);
-            ctx.drawLine(bounds.a().plus(0, 3), bounds.a().plus(width - 1, 3));
+            ctx.drawLine(Point.plus(bounds.a(), 0, 3), Point.plus(bounds.a(), width - 1, 3));
         } else {
             // Draw menu choice background
             if (hasStatus(SF_MENU_CHOICE_DOWN)) {
@@ -130,13 +131,13 @@ public class TMenuChoice extends TZone {
 
             // Remove & from displayed text
             String displayText = text != null ? text.replace("&", "") : "";
-            ctx.drawString(bounds.a().plus(5, 14), displayText);
+            ctx.drawString(Point.plus(bounds.a(), 5, 14), displayText);
 
             // Draw hotkey or >> for submenus
             if (subMenu != null) {
-                ctx.drawString(bounds.a().plus(width - 20, 14), ">>");
+                ctx.drawString(Point.plus(bounds.a(), width - 20, 14), ">>");
             } else if (hotText != null && !hotText.isEmpty()) {
-                ctx.drawString(bounds.a().plus(width - 50, 14), hotText);
+                ctx.drawString(Point.plus(bounds.a(), width - 50, 14), hotText);
             }
         }
     }
