@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 S.W.O.R.D (System of Windows for the ORganisation of the Desktop) v2.10 is a C++ object-oriented GUI framework from 1996. It provides a cross-platform interface for building desktop applications with a NeXT-style GUI across DOS, Windows, and Unix platforms (Linux, Solaris, SunOS).
 
-**Working directory:** The main code is in `210_original/` subdirectory, not the repository root.
+The original C++ source is in `210_original/`.
 
 ---
 
@@ -21,7 +21,7 @@ Create a Java port of the S.W.O.R.D C++ framework that preserves the original ar
 - **Java:** 21 (LTS)
 - **Build System:** Maven
 - **Graphics:** Pure AWT (Graphics2D, Canvas) - no Swing
-- **Architecture:** Single window with manually drawn overlapping windows (preserving original C++ approach)
+- **Architecture:** Single AWT window with manually drawn overlapping windows (preserving original C++ approach)
 
 ### Package Structure
 
@@ -34,8 +34,8 @@ net.eric_nicolas.sword.ui.base         → TObject, TZone, Widget, Window, Canva
 net.eric_nicolas.sword.ui.widgets      → Button, CheckBox, RadioBox, GroupBox,
                                          EditLine, Label, Menu, MenuChoice,
                                          Dialog, StandardButtons, AbstractButton,
-                                         ItemBox
-net.eric_nicolas.sword.samples         → Hello, Dialog (sample applications)
+                                         ItemBox, Scrollbar, Scroller
+net.eric_nicolas.sword.samples         → Hello, Dialog, Mandel (sample applications)
 ```
 
 ### Translation Guidelines
@@ -55,12 +55,12 @@ net.eric_nicolas.sword.samples         → Hello, Dialog (sample applications)
 
 3. **Status/Options Flags:**
    - Remaining bitmask flags live in `TObject`: `SF_VISIBLE`, `SF_SELECTED`, `SF_MOUSE_IN`, `SF_DOWN`, `SF_FOCUSED`, `SF_MODIFIED`
-   - Use `setStatus`/`clearStatus`/`hasStatus` and `setOption`/`clearOption`/`hasOption`
+   - Use `setStatus`/`clearStatus`/`hasStatus`
    - Widget-specific boolean state uses plain fields instead of flags: `Widget.enabled`, `Menu.mainMenu`, `MenuChoice.separator`
 
 4. **Naming:**
    - Core classes keep the T prefix: `TObject`, `TZone`, `TApp`, `TColors`
-   - Gadget classes use plain names: `Button`, `Menu`, `Dialog`, `EditLine`, etc.
+   - Gadget classes use plain names: `Button`, `Menu`, `Dialog`, `EditLine`, `Scrollbar`, etc.
    - Java conventions: camelCase for methods/fields, UPPER_CASE for constants
 
 5. **AWT Integration:**
@@ -82,26 +82,27 @@ mvn package                # Create JAR
 ```bash
 java -cp target/classes net.eric_nicolas.sword.samples.Hello
 java -cp target/classes net.eric_nicolas.sword.samples.Dialog
+java -cp target/classes net.eric_nicolas.sword.samples.Mandel
 ```
 
 ### Current Status
 
-**Phase 2 largely complete.** Core infrastructure and all main gadgets are working.
+**Phase 2 complete.** Core infrastructure, all main gadgets, and scrolling are working.
 
 ✅ Overlapping windows with drag and z-ordering
 ✅ Event system (mouse, keyboard, commands) routed through object hierarchy
 ✅ Gadgets: Button, CheckBox, RadioBox, GroupBox, EditLine, Label, Menu, MenuChoice, Dialog
-✅ Sample applications: Hello, Dialog, Mandel (Mandelbrot fractal viewer)
-✅ ~58 unit tests
+✅ Scrollbar (TLift port): arrow buttons, thumb drag, page click, H/V orientations
+✅ Scroller (TScroller port): viewport-sized buffer, zoom-aware content/scrollbar sync
+✅ Sample applications: Hello, Dialog, Mandel (Mandelbrot fractal viewer with zoom + pan)
+✅ ~57 unit tests
 
 **Deferred:**
-- Window resize / close button
-- Scrollbars (TScroller, TLift, TGauge)
+- Window resize handles / close button
+- TGauge (progress bar)
 - Modal dialog event loop
 - COMMON / DRIVERS subsystems (file system, error handling)
 - IMAGE / MATH toolboxes
-- IMAGE viewer sample
-- Complex samples (COLORS)
 
 ### Key Adaptations
 
@@ -111,14 +112,17 @@ java -cp target/classes net.eric_nicolas.sword.samples.Dialog
 |-----|------|
 | `TAtom` sibling tree (`_Next`, `_Son`…) | `LinkedList<Widget>` in `Canvas`/`Desktop` |
 | `_Father` pointer | `TObject.father` reference |
+| `TShell` (trivial TObject subclass) | Removed; `TApp` extends `TObject` directly |
 | `void*` | `Object` or specific types |
 | Manual memory management | Garbage collection |
 | Header/implementation split | Single `.java` file per class |
 | Macro event tables | Virtual method overrides in `TObject` |
 | `sfDisabled` status flag | `Widget.enabled` boolean |
 | `opMainMenu` / `opSeparator` option flags | `Menu.mainMenu` / `MenuChoice.separator` booleans |
+| Button `BO_DISABLED`, `BO_NO_CASE` options | Removed; use `setEnabled(false)` after construction |
 | libgrx20 graphics calls | AWT `Graphics2D` via `PaintContext` |
-| Multiple inheritance | Interfaces where needed |
+| `TLift` | `Scrollbar` |
+| `TScroller` | `Scroller` |
 
 **Graphics Layer:**
 - Single AWT `Canvas` in `TApp` covers the full window
@@ -126,15 +130,20 @@ java -cp target/classes net.eric_nicolas.sword.samples.Dialog
 - Double-buffered rendering: `TApp` draws to a `BufferedImage`, then blits to screen
 - Mouse/keyboard events wrapped by `EventAwtAdapter` and dispatched through the object hierarchy
 
+**Scrollbar / Scroller design:**
+- `Scrollbar` renders its own arrow buttons and thumb; handles drag capture (returns true from `mouseMove`/`mouseLUp` while dragging, even outside bounds)
+- `Scroller` is a `Canvas`; its content widget renders into a viewport-sized `BufferedImage`; the virtual content size (for scrollbar ranges) is independent of the buffer
+- Zoom-aware wiring: `scroller.setOnScroll(→ widget.setOffset)` + `widget.setOnZoomChange(→ scroller.setContentSize/setScrollPosition)`
+
 ---
 
 ## C++ Original - Build Commands
 
-All build commands must be run from within the `210 original/` directory or its subdirectories.
+All build commands must be run from within the `210_original/` directory or its subdirectories.
 
 ### Building Libraries
 ```bash
-cd "210 original/SRC/<subsystem>/"
+cd "210_original/SRC/<subsystem>/"
 make depend      # Generate dependency files
 make clean       # Remove intermediate files
 make all         # Full rebuild (clean + depend + build)
@@ -142,7 +151,7 @@ make all         # Full rebuild (clean + depend + build)
 
 ### Building Sample Programs
 ```bash
-cd "210 original/SAMPLES/<sample_name>/"
+cd "210_original/SAMPLES/<sample_name>/"
 make
 make exe         # DOS only: strip and convert to .EXE
 ```
@@ -157,8 +166,6 @@ Build system uses platform-specific definition files included by makefiles:
 - `SUNOS.DEF` - SunOS
 - `TURBOC.DEF` - Turbo C++ (DOS)
 
-Each subsystem's makefile includes the appropriate `.DEF` file to set compiler, flags, and library paths.
-
 ### Environment Variables
 
 Required for runtime:
@@ -169,14 +176,14 @@ GRX20DRV=STDVGA             # Graphics driver (DJGPP v2)
 GO32=path_to_driver         # Graphics driver (DJGPP v1)
 ```
 
-## Architecture
+## C++ Architecture
 
 The framework uses a **layered component model**:
 
 ```
 Application Layer (TApp, TDialog, TEdition)
     ↓
-Gadgets Layer (Buttons, Menus, Controls)
+Gadgets Layer (Buttons, Menus, Controls, Scrollbars)
     ↓
 Graphics Layer (Windows, Zones, Drawing)
     ↓
@@ -189,150 +196,20 @@ Common Layer (Utilities, Error Handling)
 Graphics Backend (libgrx/libgrx20)
 ```
 
-### Core Architectural Concepts
+### C++ Subsystems (in SRC/)
 
-1. **Linked Tree Structure:** All objects derive from `TAtom` which provides:
-   - `_Next`, `_Previous` - Sibling navigation
-   - `_Son` - First child
-   - `_Father` - Parent reference
-   - Objects form hierarchical parent-child trees
+**MECANISM:** TAtom (linked tree), TObject (events), TEvent, TPoint/TRect, TKeyboard, TClipBoard
 
-2. **Event-Driven Design:** Objects derive from `TObject` which adds:
-   - Event dispatching via macro-based event tables
-   - Command routing and handling
-   - Status and options flags for state management
+**GRAPHICS:** TWindow, TZone, TDesktop, TFont, TColors, TDrawings, libgrx20 backend
 
-3. **Overlapping Window Management:** Efficient rendering with clipping regions for overlapped windows
+**GADGETS:** TButton, TMenu, TDialog, TEdition, TScroller, TLift/TIntLift, TGauge, TStdWin, TStatText
 
-## Directory Structure
+**TOOLS:** TApp (main event loop), TMsgBox, TCmdWin
 
-```
-210 original/
-├── SRC/           # Source code organized by subsystem
-├── INCLUDE/       # Public API headers (mirror SRC structure)
-├── LIB/           # Pre-compiled libraries per platform
-├── SAMPLES/       # Example programs
-├── TOOLS/         # Utility programs
-├── DOCS/          # Documentation (MANUAL.DOC, MANUAL.PS)
-├── FONTS/         # Font files for rendering
-└── DATAS/         # Color palette files
-```
+**TOOLBOX/IMAGE:** Load/display images (BMP, GIF, PPM, TARGA)
 
-## Subsystems (in SRC/)
+**TOOLBOX/MATH:** Complex numbers, matrices, FFT, polynomial math
 
-### COMMON
-Core utilities, path manipulation, error handling, debug facilities
-- Files: BASIC.CC, DEBUG.CC, ERROR.CC
-- Global variables: SwordPath, AppPath, Version
+**COMMON:** Path utilities, error handling, debug facilities
 
-### MECANISM
-Core object system and infrastructure
-- **TAtom** - Base class with linked list/tree structure
-- **TObject** - Application object with event handling
-- **TEvent** - Event structure (mouse, keyboard, commands)
-- **TKeyboard** - Keyboard input processing
-- **TPoint/TRect** - Geometry primitives
-- **TSetup** - Configuration management
-- **TClipBoard** - Data exchange
-
-### DRIVERS
-Hardware abstraction: file system, disk access, time/date retrieval
-
-### GRAPHICS
-Screen rendering and window management
-- **TWindow** - Overlapped windows with drag/resize/minimize/maximize
-- **TZone** - Base drawing area with clipping
-- **TDesktop** - Application background/desktop
-- **TFont/TColors** - Font and color systems
-- **TDrawings** - Primitive drawing operations
-- Links to libgrx20 for low-level graphics
-
-### GADGETS
-Pre-built UI components:
-- **TStdWin** - Standard window with title bar
-- **TDialog** - Modal/modeless dialogs
-- **TButton** - Clickable buttons
-- **TMenu** - Hierarchical menus with hotkeys
-- **TEdition** - Text editing control
-- **TScroller** - Scrollable container
-- **TGauge** - Progress bar
-- **TLift/TIntLift** - Scrollbars
-
-### TOOLBOX
-**IMAGE Module:** Load/display images (BMP, GIF, PPM, TARGA)
-**MATH Module:** Complex numbers, matrices, vectors, FFT, polynomial math
-
-### TOOLS
-High-level application framework
-- **TApp** - Main application with event loop (Run() method)
-- **TMsgBox** - Message boxes
-- **TCmdWin** - Command windows
-
-## Key Patterns
-
-### Event Tables
-
-Use macro-based event table declarations (similar to MFC):
-
-```cpp
-DEFINE_EVENTS_TABLE(MyClass, ParentClass)
-  COMMAND(cmHelloWindow, OnHelloClick)
-  MOUSELDOWN()
-  KEYDOWN()
-END_EVENTS_TABLE
-```
-
-### Options and Status Flags
-
-Objects use bitmask flags:
-- **Options:** opDrawable, opSelectable, opWinSizeable, opWinCloseBox
-- **Status:** sfMouseIn, sfSelected, sfDown, sfVisible, sfDisabled
-
-### Data Exchange
-
-Standard pattern for object state management:
-```cpp
-virtual void SetData(void *Ptr);   // Load state
-virtual void GetData(void *Ptr);   // Retrieve state
-virtual long DataSize(void);       // Query size
-```
-
-## Sample Programs
-
-Located in `SAMPLES/` directory:
-- **HELLO** - Basic window with custom drawing
-- **DIALOG** - Dialog box and controls
-- **IMAGE** - Image viewer
-- **MANDEL** - Mandelbrot fractal generator
-- **COLORS** - Color palette viewer
-
-Each sample has its own makefile and demonstrates specific framework features.
-
-## Documentation
-
-- `DOCS/README.1ST` - Installation and quick start
-- `DOCS/MANUAL.DOC` - Complete manual (Word 7 format)
-- `DOCS/MANUAL.PS` - Manual (PostScript)
-- `DOCS/COPYING.EN` - License terms
-
-## Known Issues
-
-From TODO.TXT:
-- **MATH Toolbox:** Matrix/Vector incompatible with ANSI C++
-- **IMAGE Toolbox:** Cannot save images; missing TIFF/RAS/PICT support
-- **GADGETS:** Edition control Delete key doesn't remove selection
-- **GRAPHICS:** XORed lines issue when dragging/resizing windows with GRX20
-
-## Platform Requirements
-
-- **CPU:** 386SX16 minimum (Turbo C++), 386DX20 (DJGPP)
-- **Memory:** 1MB (Turbo C++), 4MB (DJGPP)
-- **Graphics:** Requires libgrx (v1.03 or v2.0) and mouse
-- **Display:** All graphics modes supported (640x480 minimum)
-
-## Important Notes
-
-- This is legacy C++ code from 1996 - not C++11/14/17 compliant
-- Uses non-standard C++ patterns (far pointers, DOS-specific APIs)
-- All paths use backslashes or are converted via FixPath() utility
-- Graphics backend (libgrx) must be properly configured for the target platform
+**DRIVERS:** File system, disk, time/date

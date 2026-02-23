@@ -2,132 +2,132 @@
 
 ## Current Status
 
-Phase 1 (core infrastructure + Hello sample) is complete. Phase 2 (gadgets + Dialog sample) is largely complete.
+Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three sample applications are working.
 
 ---
 
 ## Implemented Classes
 
-### UI Package (`net.eric_nicolas.sword.ui`)
+### `net.eric_nicolas.sword.ui`
 
-- **`Point`** - Immutable 2D point with arithmetic operations (plus, minus, min, max)
-- **`Rect`** - Rectangle (top-left + width/height) with intersect, union, contains
+- **`Point`** — Immutable 2D point with arithmetic helpers (plus, minus, min, max)
+- **`Rect`** — Rectangle (top-left origin + width/height); intersect, union, contains, grow
 
-### Events Package (`net.eric_nicolas.sword.ui.events`)
+### `net.eric_nicolas.sword.ui.events`
 
-- **`Event`** - Base event with type constant and timestamp
-- **`EventMouse`** - Mouse event: position, button state, modifiers
-- **`EventKeyboard`** - Keyboard event: key code, character, modifiers
-- **`EventCommand`** - Command event for routing UI actions through object hierarchy
-- **`EventAwtAdapter`** - Factory converting AWT events → S.W.O.R.D events
+- **`Event`** — Base event: `what` type constant, `EV_NOTHING` sentinel
+- **`EventMouse`** — Mouse event: `where` (Point), button mask, modifiers; `withOffset(dx,dy)` for coordinate translation
+- **`EventKeyboard`** — Keyboard event: key code, char, modifiers
+- **`EventCommand`** — Command event: `commandId` for routing UI actions up the hierarchy
+- **`EventAwtAdapter`** — Converts AWT `MouseEvent`/`KeyEvent` → S.W.O.R.D events
 
-### Mechanism Package (`net.eric_nicolas.sword.mechanism`)
+### `net.eric_nicolas.sword.ui.base`
 
-- **`TObject`** - Core application object: options/status bitmask flags, parent reference, virtual event handlers
+- **`TObject`** — Root of the object hierarchy: `father` reference, status bitmask flags (`SF_VISIBLE`, `SF_SELECTED`, `SF_MOUSE_IN`, `SF_DOWN`, `SF_FOCUSED`, `SF_MODIFIED`), virtual event handlers (`mouseLDown`, `mouseMove`, `keyDown`, `command`, …)
+- **`TZone`** — Drawing area: `bounds`, `clipRect`, background/foreground colours, `draw()` / `paint()`, `getAbsolutePosition()`, `contains()`
+- **`Widget`** — Extends TZone; adds `enabled` boolean (`isEnabled()` / `setEnabled()`)
+- **`Canvas`** — Transparent container for Widget children stored in `LinkedList<Widget>`; dispatches events in reverse (topmost first) z-order
+- **`Window`** — Overlapping window: draggable title bar, 3D frame, internal `Canvas`; `bringToFront()` / `remove()`
+- **`Desktop`** — Manages `LinkedList<Window>` with z-ordering; dispatches events and repaints
+- **`TColors`** — Static colour palette (standard + UI theme: `FACE_GRAY`, `MEDIUM_GRAY`, `DESKTOP_BG`, …)
+- **`PaintContext`** — `Graphics2D` wrapper with local-coordinate translation via `withOrigin(Point)`; covers draw/fill/clip/image primitives
+- **`TApp`** — Main application: AWT event loop, double-buffered back buffer, `Desktop`, menu bar; extend and override `createMenuChoices()` + `command()`
 
-### Graphics Package (`net.eric_nicolas.sword.graphics`)
+### `net.eric_nicolas.sword.ui.widgets`
 
-- **`TColors`** - Static color palette (standard colors + UI theme colors)
-- **`PaintContext`** - AWT Graphics2D wrapper with local coordinate translation
-- **`TZone`** - Base drawing area: bounds, clipping, visibility, parent/child relationships
-- **`Widget`** - Base class for gadget components (extends TZone)
-- **`Canvas`** - Transparent container for Widgets, stored in `LinkedList<Widget>`
-- **`Window`** - Overlapping window with draggable title bar, frame, and internal Canvas
-- **`Desktop`** - Main desktop managing windows in `LinkedList<Window>` with z-order
+- **`Label`** — Non-interactive text label
+- **`AbstractButton`** — Base for clickable buttons: 3D raised/pressed frame, scan-code support, command routing
+- **`Button`** — Standard push button with centred text
+- **`ItemBox`** — Base for selection controls (no button frame); click toggles `SF_DOWN`
+- **`CheckBox`** — Checkbox; bitmask integration with `GroupBox` for `getData()`
+- **`RadioBox`** — Radio button; mutually exclusive within `GroupBox`
+- **`GroupBox`** — Container for `CheckBox`/`RadioBox`; manages group `value` and titled frame
+- **`EditLine`** — Single-line text input: cursor, click-to-position, keyboard navigation, max length
+- **`Menu`** — Menu bar (`mainMenu=true`) or dropdown; horizontal/vertical layouts, hotkey support
+- **`MenuChoice`** — Menu item: text, hotkey, command; `separator=true` for dividers
+- **`Dialog`** — Window subclass with result codes (`CM_OK`, `CM_CANCEL`, `CM_YES`, `CM_NO`); `execDialog()` stub
+- **`StandardButtons`** — Factory for standard OK / Cancel / Yes / No button instances
+- **`Scrollbar`** — Port of `TLift`: H/V scrollbar with arrow buttons, thumb drag, page click; `setRange(contentSize, viewSize)`, `getPosition()`, `setOnChange(Runnable)`. Drag capture: `mouseLUp`/`mouseMove` return true while dragging even outside bounds.
+- **`Scroller`** — Port of `TScroller`: scrollable viewport backed by a viewport-sized `BufferedImage`. Virtual content size (governs scrollbar range) is independent of the buffer. Mouse events are forwarded as viewport-local coordinates. Public API: `setContentSize`, `setScrollPosition`, `getScrollX/Y`, `setOnScroll`.
 
-### Gadgets Package (`net.eric_nicolas.sword.widgets`)
+### `net.eric_nicolas.sword.samples`
 
-- **`Label`** - Non-interactive text label
-- **`AbstractButton`** - Base for clickable buttons: 3D frame, pressed state, command routing
-- **`Button`** - Standard button with centered text label
-- **`ItemBox`** - Base for selection controls (no button frame)
-- **`CheckBox`** - Checkbox with bitmask support for GroupBox data exchange
-- **`RadioBox`** - Radio button for mutually exclusive selection within GroupBox
-- **`GroupBox`** - Container for CheckBox/RadioBox with titled frame and value management
-- **`EditLine`** - Single-line text input: cursor, keyboard navigation, click-to-position
-- **`Menu`** - Menu bar/dropdown with horizontal or vertical layout
-- **`MenuChoice`** - Menu item: text, hotkey, command, optional submenu, separator support
-- **`Dialog`** - Modal/modeless dialog with result codes (OK, Cancel, Yes, No)
-- **`StandardButtons`** - Factory providing standard button instances (OK, Cancel, Yes, No)
-
-### Tools Package (`net.eric_nicolas.sword.tools`)
-
-- **`TShell`** - Base shell object extending TObject
-- **`TApp`** - Main application: AWT event loop, back buffer, desktop, menu management
-
-### Samples Package (`net.eric_nicolas.sword.samples`)
-
-- **`Hello`** - Custom THello widget in multiple overlapping draggable windows
-- **`Dialog`** - Demonstrates Dialog, Button, CheckBox, RadioBox, EditLine
+- **`Hello`** — Multiple overlapping draggable windows with a custom `THello` widget drawing "Hello World!"
+- **`Dialog`** — Demonstrates `Dialog`, `Button`, `CheckBox`, `RadioBox`, `GroupBox`, `EditLine`, `Label`
+- **`Mandel`** — Mandelbrot fractal viewer with zoom + pan. `MandelWidget` renders only the current viewport into a `BufferedImage`, tracking `zoom` and `offsetX/Y`. Left-click zooms in 2× (virtual world doubles, thumb halves); right-click undoes zoom. Wired to `Scroller` via `onZoomChange` / `onScroll` callbacks so scrollbars always reflect zoom level and enable full panning.
 
 ---
 
 ## Architecture Notes
 
-### What Was Changed from the Original C++ Design
+### What Was Changed from the Original C++
 
 | Aspect | C++ Original | Java Port |
 |--------|-------------|-----------|
 | Naming | All classes T-prefixed | T-prefix on core mechanism classes; gadgets/geometry omit it |
-| Tree structure | TAtom: `_Next/_Previous/_Son/_Father` sibling chain | Only `_Father` (parent ref) in TObject; children in `LinkedList` |
+| Tree structure | TAtom: `_Next/_Previous/_Son/_Father` sibling chain | Only `father` parent ref in TObject; children in `LinkedList` |
 | Child storage | TAtom linked tree | `LinkedList<Widget>` in Canvas, `LinkedList<Window>` in Desktop |
 | Event tables | C++ macros `DEFINE_EVENTS_TABLE` | Virtual method overrides in TObject subclasses |
-| Graphics | libgrx20 calls | AWT `Graphics2D` via `PaintContext` wrapper |
-| Data exchange | `SetData()/GetData()/DataSize()` | Not implemented (removed in recent refactor) |
-| Packages | Flat subsystem names | Added `ui` and `ui.events` packages |
+| Graphics backend | libgrx20 calls | AWT `Graphics2D` via `PaintContext` wrapper |
+| Data exchange | `SetData()/GetData()/DataSize()` | Removed |
+| `TShell` | Trivial TObject subclass | Removed; `TApp` extends `TObject` directly |
+| `sfDisabled` flag | Status bitmask | `Widget.enabled` boolean |
+| `opMainMenu` / `opSeparator` | Option bitmasks | `Menu.mainMenu` / `MenuChoice.separator` booleans |
+| Button `BO_*` options | Constructor parameter | Removed; use `setEnabled(false)` after construction |
+| Packages | Flat subsystem names | `ui.base`, `ui.widgets`, `ui.events` |
 
 ### Key Design Decisions
 
-1. **No TAtom**: The linked sibling tree (TAtom) was removed. Children are stored in explicit `LinkedList` containers in Canvas and Desktop.
-2. **Parent reference only**: TObject retains `_Father` for upward traversal (command routing), but no sibling navigation.
-3. **Method override event dispatch**: Instead of macro event tables, event handling uses `switch` dispatch calling overridable methods (`mouseLDown()`, `keyDown()`, `command()`, etc.).
-4. **PaintContext**: Coordinate translation is wrapped in PaintContext, passed down the paint chain, preserving the "draw in local coordinates" pattern.
-5. **LinkedList for z-order**: Desktop uses LinkedList<Window> to support bring-to-front semantics without TAtom tree manipulation.
+1. **No TAtom**: The linked sibling tree is removed. Children live in explicit `LinkedList` containers in Canvas and Desktop.
+2. **Parent reference only**: `TObject.father` enables upward command routing, but no sibling navigation.
+3. **Method-override event dispatch**: `TObject.handleEvent` dispatches via a `switch` to overridable methods; no macro tables.
+4. **PaintContext**: Local-coordinate translation is managed in `PaintContext`; callers always draw in their own (0,0)-based coordinate space.
+5. **Scrollbar drag capture**: Like Window title-bar drag, Scrollbar returns `true` from `mouseMove`/`mouseLUp` while `dragging==true` regardless of contains, so the thumb follows the mouse even outside the bar.
+6. **Scroller viewport buffer**: Content renders at viewport size (not virtual size), so only the visible slice is computed. The scrollbar range tracks the virtual size independently. Scroll offset is forwarded to the content widget via callback.
 
 ---
 
 ## What Works
 
-- ✅ Object hierarchy (parent reference chain)
+- ✅ Object hierarchy (parent reference chain, command routing up)
 - ✅ Event dispatching (mouse, keyboard, commands)
-- ✅ Window creation, management, z-ordering
-- ✅ Window dragging via title bar
-- ✅ Overlapping window rendering with clipping
+- ✅ Window creation, management, z-ordering, drag
+- ✅ Overlapping window rendering
 - ✅ Custom zone/widget painting
 - ✅ AWT event conversion
-- ✅ Buttons (standard, with pressed 3D effect)
-- ✅ CheckBox (with bitmask group support)
-- ✅ RadioBox (mutually exclusive within GroupBox)
-- ✅ GroupBox (container with titled frame)
-- ✅ EditLine (text input with cursor and keyboard navigation)
-- ✅ Menu (horizontal/vertical layouts with hotkeys)
-- ✅ MenuChoice (items, separators, hotkeys)
-- ✅ Dialog (modal/modeless, result codes)
-- ✅ Label (text display)
+- ✅ Button (standard push button, 3D pressed effect)
+- ✅ CheckBox / RadioBox / GroupBox
+- ✅ EditLine (text input, cursor, keyboard navigation)
+- ✅ Menu / MenuChoice (hotkeys, separators, H+V layouts)
+- ✅ Dialog (result codes OK/Cancel/Yes/No)
+- ✅ Label
+- ✅ Scrollbar (arrow, thumb drag, page click, H/V)
+- ✅ Scroller (viewport buffer, zoom-aware content/scrollbar sync)
+- ✅ Mandel sample (fractal, zoom history, pan with scrollbars)
 
 ## Known Limitations
 
 - **No window resize**: Resize handles not implemented
 - **No close/min/max buttons**: Title bar decorations only
 - **No window focus styling**: Active window not visually distinct
-- **Submenu display**: MenuChoice submenu structure exists but display logic incomplete
 - **Dialog modal loop**: `execDialog()` is a stub; modal blocking not yet implemented
 - **No COMMON subsystem**: No path utilities, error handling, or debug facilities
 - **No DRIVERS subsystem**: No file system or time/date access
-- **No scrollbars**: TScroller, TGauge, TLift not ported
+- **No TGauge**: Progress bar not ported
 - **No IMAGE/MATH toolboxes**: Deferred
+- **Mandel render on EDT**: Fractal re-render on zoom/scroll blocks the UI; async rendering is out of scope
 
 ---
 
 ## Test Coverage
 
-8 test classes, ~58 tests (JUnit 5):
+8 test classes, 57 tests (JUnit 5):
 
 | Test Class | What It Tests |
 |------------|--------------|
 | `PointTest` | Constructor, copy, arithmetic |
 | `RectTest` | Constructors, geometry ops, intersect/union |
-| `TObjectTest` | Flag management (status/options), visibility, selection |
+| `TObjectTest` | Flag management (status), visibility, selection |
 | `TZoneTest` | Bounds, absolute position with parent chain, contains, visibility |
 | `CheckBoxTest` | Checked state, bitmask groups, disabled state |
 | `TRadioBoxTest` | Mutual exclusion, getValue, disabled state |
@@ -138,8 +138,8 @@ Phase 1 (core infrastructure + Hello sample) is complete. Phase 2 (gadgets + Dia
 
 ## File Statistics
 
-- Java source files: 31 (src/main)
+- Java source files: 33 (src/main)
 - Test files: 8 (src/test)
-- Total tests: ~58
-- Packages: 7
-- Classes: 31
+- Total tests: 57
+- Packages: 5 (ui, ui.events, ui.base, ui.widgets, samples)
+- Classes: 33
