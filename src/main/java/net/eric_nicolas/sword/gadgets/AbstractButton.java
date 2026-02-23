@@ -10,50 +10,35 @@ import net.eric_nicolas.sword.ui.events.EventMouse;
  */
 public class AbstractButton extends Widget {
 
-    // Button options
-    public static final int BO_DISABLED = 0x0001;
-    public static final int BO_IMMEDIATE = 0x0002;
-    public static final int BO_REPETITION = 0x0004;
-    public static final int BO_NO_CASE = 0x0008;
-
     protected long command;
     protected int scanCode;
-    protected int buttonOptions;
     protected boolean pressed;
 
     /**
      * Default constructor.
      */
     public AbstractButton() {
-        this(0, 0, 80, 25, 0, 0, 0);
+        this(0, 0, 80, 25, 0, 0);
     }
 
     /**
-     * Constructor with position, size, command, and options.
+     * Constructor with position, size, and command.
      */
-    public AbstractButton(int x, int y, int width, int height, long command, int scanCode, int options) {
+    public AbstractButton(int x, int y, int width, int height, long command, int scanCode) {
         super(x, y, width, height);
         defaults();
-        init(command, scanCode, options);
+        init(command, scanCode);
     }
 
     protected void defaults() {
         command = 0;
         scanCode = 0;
-        buttonOptions = 0;
         pressed = false;
     }
 
-    protected void init(long command, int scanCode, int options) {
+    protected void init(long command, int scanCode) {
         this.command = command;
         this.scanCode = scanCode;
-        this.buttonOptions = options;
-
-        // Set disabled status based on options
-        if ((options & BO_DISABLED) != 0) {
-            setStatus(SF_DISABLED);
-        }
-
         setBackgroundColor(TColors.FACE_GRAY);
     }
 
@@ -63,7 +48,7 @@ public class AbstractButton extends Widget {
         int height = bounds.height();
 
         // Draw button background
-        if (hasStatus(SF_DISABLED)) {
+        if (!isEnabled()) {
             ctx.setColor(TColors.MEDIUM_GRAY);
         } else if (pressed) {
             ctx.setColor(TColors.DARK_GRAY);
@@ -110,7 +95,7 @@ public class AbstractButton extends Widget {
 
     @Override
     protected boolean mouseLDown(EventMouse event) {
-        if (contains(event.where) && !hasStatus(SF_DISABLED)) {
+        if (contains(event.where) && isEnabled()) {
             pressed = true;
             return true;
         }
@@ -121,7 +106,7 @@ public class AbstractButton extends Widget {
     protected boolean mouseLUp(EventMouse event) {
         if (pressed) {
             pressed = false;
-            if (contains(event.where) && !hasStatus(SF_DISABLED)) {
+            if (contains(event.where) && isEnabled()) {
                 action();
             }
             return true;

@@ -17,14 +17,14 @@ public class Button extends AbstractButton {
      * Default constructor.
      */
     public Button() {
-        this(0, 0, 80, 25, 0, 0, 0, "Button");
+        this(0, 0, 80, 25, 0, 0, "Button");
     }
 
     /**
-     * Constructor with position, size, command, options, and text.
+     * Constructor with position, size, command, and text.
      */
-    public Button(int x, int y, int width, int height, long command, int scanCode, int options, String text) {
-        super(x, y, width, height, command, scanCode, options);
+    public Button(int x, int y, int width, int height, long command, int scanCode, String text) {
+        super(x, y, width, height, command, scanCode);
         this.text = text != null ? text : "Button";
         this.buttonFont = new Font("SansSerif", Font.PLAIN, 12);
     }
@@ -34,7 +34,7 @@ public class Button extends AbstractButton {
         if (text == null || text.isEmpty()) return;
 
         // Set text color based on state
-        if (hasStatus(SF_DISABLED)) {
+        if (!isEnabled()) {
             ctx.setColor(TColors.DARK_GRAY);
         } else {
             ctx.setColor(TColors.BLACK);

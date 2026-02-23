@@ -17,8 +17,8 @@ class CheckBoxTest {
     @BeforeEach
     void setUp() {
         group = new GroupBox(10, 10, 200, 100);
-        checkA = new CheckBox(10, 10, 100, AbstractButton.BO_NO_CASE, 1, "Check A");
-        checkB = new CheckBox(10, 30, 100, AbstractButton.BO_NO_CASE, 2, "Check B");
+        checkA = new CheckBox(10, 10, 100, 1, "Check A");
+        checkB = new CheckBox(10, 30, 100, 2, "Check B");
 
         group.add(checkA);
         group.add(checkB);
@@ -61,10 +61,11 @@ class CheckBoxTest {
 
     @Test
     void testDisabled() {
-        CheckBox disabled = new CheckBox(10, 50, 100, AbstractButton.BO_DISABLED, 4, "Disabled");
+        CheckBox disabled = new CheckBox(10, 50, 100, 4, "Disabled");
+        disabled.setEnabled(false);
         group.add(disabled);
 
-        assertTrue(disabled.hasStatus(TObject.SF_DISABLED));
+        assertFalse(disabled.isEnabled());
     }
 
     @Test

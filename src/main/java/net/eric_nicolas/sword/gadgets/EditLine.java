@@ -55,7 +55,7 @@ public class EditLine extends Widget {
         int h = bounds.height();
 
         // Draw background
-        ctx.setColor(hasStatus(SF_DISABLED) ? TColors.MEDIUM_GRAY : TColors.WHITE);
+        ctx.setColor(!isEnabled() ? TColors.MEDIUM_GRAY : TColors.WHITE);
         ctx.fillRect(x, y, w, h);
 
         // Draw border if enabled
@@ -133,7 +133,7 @@ public class EditLine extends Widget {
 
     @Override
     protected boolean keyDown(EventKeyboard event) {
-        if (!hasFocus || hasStatus(SF_DISABLED)) {
+        if (!hasFocus || !isEnabled()) {
             return false;
         }
 

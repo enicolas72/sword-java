@@ -48,7 +48,8 @@ public class Dialog {
 
             Canvas dc = dialog.getCanvas();
 
-            Button otherBtn = new Button(10, 30, 80, 23, 0, 0, AbstractButton.BO_DISABLED, "Other");
+            Button otherBtn = new Button(10, 30, 80, 23, 0, 0, "Other");
+            otherBtn.setEnabled(false);
             dc.add(otherBtn);
 
             Button cancelBtn = StandardButtons.cancelButton(95, 30);
@@ -61,17 +62,19 @@ public class Dialog {
             dc.add(staticText);
 
             GroupBox checkGroup = new GroupBox(10, 85, 250, 65);
-            CheckBox checkA = new CheckBox(10, 15, 100, AbstractButton.BO_NO_CASE, 1, "Check Box &A");
+            CheckBox checkA = new CheckBox(10, 15, 100, 1, "Check Box &A");
             checkA.setChecked(true);  // default: A checked
             checkGroup.add(checkA);
-            checkGroup.add(new CheckBox(10, 40, 100, AbstractButton.BO_NO_CASE, 2, "Check Box &B"));
+            checkGroup.add(new CheckBox(10, 40, 100, 2, "Check Box &B"));
             dc.add(checkGroup);
 
             GroupBox radioGroup = new GroupBox(10, 160, 250, 80, "Radio buttons group");
-            radioGroup.add(new RadioBox(10,  25, 100, AbstractButton.BO_NO_CASE, 1, "Radio &C"));
-            radioGroup.add(new RadioBox(120, 25, 100, AbstractButton.BO_NO_CASE | AbstractButton.BO_DISABLED, 2, "Radio &D"));
-            radioGroup.add(new RadioBox(10,  50, 100, AbstractButton.BO_NO_CASE, 3, "Radio &E"));
-            radioGroup.add(new RadioBox(120, 50, 100, AbstractButton.BO_NO_CASE, 4, "Radio &F"));
+            radioGroup.add(new RadioBox(10,  25, 100, 1, "Radio &C"));
+            RadioBox radioD = new RadioBox(120, 25, 100, 2, "Radio &D");
+            radioD.setEnabled(false);
+            radioGroup.add(radioD);
+            radioGroup.add(new RadioBox(10,  50, 100, 3, "Radio &E"));
+            radioGroup.add(new RadioBox(120, 50, 100, 4, "Radio &F"));
             radioGroup.value = 3;  // default: E selected
             dc.add(radioGroup);
 

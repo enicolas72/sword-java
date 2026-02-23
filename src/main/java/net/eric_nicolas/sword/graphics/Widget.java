@@ -6,7 +6,17 @@ package net.eric_nicolas.sword.graphics;
  */
 public class Widget extends TZone {
 
+    protected boolean enabled = true;
+
     public Widget(int x, int y, int width, int height) {
         super(x, y, width, height);
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }

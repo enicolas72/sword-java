@@ -21,7 +21,7 @@ public class Dialog extends Window {
     }
 
     public Dialog(int x, int y, int width, int height, String title) {
-        super(x, y, width, height, title, OP_WIN_CLOSEBOX);
+        super(x, y, width, height, title);
         dialogResult = 0;
         modal = false;
         setBackgroundColor(TColors.FACE_GRAY);
@@ -53,7 +53,7 @@ public class Dialog extends Window {
 
         java.awt.EventQueue queue = java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue();
 
-        while (dialogResult == 0 && _Father != null) {
+        while (dialogResult == 0 && father != null) {
             try {
                 java.awt.AWTEvent event = queue.getNextEvent();
                 Object source = event.getSource();

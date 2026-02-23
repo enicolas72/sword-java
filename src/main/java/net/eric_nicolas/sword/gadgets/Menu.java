@@ -20,23 +20,21 @@ import java.util.List;
  */
 public class Menu extends Window {
 
-    public static final int OP_MAIN_MENU = 0x0200;
-
+    protected boolean mainMenu;
     protected int textWidth;
     protected int hotTextWidth;
     protected Menu fatherMenu;
     protected Font menuFont;
 
     public Menu() {
-        this("Menu", 0);
+        this("Menu", false);
     }
 
-    public Menu(String title, int options) {
-        super((options & OP_MAIN_MENU) != 0 ? 0 : 5,
-              (options & OP_MAIN_MENU) != 0 ? 0 : 5,
-              100, 50, title, options);
+    public Menu(String title, boolean mainMenu) {
+        super(mainMenu ? 0 : 5, mainMenu ? 0 : 5, 100, 50, title);
+        this.mainMenu = mainMenu;
         defaults();
-        init(title, options);
+        init(title);
     }
 
     protected void defaults() {
@@ -46,8 +44,7 @@ public class Menu extends Window {
         menuFont = new Font("SansSerif", Font.PLAIN, 12);
     }
 
-    protected void init(String title, int options) {
-        setOption(options);
+    protected void init(String title) {
         setBackgroundColor(TColors.FACE_GRAY);
     }
 
@@ -61,7 +58,7 @@ public class Menu extends Window {
     }
 
     public void initChoices() {
-        if (hasOption(OP_MAIN_MENU)) {
+        if (mainMenu) {
             initChoicesHorizontal();
         } else {
             initChoicesVertical();
@@ -79,7 +76,7 @@ public class Menu extends Window {
         java.awt.FontMetrics fm = g.getFontMetrics();
 
         for (MenuChoice choice : getChoices()) {
-            if (!choice.hasOption(MenuChoice.OP_SEPARATOR)) {
+            if (!choice.separator) {
                 String displayText = choice.text != null ? choice.text.replace("&", "") : "";
                 int width = fm.stringWidth(displayText) + 20;
 
@@ -115,7 +112,7 @@ public class Menu extends Window {
                 choice.getSubMenu().initChoices();
             }
 
-            int h = choice.hasOption(MenuChoice.OP_SEPARATOR) ? 6 : 20;
+            int h = choice.separator ? 6 : 20;
             Rect choiceBounds = new Rect(Point.plus(myBounds.origin(), 7, y), width - 15, h);
             choice.setBounds(choiceBounds);
             y += h;
@@ -146,7 +143,7 @@ public class Menu extends Window {
     protected int compHeight() {
         int h = 32;
         for (MenuChoice choice : getChoices()) {
-            h += choice.hasOption(MenuChoice.OP_SEPARATOR) ? 6 : 20;
+            h += choice.separator ? 6 : 20;
         }
         return h;
     }
@@ -208,7 +205,7 @@ public class Menu extends Window {
     }
 
     public void closeMenu() {
-        if (!hasOption(OP_MAIN_MENU)) {
+        if (!mainMenu) {
             remove();
             for (MenuChoice mc : getChoices()) {
                 mc.up();
@@ -221,7 +218,7 @@ public class Menu extends Window {
 
     public MenuChoice activeChoice() {
         for (MenuChoice mc : getChoices()) {
-            if (!mc.hasStatus(TObject.SF_DISABLED) && mc.hasStatus(MenuChoice.SF_MENU_CHOICE_DOWN)) {
+            if (mc.isEnabled() && mc.hasStatus(MenuChoice.SF_MENU_CHOICE_DOWN)) {
                 return mc;
             }
         }
@@ -230,7 +227,7 @@ public class Menu extends Window {
 
     public MenuChoice firstChoice() {
         for (MenuChoice mc : getChoices()) {
-            if (!mc.hasStatus(TObject.SF_DISABLED)) return mc;
+            if (mc.isEnabled()) return mc;
         }
         return null;
     }
@@ -238,14 +235,14 @@ public class Menu extends Window {
     public MenuChoice lastChoice() {
         List<MenuChoice> choices = getChoices();
         for (int i = choices.size() - 1; i >= 0; i--) {
-            if (!choices.get(i).hasStatus(TObject.SF_DISABLED)) return choices.get(i);
+            if (choices.get(i).isEnabled()) return choices.get(i);
         }
         return null;
     }
 
     @Override
     protected void paint(PaintContext ctx) {
-        if (hasOption(OP_MAIN_MENU)) {
+        if (mainMenu) {
             ctx.setColor(TColors.FACE_GRAY);
             ctx.fillRect(0, 0, bounds.width(), bounds.height());
 

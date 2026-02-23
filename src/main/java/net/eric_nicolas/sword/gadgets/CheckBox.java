@@ -15,8 +15,8 @@ public class CheckBox extends ItemBox {
     /**
      * Constructor with position, size, options, mask, and text.
      */
-    public CheckBox(int x, int y, int width, int options, int mask, String text) {
-        super(x, y, width, options, text);
+    public CheckBox(int x, int y, int width, int mask, String text) {
+        super(x, y, width, text);
         this.mask = mask;
         this.checked = false;
     }
@@ -44,7 +44,7 @@ public class CheckBox extends ItemBox {
 
         // Draw text
         if (text != null && !text.isEmpty()) {
-            if (hasStatus(SF_DISABLED)) {
+            if (!isEnabled()) {
                 ctx.setColor(TColors.DARK_GRAY);
             } else {
                 ctx.setColor(TColors.BLACK);
@@ -57,7 +57,7 @@ public class CheckBox extends ItemBox {
 
     @Override
     protected void action() {
-        if (!hasStatus(SF_DISABLED)) {
+        if (isEnabled()) {
             checked = !checked;
             // Update parent group box value
             updateParentValue();

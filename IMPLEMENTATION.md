@@ -1,77 +1,145 @@
-# Java Port Implementation Notes
+# Java Port - Implementation Notes
 
-## Phase 1 Complete - Hello Sample Running
+## Current Status
 
-### Implemented Classes
+Phase 1 (core infrastructure + Hello sample) is complete. Phase 2 (gadgets + Dialog sample) is largely complete.
 
-#### Mechanism Package (`net.eric_nicolas.sword.mechanism`)
-- **TAtom** - Base class with linked tree structure (_Next, _Previous, _Son, _Father)
-- **TObject** - Event handling with status/option flags (bitmasks)
-- **TEvent** - Event system wrapping AWT events
-- **TPoint** - 2D point
-- **TRect** - Rectangle with intersection/union operations
+---
 
-#### Graphics Package (`net.eric_nicolas.sword.graphics`)
-- **TColors** - Color constants and palette
-- **TZone** - Base drawing area with clipping
-- **TWindow** - Overlapping window with draggable title bar
-- **TDesktop** - Application desktop/background
+## Implemented Classes
 
-#### Tools Package (`net.eric_nicolas.sword.tools`)
-- **TApp** - Main application with AWT Canvas and event loop
-  - Converts AWT MouseEvent/KeyEvent to TEvent
-  - Double-buffered rendering with Graphics2D
-  - ~60 FPS event loop
+### UI Package (`net.eric_nicolas.sword.ui`)
 
-#### Samples Package (`net.eric_nicolas.sword.samples`)
-- **Hello** - Working demo creating multiple overlapping windows
+- **`Point`** - Immutable 2D point with arithmetic operations (plus, minus, min, max)
+- **`Rect`** - Rectangle (top-left + width/height) with intersect, union, contains
+
+### Events Package (`net.eric_nicolas.sword.ui.events`)
+
+- **`Event`** - Base event with type constant and timestamp
+- **`EventMouse`** - Mouse event: position, button state, modifiers
+- **`EventKeyboard`** - Keyboard event: key code, character, modifiers
+- **`EventCommand`** - Command event for routing UI actions through object hierarchy
+- **`EventAwtAdapter`** - Factory converting AWT events → S.W.O.R.D events
+
+### Mechanism Package (`net.eric_nicolas.sword.mechanism`)
+
+- **`TObject`** - Core application object: options/status bitmask flags, parent reference, virtual event handlers
+
+### Graphics Package (`net.eric_nicolas.sword.graphics`)
+
+- **`TColors`** - Static color palette (standard colors + UI theme colors)
+- **`PaintContext`** - AWT Graphics2D wrapper with local coordinate translation
+- **`TZone`** - Base drawing area: bounds, clipping, visibility, parent/child relationships
+- **`Widget`** - Base class for gadget components (extends TZone)
+- **`Canvas`** - Transparent container for Widgets, stored in `LinkedList<Widget>`
+- **`Window`** - Overlapping window with draggable title bar, frame, and internal Canvas
+- **`Desktop`** - Main desktop managing windows in `LinkedList<Window>` with z-order
+
+### Gadgets Package (`net.eric_nicolas.sword.gadgets`)
+
+- **`Label`** - Non-interactive text label
+- **`AbstractButton`** - Base for clickable buttons: 3D frame, pressed state, command routing
+- **`Button`** - Standard button with centered text label
+- **`ItemBox`** - Base for selection controls (no button frame)
+- **`CheckBox`** - Checkbox with bitmask support for GroupBox data exchange
+- **`RadioBox`** - Radio button for mutually exclusive selection within GroupBox
+- **`GroupBox`** - Container for CheckBox/RadioBox with titled frame and value management
+- **`EditLine`** - Single-line text input: cursor, keyboard navigation, click-to-position
+- **`Menu`** - Menu bar/dropdown with horizontal or vertical layout
+- **`MenuChoice`** - Menu item: text, hotkey, command, optional submenu, separator support
+- **`Dialog`** - Modal/modeless dialog with result codes (OK, Cancel, Yes, No)
+- **`StandardButtons`** - Factory providing standard button instances (OK, Cancel, Yes, No)
+
+### Tools Package (`net.eric_nicolas.sword.tools`)
+
+- **`TShell`** - Base shell object extending TObject
+- **`TApp`** - Main application: AWT event loop, back buffer, desktop, menu management
+
+### Samples Package (`net.eric_nicolas.sword.samples`)
+
+- **`Hello`** - Custom THello widget in multiple overlapping draggable windows
+- **`Dialog`** - Demonstrates Dialog, Button, CheckBox, RadioBox, EditLine
+
+---
+
+## Architecture Notes
+
+### What Was Changed from the Original C++ Design
+
+| Aspect | C++ Original | Java Port |
+|--------|-------------|-----------|
+| Naming | All classes T-prefixed | T-prefix on core mechanism classes; gadgets/geometry omit it |
+| Tree structure | TAtom: `_Next/_Previous/_Son/_Father` sibling chain | Only `_Father` (parent ref) in TObject; children in `LinkedList` |
+| Child storage | TAtom linked tree | `LinkedList<Widget>` in Canvas, `LinkedList<Window>` in Desktop |
+| Event tables | C++ macros `DEFINE_EVENTS_TABLE` | Virtual method overrides in TObject subclasses |
+| Graphics | libgrx20 calls | AWT `Graphics2D` via `PaintContext` wrapper |
+| Data exchange | `SetData()/GetData()/DataSize()` | Not implemented (removed in recent refactor) |
+| Packages | Flat subsystem names | Added `ui` and `ui.events` packages |
 
 ### Key Design Decisions
 
-1. **Linked Tree Preserved**: Using explicit object references instead of Collections
-2. **Bitmask Flags**: Status and options use int with bitwise operations
-3. **AWT Integration**: Single Canvas with manual window management
-4. **Event Wrapping**: AWT events converted to S.W.O.R.D TEvent objects
-5. **Manual Rendering**: All drawing done via Graphics2D, no Swing components
+1. **No TAtom**: The linked sibling tree (TAtom) was removed. Children are stored in explicit `LinkedList` containers in Canvas and Desktop.
+2. **Parent reference only**: TObject retains `_Father` for upward traversal (command routing), but no sibling navigation.
+3. **Method override event dispatch**: Instead of macro event tables, event handling uses `switch` dispatch calling overridable methods (`mouseLDown()`, `keyDown()`, `command()`, etc.).
+4. **PaintContext**: Coordinate translation is wrapped in PaintContext, passed down the paint chain, preserving the "draw in local coordinates" pattern.
+5. **LinkedList for z-order**: Desktop uses LinkedList<Window> to support bring-to-front semantics without TAtom tree manipulation.
 
-### What Works
+---
 
-- ✅ Object hierarchy (linked tree)
-- ✅ Event dispatching through object tree
-- ✅ Window creation and management
+## What Works
+
+- ✅ Object hierarchy (parent reference chain)
+- ✅ Event dispatching (mouse, keyboard, commands)
+- ✅ Window creation, management, z-ordering
 - ✅ Window dragging via title bar
 - ✅ Overlapping window rendering with clipping
-- ✅ Custom zone painting
+- ✅ Custom zone/widget painting
 - ✅ AWT event conversion
+- ✅ Buttons (standard, with pressed 3D effect)
+- ✅ CheckBox (with bitmask group support)
+- ✅ RadioBox (mutually exclusive within GroupBox)
+- ✅ GroupBox (container with titled frame)
+- ✅ EditLine (text input with cursor and keyboard navigation)
+- ✅ Menu (horizontal/vertical layouts with hotkeys)
+- ✅ MenuChoice (items, separators, hotkeys)
+- ✅ Dialog (modal/modeless, result codes)
+- ✅ Label (text display)
 
-### Known Limitations
+## Known Limitations
 
-1. **No Resize**: Windows don't support resizing yet
-2. **No Close Button**: Title bar doesn't have functional close/min/max buttons
-3. **No Focus**: Window focus/activation not implemented
-4. **No Z-Order**: Windows don't come to front when clicked
-5. **Font**: Using Java AWT Font instead of C++ TFont system
+- **No window resize**: Resize handles not implemented
+- **No close/min/max buttons**: Title bar decorations only
+- **No window focus styling**: Active window not visually distinct
+- **Submenu display**: MenuChoice submenu structure exists but display logic incomplete
+- **Dialog modal loop**: `execDialog()` is a stub; modal blocking not yet implemented
+- **No COMMON subsystem**: No path utilities, error handling, or debug facilities
+- **No DRIVERS subsystem**: No file system or time/date access
+- **No scrollbars**: TScroller, TGauge, TLift not ported
+- **No IMAGE/MATH toolboxes**: Deferred
 
-### Next Steps (When Needed)
+---
 
-1. Implement window z-ordering (bring to front)
-2. Add window resize handles
-3. Add title bar buttons (close, minimize, maximize)
-4. Implement focus system
-5. Port TStdWindow for standard window decorations
-6. Add menu system (TMenu)
-7. Port more gadgets (TButton, TEdition, etc.)
+## Test Coverage
 
-### File Statistics
+8 test classes, ~58 tests (JUnit 5):
 
-- Java source files: 12
-- Lines of code: ~800
-- Packages: 5
-- Classes: 11
+| Test Class | What It Tests |
+|------------|--------------|
+| `PointTest` | Constructor, copy, arithmetic |
+| `RectTest` | Constructors, geometry ops, intersect/union |
+| `TObjectTest` | Flag management (status/options), visibility, selection |
+| `TZoneTest` | Bounds, absolute position with parent chain, contains, visibility |
+| `CheckBoxTest` | Checked state, bitmask groups, disabled state |
+| `TRadioBoxTest` | Mutual exclusion, getValue, disabled state |
+| `EditLineTest` | setText, max length, null handling |
+| `DialogTest` | Result codes (OK/Cancel/Yes/No), title |
 
-### Performance
+---
 
-- Renders at ~60 FPS
-- Supports multiple overlapping windows
-- Event response is immediate
-- Memory usage is minimal (Java 22 tested)
+## File Statistics
+
+- Java source files: 31 (src/main)
+- Test files: 8 (src/test)
+- Total tests: ~58
+- Packages: 7
+- Classes: 31

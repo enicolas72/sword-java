@@ -22,7 +22,6 @@ public class TZone extends TObject {
         this.clipRect = new Rect(bounds);
         this.bgColor = TColors.WINDOW_BG;
         this.fgColor = TColors.BLACK;
-        setOption(OP_DRAWABLE);
     }
 
     public Rect getBounds() {
@@ -68,7 +67,7 @@ public class TZone extends TObject {
 
     /** Package-private: set parent reference. */
     void setParent(TObject parent) {
-        _Father = parent;
+        father = parent;
     }
 
     public void setBackgroundColor(Color color) {
@@ -104,6 +103,4 @@ public class TZone extends TObject {
 
         return p;
     }
-
-
 }

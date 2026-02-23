@@ -35,8 +35,6 @@ public class Canvas extends Widget {
     /**
      * Dispatch events to LinkedList children (reverse order = topmost first),
      * then fall through to Canvas's own local handling via super.
-     * super.handleEvent has no TAtom children to visit (_Son is null), so it
-     * goes straight to the local switch.
      */
     @Override
     public boolean handleEvent(Event event) {
@@ -66,6 +64,4 @@ public class Canvas extends Widget {
             widget.draw(ctx);
         }
     }
-
-
 }

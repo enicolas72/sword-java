@@ -16,14 +16,14 @@ public class ItemBox extends AbstractButton {
      * Default constructor.
      */
     public ItemBox() {
-        this(0, 0, 100, 0, "");
+        this(0, 0, 100, "");
     }
 
     /**
-     * Constructor with position, size, options, and text.
+     * Constructor with position, size, and text.
      */
-    public ItemBox(int x, int y, int width, int options, String text) {
-        super(x, y, width, 20, 0, 0, options);
+    public ItemBox(int x, int y, int width, String text) {
+        super(x, y, width, 20, 0, 0);
         this.text = text != null ? text : "";
         this.itemFont = new Font("SansSerif", Font.PLAIN, 12);
     }

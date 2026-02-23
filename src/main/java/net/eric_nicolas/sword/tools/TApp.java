@@ -1,5 +1,6 @@
 package net.eric_nicolas.sword.tools;
 
+import net.eric_nicolas.sword.mechanism.TObject;
 import net.eric_nicolas.sword.gadgets.Menu;
 import net.eric_nicolas.sword.graphics.Desktop;
 import net.eric_nicolas.sword.graphics.PaintContext;
@@ -13,7 +14,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 
-public class TApp extends TShell implements Runnable {
+public class TApp extends TObject implements Runnable {
 
     // Command constants
     public static final int CM_QUIT = 100;
@@ -134,7 +135,7 @@ public class TApp extends TShell implements Runnable {
 
     protected void initializeMenu() {
         // Create main menu (regular window, stays visible)
-        mainMenu = new Menu("Menu", 0);
+        mainMenu = new Menu("Menu", false);
         createMenuChoices(mainMenu);
         mainMenu.initChoices();
         desktop.add(mainMenu);

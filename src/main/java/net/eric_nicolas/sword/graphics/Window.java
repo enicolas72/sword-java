@@ -21,14 +21,8 @@ public class Window extends TZone {
         this.title = title;
         this.dragging = false;
         this.dragOffset = null;
-        setOption(OP_WIN_SIZEABLE | OP_WIN_CLOSEBOX);
         this.canvas = new Canvas(0, 0, width, height);
         this.canvas.setParent(this);
-    }
-
-    public Window(int x, int y, int width, int height, String title, int options) {
-        this(x, y, width, height, title);
-        setOption(options);
     }
 
     public Canvas getCanvas() {
@@ -112,14 +106,14 @@ public class Window extends TZone {
     }
 
     public void bringToFront() {
-        if (_Father instanceof Desktop desktop) {
+        if (father instanceof Desktop desktop) {
             desktop.bringToFront(this);
         }
     }
 
     public void remove() {
-        if (_Father instanceof Desktop desktop) {
-            _Father = null;
+        if (father instanceof Desktop desktop) {
+            father = null;
             desktop.remove(this);
         }
     }

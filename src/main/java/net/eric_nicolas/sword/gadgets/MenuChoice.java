@@ -14,9 +14,9 @@ import java.util.List;
  */
 public class MenuChoice extends Widget {
 
-    public static final int OP_SEPARATOR = 0x0100;
     public static final int SF_MENU_CHOICE_DOWN = 0x0100;
 
+    protected boolean separator;
     protected String text;
     protected String hotText;
     protected int globalScanCode;
@@ -31,23 +31,23 @@ public class MenuChoice extends Widget {
     public MenuChoice() {
         super(0, 0, 100, 6);
         defaults();
-        setOption(OP_SEPARATOR);
+        separator = true;
     }
 
     /**
      * Constructor for menu item with command.
      */
-    public MenuChoice(String text, int globalScanCode, int command, int status, int options) {
+    public MenuChoice(String text, int globalScanCode, int command, int status) {
         super(0, 0, 100, 20);
         defaults();
-        init(text, globalScanCode, command, null, status, options);
+        init(text, globalScanCode, command, null, status);
     }
 
     /**
-     * Constructor for menu item with command (default status/options).
+     * Constructor for menu item with command (default status).
      */
     public MenuChoice(String text, int globalScanCode, int command) {
-        this(text, globalScanCode, command, 0, 0);
+        this(text, globalScanCode, command, 0);
     }
 
     /**
@@ -56,10 +56,11 @@ public class MenuChoice extends Widget {
     public MenuChoice(String text, Menu subMenu, int status) {
         super(0, 0, 100, 20);
         defaults();
-        init(text, 0, 0, subMenu, status, 0);
+        init(text, 0, 0, subMenu, status);
     }
 
     protected void defaults() {
+        separator = false;
         text = null;
         hotText = null;
         subMenu = null;
@@ -69,12 +70,11 @@ public class MenuChoice extends Widget {
         menuFont = new Font("SansSerif", Font.PLAIN, 12);
     }
 
-    protected void init(String text, int globalScanCode, int command, Menu subMenu, int status, int options) {
+    protected void init(String text, int globalScanCode, int command, Menu subMenu, int status) {
         this.text = text;
         this.globalScanCode = globalScanCode;
         this.command = command;
         this.subMenu = subMenu;
-        setOption(options);
         setStatus(status);
 
         if (globalScanCode != 0) {
@@ -106,7 +106,7 @@ public class MenuChoice extends Widget {
         int width = bounds.width();
         int height = bounds.height();
 
-        if (hasOption(OP_SEPARATOR)) {
+        if (separator) {
             ctx.setColor(TColors.DARK_GRAY);
             ctx.drawLine(0, 2, width - 1, 2);
             ctx.setColor(TColors.LIGHT_GRAY);
@@ -120,7 +120,7 @@ public class MenuChoice extends Widget {
             ctx.fillRect(0, 0, width, height);
 
             ctx.setFont(menuFont);
-            if (hasStatus(SF_DISABLED)) {
+            if (!isEnabled()) {
                 ctx.setColor(TColors.MEDIUM_GRAY);
             } else if (hasStatus(SF_MENU_CHOICE_DOWN)) {
                 ctx.setColor(TColors.WHITE);
@@ -141,7 +141,7 @@ public class MenuChoice extends Widget {
 
     @Override
     protected boolean mouseLDown(EventMouse event) {
-        if (contains(event.where) && !hasStatus(SF_DISABLED)) {
+        if (contains(event.where) && isEnabled()) {
             activate();
             return true;
         }
@@ -175,7 +175,7 @@ public class MenuChoice extends Widget {
     }
 
     protected void down() {
-        if (!hasStatus(SF_DISABLED) && !hasStatus(SF_MENU_CHOICE_DOWN)) {
+        if (isEnabled() && !hasStatus(SF_MENU_CHOICE_DOWN)) {
             Menu menu = containingMenu();
             if (menu != null) {
                 for (MenuChoice mc : menu.getChoices()) {
@@ -187,7 +187,7 @@ public class MenuChoice extends Widget {
     }
 
     protected void up() {
-        if (!hasStatus(SF_DISABLED) && hasStatus(SF_MENU_CHOICE_DOWN)) {
+        if (isEnabled() && hasStatus(SF_MENU_CHOICE_DOWN)) {
             clearStatus(SF_MENU_CHOICE_DOWN);
         }
     }
@@ -220,7 +220,7 @@ public class MenuChoice extends Widget {
         List<MenuChoice> choices = menu.getChoices();
         int idx = choices.indexOf(this);
         for (int i = idx + 1; i < choices.size(); i++) {
-            if (!choices.get(i).hasStatus(SF_DISABLED)) return choices.get(i);
+            if (choices.get(i).isEnabled()) return choices.get(i);
         }
         return null;
     }
@@ -231,7 +231,7 @@ public class MenuChoice extends Widget {
         List<MenuChoice> choices = menu.getChoices();
         int idx = choices.indexOf(this);
         for (int i = idx - 1; i >= 0; i--) {
-            if (!choices.get(i).hasStatus(SF_DISABLED)) return choices.get(i);
+            if (choices.get(i).isEnabled()) return choices.get(i);
         }
         return null;
     }

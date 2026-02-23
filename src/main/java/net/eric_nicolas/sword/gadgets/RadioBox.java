@@ -14,8 +14,8 @@ public class RadioBox extends ItemBox {
     /**
      * Constructor with position, size, options, value, and text.
      */
-    public RadioBox(int x, int y, int width, int options, int value, String text) {
-        super(x, y, width, options, text);
+    public RadioBox(int x, int y, int width, int value, String text) {
+        super(x, y, width, text);
         this.value = value;
     }
 
@@ -38,7 +38,7 @@ public class RadioBox extends ItemBox {
 
         // Draw text
         if (text != null && !text.isEmpty()) {
-            if (hasStatus(SF_DISABLED)) {
+            if (!isEnabled()) {
                 ctx.setColor(TColors.DARK_GRAY);
             } else {
                 ctx.setColor(TColors.BLACK);
@@ -51,7 +51,7 @@ public class RadioBox extends ItemBox {
 
     @Override
     protected void action() {
-        if (!hasStatus(SF_DISABLED)) {
+        if (isEnabled()) {
             TObject parentAtom = father();
             if (parentAtom instanceof GroupBox parentGroupBox) {
                 parentGroupBox.value = this.value;

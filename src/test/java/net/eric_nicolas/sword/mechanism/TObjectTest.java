@@ -20,7 +20,6 @@ class TObjectTest {
     void testInitialStatus() {
         assertTrue(obj.hasStatus(TObject.SF_VISIBLE));
         assertFalse(obj.hasStatus(TObject.SF_SELECTED));
-        assertFalse(obj.hasStatus(TObject.SF_DISABLED));
     }
 
     @Test
@@ -75,24 +74,5 @@ class TObjectTest {
         assertTrue(obj.isSelected());
         obj.setSelected(false);
         assertFalse(obj.isSelected());
-    }
-
-    @Test
-    void testOptions() {
-        assertFalse(obj.hasOption(TObject.OP_DRAWABLE));
-        obj.setOption(TObject.OP_DRAWABLE);
-        assertTrue(obj.hasOption(TObject.OP_DRAWABLE));
-        obj.clearOption(TObject.OP_DRAWABLE);
-        assertFalse(obj.hasOption(TObject.OP_DRAWABLE));
-    }
-
-    @Test
-    void testMultipleOptions() {
-        obj.setOption(TObject.OP_DRAWABLE);
-        obj.setOption(TObject.OP_SELECTABLE);
-
-        assertTrue(obj.hasOption(TObject.OP_DRAWABLE));
-        assertTrue(obj.hasOption(TObject.OP_SELECTABLE));
-        assertFalse(obj.hasOption(TObject.OP_WIN_SIZEABLE));
     }
 }

@@ -70,8 +70,7 @@ public class Hello {
             Window window = new Window(
                 100 + (helloCounter - 1) * 30,
                 100 + (helloCounter - 1) * 30,
-                300, 200, title,
-                TObject.OP_WIN_SIZEABLE | TObject.OP_WIN_CLOSEBOX
+                300, 200, title
             );
 
             // Create THello zone inside window (with padding for title bar)

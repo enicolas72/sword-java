@@ -3,6 +3,9 @@
 .AppleDouble
 .LSOverride
 
+# Original C++ version
+210_original/
+
 # Java
 target/
 *.class
