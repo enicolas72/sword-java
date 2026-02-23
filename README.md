@@ -14,7 +14,7 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 - Custom widget painting (TZone-based drawing areas)
 - Event system (mouse, keyboard, commands) routed through object hierarchy
 - Gadgets: Button, CheckBox, RadioBox, GroupBox, EditLine, Label, Menu, MenuChoice, Dialog
-- Sample applications: Hello (custom windows), Dialog (full gadget demo)
+- Sample applications: Hello (custom windows), Dialog (full gadget demo), Mandel (Mandelbrot viewer with click-to-zoom)
 - ~58 unit tests covering geometry, object state, and gadget behavior
 
 ### What's deferred
@@ -76,6 +76,13 @@ java -cp target/classes net.eric_nicolas.sword.samples.Hello
 ```bash
 cd java
 java -cp target/classes net.eric_nicolas.sword.samples.Dialog
+```
+
+### Run the Mandel sample
+
+```bash
+cd java
+java -cp target/classes net.eric_nicolas.sword.samples.Mandel
 ```
 
 ### With javac directly

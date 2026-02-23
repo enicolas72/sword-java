@@ -91,7 +91,7 @@ java -cp target/classes net.eric_nicolas.sword.samples.Dialog
 ✅ Overlapping windows with drag and z-ordering
 ✅ Event system (mouse, keyboard, commands) routed through object hierarchy
 ✅ Gadgets: Button, CheckBox, RadioBox, GroupBox, EditLine, Label, Menu, MenuChoice, Dialog
-✅ Sample applications: Hello, Dialog
+✅ Sample applications: Hello, Dialog, Mandel (Mandelbrot fractal viewer)
 ✅ ~58 unit tests
 
 **Deferred:**
@@ -100,7 +100,8 @@ java -cp target/classes net.eric_nicolas.sword.samples.Dialog
 - Modal dialog event loop
 - COMMON / DRIVERS subsystems (file system, error handling)
 - IMAGE / MATH toolboxes
-- Complex samples (MANDEL, IMAGE viewer)
+- IMAGE viewer sample
+- Complex samples (COLORS)
 
 ### Key Adaptations
 

@@ -235,6 +235,16 @@ public class PaintContext {
         g.fillPolygon(translate(xPoints, nPoints, origin.x()), translate(yPoints, nPoints, origin.y()), nPoints);
     }
 
+    /**
+     * Draw an image at the specified position.
+     * @param image Image to draw
+     * @param x X coordinate (local)
+     * @param y Y coordinate (local)
+     */
+    public void drawImage(java.awt.Image image, int x, int y) {
+        g.drawImage(image, x + origin.x(), y + origin.y(), null);
+    }
+
     // ===== Rendering hints =====
 
     public void setAntialiasing(boolean enabled) {
