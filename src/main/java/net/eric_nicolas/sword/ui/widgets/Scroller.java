@@ -14,37 +14,35 @@ import java.util.ListIterator;
  * Scroller - Scrollable viewport container.
  * Port of TScroller from C++ S.W.O.R.D.
  *
- * The content widget is rendered into an off-screen BufferedImage (virtual
- * content size).  The visible portion (viewport) is blitted to screen.
- * Optional H/V Scrollbar children control the scroll offset.
+ * The content widget renders into a viewport-sized buffer (viewW × viewH).
+ * The virtual content size (contentW × contentH) governs the scrollbar ranges
+ * and is independent of the buffer size — the content widget is responsible
+ * for rendering the correct region based on the current scroll offset, which
+ * Scroller notifies via an onScroll callback.
  *
- * Content coordinates vs. screen coordinates
- * ------------------------------------------
- * The content widget is rendered stand-alone (father = null, bounds at
- * virtual origin (0,0)).  Mouse events entering the viewport are translated
- * from screen space to content space before being forwarded:
- *
- *   contentX = (screenX - scrollerAbsX) + scrollX
- *   contentY = (screenY - scrollerAbsY) + scrollY
+ * Mouse events inside the viewport are forwarded to the content widget as
+ * viewport-local coordinates (origin = top-left of the viewport).
  */
 public class Scroller extends Canvas {
 
     private final Widget content;
-    private final int contentW, contentH;
+    private final int viewW, viewH;  // viewport dimensions (no scrollbar strips)
+    private int contentW, contentH;  // virtual content size → scrollbar range
     private final Scrollbar hbar, vbar;
     private int scrollX, scrollY;
     private BufferedImage contentBuffer;
     private boolean contentDirty = true;
+    private Runnable onScroll;
 
     /**
      * @param x        position relative to parent
      * @param y        position relative to parent
      * @param viewW    viewport width  (scrollbar thickness NOT included)
      * @param viewH    viewport height (scrollbar thickness NOT included)
-     * @param content  the widget providing scrollable content; its bounds
-     *                 will be reset to (0, 0, contentW, contentH)
-     * @param contentW virtual content width
-     * @param contentH virtual content height
+     * @param content  the widget that renders the scrollable content; its
+     *                 bounds will be set to (0, 0, viewW, viewH)
+     * @param contentW initial virtual content width  (for scrollbar range)
+     * @param contentH initial virtual content height (for scrollbar range)
      * @param addHbar  add a horizontal scrollbar
      * @param addVbar  add a vertical scrollbar
      */
@@ -55,18 +53,24 @@ public class Scroller extends Canvas {
               viewW + (addVbar ? Scrollbar.THICKNESS : 0),
               viewH + (addHbar ? Scrollbar.THICKNESS : 0));
         this.content  = content;
-        this.contentW = contentW;
-        this.contentH = contentH;
+        this.viewW    = viewW;
+        this.viewH    = viewH;
+        this.contentW = Math.max(1, contentW);
+        this.contentH = Math.max(1, contentH);
 
-        // Content is rendered stand-alone into the off-screen buffer;
-        // position it at the virtual origin.
-        content.setBounds(new Rect(0, 0, contentW, contentH));
+        // Content renders into a viewW × viewH buffer; its own coordinate
+        // system starts at (0,0), independent of the virtual scroll position.
+        content.setBounds(new Rect(0, 0, viewW, viewH));
 
         if (addHbar) {
             hbar = new Scrollbar(0, viewH, viewW, true);
-            hbar.setRange(contentW, viewW);
+            hbar.setRange(this.contentW, viewW);
             hbar.setStep(Math.max(1, viewW / 10));
-            hbar.setOnChange(() -> { scrollX = hbar.getPosition(); contentDirty = true; });
+            hbar.setOnChange(() -> {
+                scrollX = hbar.getPosition();
+                contentDirty = true;
+                if (onScroll != null) onScroll.run();
+            });
             add(hbar);
         } else {
             hbar = null;
@@ -74,13 +78,59 @@ public class Scroller extends Canvas {
 
         if (addVbar) {
             vbar = new Scrollbar(viewW, 0, viewH, false);
-            vbar.setRange(contentH, viewH);
+            vbar.setRange(this.contentH, viewH);
             vbar.setStep(Math.max(1, viewH / 10));
-            vbar.setOnChange(() -> { scrollY = vbar.getPosition(); contentDirty = true; });
+            vbar.setOnChange(() -> {
+                scrollY = vbar.getPosition();
+                contentDirty = true;
+                if (onScroll != null) onScroll.run();
+            });
             add(vbar);
         } else {
             vbar = null;
         }
+    }
+
+    // ===== Public API =====
+
+    /**
+     * Register a callback to be invoked whenever the scroll position changes
+     * due to user interaction with the scrollbars.
+     */
+    public void setOnScroll(Runnable onScroll) { this.onScroll = onScroll; }
+
+    public int getScrollX() { return scrollX; }
+    public int getScrollY() { return scrollY; }
+
+    /**
+     * Update the virtual content dimensions and synchronise scrollbar ranges.
+     * The current scroll position is clamped to the new valid range.
+     */
+    public void setContentSize(int w, int h) {
+        contentW = Math.max(1, w);
+        contentH = Math.max(1, h);
+        if (hbar != null) {
+            hbar.setRange(contentW, viewW);
+            scrollX = Math.min(scrollX, Math.max(0, contentW - viewW));
+            hbar.setPosition(scrollX);
+        }
+        if (vbar != null) {
+            vbar.setRange(contentH, viewH);
+            scrollY = Math.min(scrollY, Math.max(0, contentH - viewH));
+            vbar.setPosition(scrollY);
+        }
+    }
+
+    /**
+     * Programmatically move the scroll position (e.g. after a zoom).
+     * Updates the scrollbar thumb positions without triggering onScroll.
+     */
+    public void setScrollPosition(int x, int y) {
+        scrollX = Math.max(0, Math.min(x, Math.max(0, contentW - viewW)));
+        scrollY = Math.max(0, Math.min(y, Math.max(0, contentH - viewH)));
+        if (hbar != null) hbar.setPosition(scrollX);
+        if (vbar != null) vbar.setPosition(scrollY);
+        contentDirty = true;
     }
 
     /** Force content to be re-rendered on the next draw(). */
@@ -88,20 +138,10 @@ public class Scroller extends Canvas {
 
     // ===== Geometry helpers =====
 
-    private int viewportW() {
-        return bounds.width()  - (vbar != null ? Scrollbar.THICKNESS : 0);
-    }
-
-    private int viewportH() {
-        return bounds.height() - (hbar != null ? Scrollbar.THICKNESS : 0);
-    }
-
     private boolean inViewport(Point p) {
         Point abs = getAbsolutePosition();
-        int vw = viewportW();
-        int vh = viewportH();
-        return p.x() >= abs.x() && p.x() < abs.x() + vw
-            && p.y() >= abs.y() && p.y() < abs.y() + vh;
+        return p.x() >= abs.x() && p.x() < abs.x() + viewW
+            && p.y() >= abs.y() && p.y() < abs.y() + viewH;
     }
 
     // ===== Rendering =====
@@ -113,17 +153,16 @@ public class Scroller extends Canvas {
         Point absPos = getAbsolutePosition();
         PaintContext localCtx = ctx.withOrigin(absPos);
 
-        // Fill full background (also covers corner between scrollbars)
+        // Fill background (covers corner cell between scrollbars too)
         localCtx.setClip(0, 0, bounds.width(), bounds.height());
         localCtx.setColor(bgColor);
         localCtx.fillRect(0, 0, bounds.width(), bounds.height());
 
-        int vw = viewportW();
-        int vh = viewportH();
-
-        // Lazy-allocate off-screen buffer
-        if (contentBuffer == null) {
-            contentBuffer = new BufferedImage(contentW, contentH, BufferedImage.TYPE_INT_RGB);
+        // Lazy-allocate viewport-sized buffer
+        if (contentBuffer == null
+                || contentBuffer.getWidth()  != viewW
+                || contentBuffer.getHeight() != viewH) {
+            contentBuffer = new BufferedImage(viewW, viewH, BufferedImage.TYPE_INT_RGB);
             contentDirty = true;
         }
 
@@ -136,18 +175,11 @@ public class Scroller extends Canvas {
             contentDirty = false;
         }
 
-        // Blit viewport portion (guard against scroll > content)
-        int sx = Math.min(scrollX, Math.max(0, contentW - vw));
-        int sy = Math.min(scrollY, Math.max(0, contentH - vh));
-        int sw = Math.min(vw, contentW - sx);
-        int sh = Math.min(vh, contentH - sy);
-        if (sw > 0 && sh > 0) {
-            BufferedImage view = contentBuffer.getSubimage(sx, sy, sw, sh);
-            localCtx.setClip(0, 0, vw, vh);
-            localCtx.drawImage(view, 0, 0);
-        }
+        // Blit the full viewport buffer (content renders exactly what's visible)
+        localCtx.setClip(0, 0, viewW, viewH);
+        localCtx.drawImage(contentBuffer, 0, 0);
 
-        // Draw scrollbars (children of this Canvas)
+        // Draw scrollbars (Canvas children)
         for (Widget widget : getWidgets()) {
             widget.draw(ctx);
         }
@@ -159,7 +191,7 @@ public class Scroller extends Canvas {
     public boolean handleEvent(Event event) {
         if (event.what == Event.EV_NOTHING) return false;
 
-        // Try scrollbars first (reverse order = last added first)
+        // Try scrollbars first (reverse = last-added first)
         ListIterator<Widget> it = getWidgets().listIterator(getWidgets().size());
         while (it.hasPrevious()) {
             Widget w = it.previous();
@@ -169,15 +201,12 @@ public class Scroller extends Canvas {
             }
         }
 
-        // Forward mouse events inside the viewport to the content widget,
-        // translating screen coordinates to content coordinates.
+        // Forward viewport mouse events to content as viewport-local coordinates.
+        // Content's own absPos = (0,0) (father=null, bounds start at origin),
+        // so subtracting scrollerAbsPos gives coords in [0, viewW) × [0, viewH).
         if (event instanceof EventMouse mouseEvent && inViewport(mouseEvent.where)) {
             Point absPos = getAbsolutePosition();
-            // Adjusted coord: (localX + scrollX, localY + scrollY)
-            // = mouseEvent.where + (scrollX - absPos.x, scrollY - absPos.y)
-            EventMouse adjusted = mouseEvent.withOffset(
-                    scrollX - absPos.x(),
-                    scrollY - absPos.y());
+            EventMouse adjusted = mouseEvent.withOffset(-absPos.x(), -absPos.y());
             if (content.handleEvent(adjusted)) {
                 event.what = Event.EV_NOTHING;
                 contentDirty = true;
