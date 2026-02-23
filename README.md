@@ -32,12 +32,12 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 
 ```
 src/main/java/net/eric_nicolas/sword/
-├── ui/               - Geometry (Point, Rect) and event system
-│   └── events/       - Event, EventMouse, EventKeyboard, EventCommand, EventAwtAdapter
-├── mechanism/        - Core object system (TObject: flags, parent ref, event dispatch)
-├── graphics/         - TZone, Widget, Window, Canvas, Desktop, TColors, PaintContext
-├── gadgets/          - UI components (Button, CheckBox, RadioBox, EditLine, Menu, Dialog…)
-├── tools/            - Application framework (TApp)
+├── ui/               - Geometry (Point, Rect)
+│   ├── events/       - Event, EventMouse, EventKeyboard, EventCommand, EventAwtAdapter
+│   ├── base/         - Core layer: TObject, TZone, Widget, Window, Canvas, Desktop,
+│   │                   TColors, PaintContext, TApp
+│   └── widgets/      - UI components: Button, CheckBox, RadioBox, GroupBox, EditLine,
+│                       Label, Menu, MenuChoice, Dialog, StandardButtons
 └── samples/          - Example applications (Hello, Dialog)
 ```
 
@@ -93,19 +93,19 @@ java -cp target/classes net.eric_nicolas.sword.samples.Hello
 The port preserves the original layered model:
 
 ```
-Samples (Hello, Dialog)
+samples/          (Hello, Dialog)
     ↓
-Tools (TApp – AWT event loop, desktop, menu)
+ui.base/          (TApp – AWT event loop, desktop, menu)
     ↓
-Gadgets (Button, EditLine, Menu, Dialog…)
+ui.widgets/       (Button, EditLine, Menu, Dialog…)
     ↓
-Graphics (Window, TZone, Canvas, Desktop)
+ui.base/          (Window, TZone, Canvas, Desktop)
     ↓
-Mechanism (TObject – flags, parent ref, event dispatch)
+ui.base/          (TObject – flags, parent ref, event dispatch)
     ↓
-UI (Point, Rect, Event hierarchy)
+ui/ + ui.events/  (Point, Rect, Event hierarchy)
     ↓
-AWT Graphics2D (replaces libgrx20)
+AWT Graphics2D    (replaces libgrx20)
 ```
 
 Key adaptations from C++:

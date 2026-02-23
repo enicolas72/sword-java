@@ -1,9 +1,9 @@
 package net.eric_nicolas.sword.samples;
 
-import net.eric_nicolas.sword.tools.TApp;
-import net.eric_nicolas.sword.graphics.*;
-import net.eric_nicolas.sword.gadgets.*;
-import net.eric_nicolas.sword.mechanism.*;
+import net.eric_nicolas.sword.ui.base.*;
+import net.eric_nicolas.sword.ui.widgets.Menu;
+import net.eric_nicolas.sword.ui.widgets.MenuChoice;
+
 import java.awt.Font;
 
 /**

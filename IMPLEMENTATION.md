@@ -35,7 +35,7 @@ Phase 1 (core infrastructure + Hello sample) is complete. Phase 2 (gadgets + Dia
 - **`Window`** - Overlapping window with draggable title bar, frame, and internal Canvas
 - **`Desktop`** - Main desktop managing windows in `LinkedList<Window>` with z-order
 
-### Gadgets Package (`net.eric_nicolas.sword.gadgets`)
+### Gadgets Package (`net.eric_nicolas.sword.widgets`)
 
 - **`Label`** - Non-interactive text label
 - **`AbstractButton`** - Base for clickable buttons: 3D frame, pressed state, command routing

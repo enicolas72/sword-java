@@ -1,8 +1,8 @@
 package net.eric_nicolas.sword.samples;
 
-import net.eric_nicolas.sword.tools.TApp;
-import net.eric_nicolas.sword.gadgets.*;
-import net.eric_nicolas.sword.graphics.Canvas;
+import net.eric_nicolas.sword.ui.base.TApp;
+import net.eric_nicolas.sword.ui.widgets.*;
+import net.eric_nicolas.sword.ui.base.Canvas;
 
 /**
  * Dialog - Sample application demonstrating dialog boxes and controls.
@@ -43,8 +43,8 @@ public class Dialog {
         protected boolean doDialogTest() {
             int dX = (640 - 270) / 2;
             int dY = (480 - 300) / 2;
-            net.eric_nicolas.sword.gadgets.Dialog dialog =
-                new net.eric_nicolas.sword.gadgets.Dialog(dX, dY, 270, 300, "Dialog sample");
+            net.eric_nicolas.sword.ui.widgets.Dialog dialog =
+                new net.eric_nicolas.sword.ui.widgets.Dialog(dX, dY, 270, 300, "Dialog sample");
 
             Canvas dc = dialog.getCanvas();
 
@@ -105,10 +105,10 @@ public class Dialog {
         System.out.println("\n'Dialog' application finished.");
         System.out.println("You quit the dialog last time by clicking on ");
         switch (app.getDialogResult()) {
-            case net.eric_nicolas.sword.gadgets.Dialog.CM_OK:
+            case net.eric_nicolas.sword.ui.widgets.Dialog.CM_OK:
                 System.out.println("OK");
                 break;
-            case net.eric_nicolas.sword.gadgets.Dialog.CM_CANCEL:
+            case net.eric_nicolas.sword.ui.widgets.Dialog.CM_CANCEL:
                 System.out.println("Cancel");
                 break;
             default:
