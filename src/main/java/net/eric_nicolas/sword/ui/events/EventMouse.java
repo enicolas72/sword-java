@@ -29,6 +29,11 @@ public class EventMouse extends Event {
         this.modifiers = modifiers;
     }
 
+    /** Return a copy of this event with coordinates shifted by (dx, dy). */
+    public EventMouse withOffset(int dx, int dy) {
+        return new EventMouse(what, where.x() + dx, where.y() + dy, buttons, modifiers);
+    }
+
     public boolean hasModifier(int modifier) {
         return (modifiers & modifier) != 0;
     }

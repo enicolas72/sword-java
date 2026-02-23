@@ -5,6 +5,8 @@ import net.eric_nicolas.sword.ui.base.*;
 import net.eric_nicolas.sword.ui.events.EventMouse;
 import net.eric_nicolas.sword.ui.widgets.Menu;
 import net.eric_nicolas.sword.ui.widgets.MenuChoice;
+import net.eric_nicolas.sword.ui.widgets.Scrollbar;
+import net.eric_nicolas.sword.ui.widgets.Scroller;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -17,10 +19,15 @@ import java.util.Deque;
  *
  * Left-click zooms in 2x around the clicked point.
  * Right-click restores the previous zoom (or zooms out 2x if no history).
+ * The rendered bitmap is larger than the window; use scrollbars to pan.
  */
 public class Mandel {
 
     static final int CM_NEW_VIEWER = 10001;
+
+    // Rendered image size (virtual content)
+    static final int IMAGE_W = 800;
+    static final int IMAGE_H = 600;
 
     // -------------------------------------------------------------------
     // MandelWidget - renders the Mandelbrot set and handles zoom gestures
@@ -78,11 +85,13 @@ public class Mandel {
         }
 
         // Left-click: zoom in 2x around the clicked point.
+        // Coordinates received here are in content (image) space thanks to
+        // the Scroller's event translation (MandelWidget.absPos = (0,0)).
         @Override
         protected boolean mouseLDown(EventMouse event) {
             if (!contains(event.where)) return false;
 
-            Point absPos = getAbsolutePosition();
+            Point absPos = getAbsolutePosition();  // (0, 0) when inside Scroller
             int px = event.where.x() - absPos.x();
             int py = event.where.y() - absPos.y();
 
@@ -97,7 +106,7 @@ public class Mandel {
             xMin = cx - hw;  xMax = cx + hw;
             yMin = cy - hh;  yMax = cy + hh;
 
-            rendered = null;
+            rendered = null;  // invalidate cached image
             return true;
         }
 
@@ -119,7 +128,7 @@ public class Mandel {
                 yMin = cy - hh;  yMax = cy + hh;
             }
 
-            rendered = null;
+            rendered = null;  // invalidate cached image
             return true;
         }
     }
@@ -133,7 +142,7 @@ public class Mandel {
         private int viewerCount = 0;
 
         public MandelApp() {
-            super("Mandel Sample - S.W.O.R.D", 640, 480);
+            super("Mandel Sample - S.W.O.R.D", 700, 540);
         }
 
         @Override
@@ -153,14 +162,27 @@ public class Mandel {
         private boolean doNewViewer() {
             viewerCount++;
             int offset = ((viewerCount - 1) % 6) * 25;
+
+            int winW = 460, winH = 410;
             Window win = new Window(
-                    30 + offset, 50 + offset, 400, 350,
+                    30 + offset, 50 + offset, winW, winH,
                     "Mandelbrot #" + viewerCount);
-            MandelWidget widget = new MandelWidget(
+
+            // Content area inside window (subtract 2px frame + 22px title bar)
+            int contentAreaW = winW - 4;
+            int contentAreaH = winH - 24;
+
+            // Scroller fills the content area; viewport is content area minus
+            // the scrollbar strips; MandelWidget renders at IMAGE_W x IMAGE_H.
+            MandelWidget widget = new MandelWidget(0, 0, IMAGE_W, IMAGE_H);
+            Scroller scroller = new Scroller(
                     2, 22,
-                    win.getBounds().width() - 4,
-                    win.getBounds().height() - 24);
-            win.getCanvas().add(widget);
+                    contentAreaW - Scrollbar.THICKNESS,
+                    contentAreaH - Scrollbar.THICKNESS,
+                    widget, IMAGE_W, IMAGE_H,
+                    true, true);
+
+            win.getCanvas().add(scroller);
             getDesktop().add(win);
             return true;
         }

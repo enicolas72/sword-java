@@ -13,14 +13,14 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 - Overlapping windows with drag and z-ordering
 - Custom widget painting (TZone-based drawing areas)
 - Event system (mouse, keyboard, commands) routed through object hierarchy
-- Gadgets: Button, CheckBox, RadioBox, GroupBox, EditLine, Label, Menu, MenuChoice, Dialog
-- Sample applications: Hello (custom windows), Dialog (full gadget demo), Mandel (Mandelbrot viewer with click-to-zoom)
-- ~58 unit tests covering geometry, object state, and gadget behavior
+- Gadgets: Button, CheckBox, RadioBox, GroupBox, EditLine, Label, Menu, MenuChoice, Dialog, Scrollbar, Scroller
+- Sample applications: Hello (custom windows), Dialog (full gadget demo), Mandel (Mandelbrot viewer with zoom + scrollbars)
+- ~57 unit tests covering geometry, object state, and gadget behavior
 
 ### What's deferred
 
 - Window resize handles / close button
-- Scrollbars (TScroller, TLift, TGauge)
+- TGauge (progress bar)
 - Modal dialog event loop
 - COMMON / DRIVERS subsystems (file system, error handling)
 - IMAGE / MATH toolboxes
@@ -37,7 +37,8 @@ src/main/java/net/eric_nicolas/sword/
 │   ├── base/         - Core layer: TObject, TZone, Widget, Window, Canvas, Desktop,
 │   │                   TColors, PaintContext, TApp
 │   └── widgets/      - UI components: Button, CheckBox, RadioBox, GroupBox, EditLine,
-│                       Label, Menu, MenuChoice, Dialog, StandardButtons
+│                       Label, Menu, MenuChoice, Dialog, StandardButtons,
+│                       Scrollbar, Scroller
 └── samples/          - Example applications (Hello, Dialog)
 ```
 
