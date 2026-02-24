@@ -55,7 +55,7 @@ public class Dialog extends Window {
 
         java.awt.EventQueue queue = java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue();
 
-        while (dialogResult == 0 && father != null) {
+        while (dialogResult == 0 && getScreen() != null) {
             try {
                 java.awt.AWTEvent event = queue.getNextEvent();
                 Object source = event.getSource();

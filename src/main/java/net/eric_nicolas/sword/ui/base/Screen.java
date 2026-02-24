@@ -1,7 +1,7 @@
 package net.eric_nicolas.sword.ui.base;
 
 import net.eric_nicolas.sword.ui.events.Event;
-import net.eric_nicolas.sword.ui.events.EventMouse;
+import net.eric_nicolas.sword.ui.events.EventCommand;
 
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -11,17 +11,20 @@ import java.util.function.IntPredicate;
  * Screen - Main application screen / desktop background.
  * Manages the z-ordered stack of Windows; dispatches events topmost-first.
  *
- * The application registers a command handler via setCommandHandler() so that
- * commands (e.g. CM_QUIT) bubble up from menus and buttons to the app.
+ * Screen is NOT a ScreenArea: it sits above the ScreenArea hierarchy and is
+ * not part of any parent chain. Windows hold a direct reference to their
+ * Screen (Window.getScreen()) for window-management operations.
  */
-public class Screen extends TZone {
+public class Screen {
 
+    private final int width;
+    private final int height;
     private final LinkedList<Window> windows = new LinkedList<>();
     private IntPredicate commandHandler;
 
     public Screen(int width, int height) {
-        super(0, 0, width, height);
-        setBackgroundColor(TColors.DESKTOP_BG);
+        this.width = width;
+        this.height = height;
     }
 
     /**
@@ -34,7 +37,7 @@ public class Screen extends TZone {
 
     /** Add a Window (or Menu, Dialog…) to the screen. */
     public void add(Window window) {
-        window.setParent(this);
+        window.setScreen(this);
         windows.add(window);
     }
 
@@ -49,43 +52,33 @@ public class Screen extends TZone {
         windows.remove(window);
     }
 
-    @Override
     public void draw(PaintContext ctx) {
-        super.draw(ctx);
+        ctx.setColor(TColors.DESKTOP_BG);
+        ctx.fillRect(0, 0, width, height);
         for (Window window : windows) {
             window.draw(ctx);
         }
     }
 
-    @Override
     public boolean handleEvent(Event event) {
-        if (event.what != Event.EV_NOTHING) {
-            ListIterator<Window> it = windows.listIterator(windows.size());
-            while (it.hasPrevious()) {
-                if (it.previous().handleEvent(event)) {
-                    event.what = Event.EV_NOTHING;
-                    return true;
-                }
+        if (event.what == Event.EV_NOTHING) return false;
+
+        // Dispatch to windows topmost-first
+        ListIterator<Window> it = windows.listIterator(windows.size());
+        while (it.hasPrevious()) {
+            if (it.previous().handleEvent(event)) {
+                event.what = Event.EV_NOTHING;
+                return true;
             }
         }
-        return super.handleEvent(event);
-    }
 
-    @Override
-    protected boolean command(int commandId) {
-        if (commandHandler != null) {
-            return commandHandler.test(commandId);
+        // Unhandled command: forward to application command handler
+        if (event.what == EventCommand.EV_COMMAND && commandHandler != null) {
+            boolean handled = commandHandler.test(((EventCommand) event).commandId);
+            if (handled) event.what = Event.EV_NOTHING;
+            return handled;
         }
-        return false;
-    }
 
-    @Override
-    protected boolean mouseLDown(EventMouse event) {
         return false;
-    }
-
-    @Override
-    protected void paint(PaintContext ctx) {
-        // Background fill is handled by draw() in the base class
     }
 }

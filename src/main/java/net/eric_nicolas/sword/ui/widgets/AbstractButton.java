@@ -123,18 +123,18 @@ public class AbstractButton extends Widget {
     }
 
     /**
-     * Send command up the hierarchy.
+     * Send command to the Screen this widget lives on.
+     * Walks the father chain to find the nearest Window ancestor, then
+     * dispatches via its Screen so the full window z-order gets a chance
+     * to handle the command (e.g. a modal Dialog intercepts CM_OK/CM_CANCEL).
      */
     protected void sendCommand(int cmd) {
-        // Find the screen or dialog
-        TZone current = this;
-        while (current != null && !(current instanceof Screen) && !(current instanceof Dialog)) {
+        ScreenArea current = this;
+        while (current != null && !(current instanceof Window)) {
             current = current.father();
         }
-
-        // Send command event
-        if (current != null) {
-            current.handleEvent(new EventCommand(cmd));
+        if (current instanceof Window w && w.getScreen() != null) {
+            w.getScreen().handleEvent(new EventCommand(cmd));
         }
     }
 

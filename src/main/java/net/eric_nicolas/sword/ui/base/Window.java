@@ -39,7 +39,7 @@ import net.eric_nicolas.sword.ui.events.EventMouse;
  * Inner chrome (sidebar separator + content border) is redrawn AFTER canvas
  * children so it is never hidden by widget background fills.
  */
-public class Window extends TZone {
+public class Window extends ScreenArea {
 
     // Public so samples and Scroller can compute content dimensions
     public static final int BORDER    = 5;   // resize border thickness (pixels)
@@ -75,6 +75,9 @@ public class Window extends TZone {
 
     // Resize notification callback
     private Runnable onResize;
+
+    // Screen this window lives on (set by Screen.add; null when not on screen)
+    private Screen screen;
 
     public Window(int x, int y, int width, int height, String title) {
         super(x, y, width, height);
@@ -396,16 +399,19 @@ public class Window extends TZone {
 
     // ===== Window management =====
 
+    /** Called by Screen.add(); not for external use. */
+    void setScreen(Screen s) { this.screen = s; }
+
+    public Screen getScreen() { return screen; }
+
     public void bringToFront() {
-        if (father instanceof Screen screen) {
-            screen.bringToFront(this);
-        }
+        if (screen != null) screen.bringToFront(this);
     }
 
     public void remove() {
-        if (father instanceof Screen screen) {
-            father = null;
+        if (screen != null) {
             screen.remove(this);
+            screen = null;
         }
     }
 
