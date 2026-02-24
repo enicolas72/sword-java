@@ -29,8 +29,8 @@ Create a Java port of the S.W.O.R.D C++ framework that preserves the original ar
 net.eric_nicolas.sword.ui              → Point, Rect
 net.eric_nicolas.sword.ui.events       → Event, EventMouse, EventKeyboard, EventCommand
 net.eric_nicolas.sword.ui.driver       → AwtDriver, EventAwtAdapter  (all AWT coupling here)
-net.eric_nicolas.sword.ui.base         → TZone, Widget, Window, Canvas,
-                                         Screen, TColors, PaintContext, TApp
+net.eric_nicolas.sword.ui.base         → ScreenArea, Widget, Window, Canvas,
+                                         Screen, TColors, PaintContext, Application
 net.eric_nicolas.sword.ui.widgets      → Button, CheckBox, RadioBox, GroupBox,
                                          EditLine, Label, Menu, MenuChoice,
                                          Dialog, StandardButtons, AbstractButton,
@@ -44,23 +44,24 @@ net.eric_nicolas.sword.samples         → Hello, Dialog, Mandel (sample applica
 
 1. **Object Hierarchy:**
    - TAtom sibling tree is removed; children are managed in `LinkedList` inside `Canvas` and `Screen`
-   - Single `father` reference (in `TZone`) is retained for command routing up the hierarchy
+   - Single `father` reference (in `ScreenArea`) is retained for coordinate translation and event dispatch within the window hierarchy
+   - `Screen` is NOT in the `father` chain — Windows hold a direct `screen` reference (see below)
    - No Collections framework for parent traversal — walk `father()` manually
 
 2. **Event Handling:**
-   - C++ macro event tables replaced by virtual method overrides in `TZone` subclasses
+   - C++ macro event tables replaced by virtual method overrides in `ScreenArea` subclasses
    - Override `mouseLDown`, `mouseLUp`, `mouseMove`, `keyDown`, `keyUp`, `command` as needed
-   - `TApp` subclasses override `handleCommand(int)` (not `command`) and call `super.handleCommand(commandId)`
+   - `Application` subclasses override `handleCommand(int)` (not `command`) and call `super.handleCommand(commandId)`
    - Event constants use EV_ prefix (EV_MOUSE_LDOWN, EV_KEY_DOWN, EV_COMMAND, etc.)
    - Command IDs use CM_ prefix (CM_QUIT, CM_OK, CM_CANCEL, etc.)
 
 3. **Status/Options Flags:**
-   - Bitmask flags live in `TZone`: `SF_VISIBLE`, `SF_SELECTED`, `SF_MOUSE_IN`, `SF_DOWN`, `SF_FOCUSED`, `SF_MODIFIED`
+   - Bitmask flags live in `ScreenArea`: `SF_VISIBLE`, `SF_SELECTED`, `SF_MOUSE_IN`, `SF_DOWN`, `SF_FOCUSED`, `SF_MODIFIED`
    - Use `setStatus`/`clearStatus`/`hasStatus`
    - Widget-specific boolean state uses plain fields instead of flags: `Widget.enabled`, `Menu.mainMenu`, `MenuChoice.separator`, `Window.resizable`, `Window.closable`
 
 4. **Naming:**
-   - Core classes keep the T prefix: `TZone`, `TApp`, `TColors`
+   - Core classes: `ScreenArea`, `Application`, `TColors` (TColors keeps its T prefix as a pure constants class)
    - Gadget classes use plain names: `Button`, `Menu`, `Dialog`, `EditLine`, `Scrollbar`, etc.
    - Java conventions: camelCase for methods/fields, UPPER_CASE for constants
 
@@ -68,7 +69,7 @@ net.eric_nicolas.sword.samples         → Hello, Dialog, Mandel (sample applica
    - All AWT code lives in `ui.driver`; the framework core has zero AWT imports
    - `AwtDriver` owns the `Frame`, back-buffered `Canvas`, and all AWT listeners
    - `EventAwtAdapter` converts AWT `MouseEvent`/`KeyEvent` → SWORD events
-   - `TApp` wires things up via lambdas: `screen.setCommandHandler(this::handleCommand)` and a hotkey predicate passed to `AwtDriver`
+   - `Application` wires things up via lambdas: `screen.setCommandHandler(this::handleCommand)` and a hotkey predicate passed to `AwtDriver`
    - `PaintContext` wraps `Graphics2D`; all drawing goes through it
    - `AwtDriver.forceRepaint()` redraws the full screen to a back buffer then blits to screen
 
@@ -114,14 +115,14 @@ java -cp target/classes net.eric_nicolas.sword.samples.Mandel
 | C++ | Java |
 |-----|------|
 | `TAtom` sibling tree (`_Next`, `_Son`…) | `LinkedList<Widget>` in `Canvas`/`Screen` |
-| `_Father` pointer | `TZone.father` reference |
-| `TObject` + `TZone` (two-layer split) | Single `TZone` class |
-| `TDesktop` | `Screen` |
-| `TShell` (trivial TObject subclass) | Removed; `TApp` is a plain class |
+| `_Father` pointer | `ScreenArea.father` reference (widget hierarchy only; not Screen) |
+| `TObject` + `TZone` (two-layer split) | Single `ScreenArea` class |
+| `TDesktop` | `Screen` (plain class, not a `ScreenArea` subclass) |
+| `TShell` (trivial TObject subclass) | Removed; `Application` is a plain class |
 | `void*` | `Object` or specific types |
 | Manual memory management | Garbage collection |
 | Header/implementation split | Single `.java` file per class |
-| Macro event tables | Virtual method overrides in `TZone` |
+| Macro event tables | Virtual method overrides in `ScreenArea` |
 | `sfDisabled` status flag | `Widget.enabled` boolean |
 | `opMainMenu` / `opSeparator` option flags | `Menu.mainMenu` / `MenuChoice.separator` booleans |
 | Button `BO_DISABLED`, `BO_NO_CASE` options | Removed; use `setEnabled(false)` after construction |
@@ -131,9 +132,12 @@ java -cp target/classes net.eric_nicolas.sword.samples.Mandel
 
 **Graphics / Driver Layer:**
 - `AwtDriver` owns the single AWT `Canvas` covering the full window; double-buffered via `BufferedImage`
-- `Screen` holds all top-level `Window` objects in a `LinkedList`; each `Window` owns a `Canvas` holding `Widget` children
+- `Screen` is a plain class (not a `ScreenArea`) that holds `LinkedList<Window>`; each `Window` owns a `Canvas` holding `Widget` children
+- Windows hold a direct `Window.screen` reference (set by `Screen.add()`); `Window.getScreen()` is used for window management and command dispatch
+- The `ScreenArea.father` chain terminates at the top-level `Window` (father = null); Screen is never in the father chain
 - Mouse/keyboard events wrapped by `EventAwtAdapter` (in `ui.driver`) and dispatched to `Screen.handleEvent()`
-- Global menu hotkeys are intercepted by `TApp`'s hotkey predicate before desktop dispatch; matched via `Menu.processHotKey(keyCode)` which calls `MenuChoice.sendCommand()` up to `Screen`
+- Command dispatch from widgets: `sendCommand()` walks the `father` chain to the nearest `Window`, then calls `window.getScreen().handleEvent(cmd)`
+- Global menu hotkeys are intercepted by `Application`'s hotkey predicate before desktop dispatch; matched via `Menu.processHotKey(keyCode)` which calls `MenuChoice.sendCommand()`
 
 **Window chrome:**
 - Left sidebar (SIDEBAR_W=16 px): grip lines at top, optional close button (×) below

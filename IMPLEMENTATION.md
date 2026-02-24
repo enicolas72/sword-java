@@ -23,14 +23,14 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 ### `net.eric_nicolas.sword.ui.base`
 
-- **`TZone`** — Root of the visual hierarchy: `father` reference, status bitmask flags (`SF_VISIBLE`, `SF_SELECTED`, `SF_MOUSE_IN`, `SF_DOWN`, `SF_FOCUSED`, `SF_MODIFIED`), virtual event handlers (`mouseLDown`, `mouseMove`, `keyDown`, `command`, …), drawing area with `bounds`, `clipRect`, `draw()` / `paint()`, `getAbsolutePosition()`, `contains()`
-- **`Widget`** — Extends TZone; adds `enabled` boolean (`isEnabled()` / `setEnabled()`)
+- **`ScreenArea`** — Root of the visual hierarchy: `father` reference, status bitmask flags (`SF_VISIBLE`, `SF_SELECTED`, `SF_MOUSE_IN`, `SF_DOWN`, `SF_FOCUSED`, `SF_MODIFIED`), virtual event handlers (`mouseLDown`, `mouseMove`, `keyDown`, `command`, …), drawing area with `bounds`, `clipRect`, `draw()` / `paint()`, `getAbsolutePosition()`, `contains()`
+- **`Widget`** — Extends ScreenArea; adds `enabled` boolean (`isEnabled()` / `setEnabled()`)
 - **`Canvas`** — Transparent container for Widget children stored in `LinkedList<Widget>`; dispatches events in reverse (topmost first) z-order
 - **`Window`** — Overlapping window: left sidebar (drag grip + optional close button), outer resize border; internal `Canvas`; `bringToFront()` / `remove()`. Options: `setResizable(bool)` (thick border + resize handles vs. 1-px outline), `setClosable(bool)` (show/hide × button). `setOnResize(Runnable)` callback fired on resize. `drawOverlay()` redraws inner chrome after canvas children so widget fills never obscure it.
-- **`Screen`** — Manages `LinkedList<Window>` with z-ordering; dispatches events; routes unhandled commands to the registered `IntPredicate` command handler
+- **`Screen`** — Plain class (not a `ScreenArea`): manages `LinkedList<Window>` with z-ordering; dispatches events topmost-first; routes unhandled commands to the registered `IntPredicate` command handler. Windows hold a direct `screen` reference (`Window.getScreen()`) set by `Screen.add()`; `Screen` is never in the `ScreenArea.father` chain.
 - **`TColors`** — Static colour palette (standard + UI theme: `FACE_GRAY`, `MEDIUM_GRAY`, `DESKTOP_BG`, …)
 - **`PaintContext`** — `Graphics2D` wrapper with local-coordinate translation via `withOrigin(Point)`; covers draw/fill/clip/image primitives
-- **`TApp`** — Application shell (plain class, not a TZone): owns a `Screen` and an `AwtDriver`; extend and override `createMenuChoices()` + `handleCommand()`
+- **`Application`** — Application shell (plain class, not a ScreenArea): owns a `Screen` and an `AwtDriver`; extend and override `createMenuChoices()` + `handleCommand()`
 
 ### `net.eric_nicolas.sword.ui.driver`
 
@@ -68,16 +68,16 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 | Aspect | C++ Original | Java Port |
 |--------|-------------|-----------|
-| Naming | All classes T-prefixed | T-prefix on core classes; gadgets/geometry omit it |
-| Tree structure | TAtom: `_Next/_Previous/_Son/_Father` sibling chain | Only `father` parent ref in TZone; children in `LinkedList` |
+| Naming | All classes T-prefixed | Only `TColors` keeps T prefix; others use plain names (`ScreenArea`, `Application`, …) |
+| Tree structure | TAtom: `_Next/_Previous/_Son/_Father` sibling chain | Only `father` parent ref in ScreenArea; children in `LinkedList` |
 | Child storage | TAtom linked tree | `LinkedList<Widget>` in Canvas, `LinkedList<Window>` in Screen |
-| Event tables | C++ macros `DEFINE_EVENTS_TABLE` | Virtual method overrides in TZone subclasses |
+| Event tables | C++ macros `DEFINE_EVENTS_TABLE` | Virtual method overrides in ScreenArea subclasses |
 | Graphics backend | libgrx20 calls | AWT `Graphics2D` via `PaintContext` wrapper |
 | AWT coupling | N/A | Isolated in `ui.driver` (AwtDriver + EventAwtAdapter) |
 | Data exchange | `SetData()/GetData()/DataSize()` | Removed |
-| `TShell` | Trivial TObject subclass | Removed; `TApp` is a plain class |
-| `TObject` + `TZone` | Separate mechanism/graphics layers | Merged into `TZone` |
-| `TDesktop` | Background application desktop | Renamed to `Screen` |
+| `TShell` | Trivial TObject subclass | Removed; `Application` is a plain class |
+| `TObject` + `TZone` | Separate mechanism/graphics layers | Merged into `ScreenArea` |
+| `TDesktop` | Background application desktop | `Screen` (plain class, not a ScreenArea subclass) |
 | `sfDisabled` flag | Status bitmask | `Widget.enabled` boolean |
 | `opMainMenu` / `opSeparator` | Option bitmasks | `Menu.mainMenu` / `MenuChoice.separator` booleans |
 | `opWinSizeable` / `opWinCloseBox` | Option bitmasks | `Window.resizable` / `Window.closable` booleans |
@@ -87,12 +87,13 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 ### Key Design Decisions
 
 1. **No TAtom**: The linked sibling tree is removed. Children live in explicit `LinkedList` containers in Canvas and Screen.
-2. **TObject merged into TZone**: The former mechanism/graphics split is collapsed. `TZone` is the single root for all visual objects; it holds `father`, `status`, event dispatch, bounds, and drawing.
-3. **TApp is a plain class**: No longer extends TZone/TObject. Owns a `Screen` and an `AwtDriver`; registers command/hotkey handlers via lambdas.
+2. **TObject merged into ScreenArea**: The former mechanism/graphics split is collapsed. `ScreenArea` is the single root for all visual objects; it holds `father`, `status`, event dispatch, bounds, and drawing.
+3. **Application is a plain class**: Not a ScreenArea subclass. Owns a `Screen` and an `AwtDriver`; registers command/hotkey handlers via lambdas.
 4. **AWT isolated in `ui.driver`**: `AwtDriver` holds the `Frame`, `Canvas`, back buffer, and all AWT listeners. `EventAwtAdapter` translates AWT events. No AWT imports outside this package.
-5. **Parent reference only**: `TZone.father` enables upward command routing, but no sibling navigation.
-6. **Method-override event dispatch**: `TZone.handleEvent` dispatches via a `switch` to overridable methods; no macro tables.
-7. **PaintContext**: Local-coordinate translation is managed in `PaintContext`; callers always draw in their own (0,0)-based coordinate space.
+5. **Screen is not a ScreenArea**: Screen sits above the ScreenArea hierarchy. `ScreenArea.father` terminates at the top-level Window (father = null). Windows hold a direct `Screen` reference (`Window.getScreen()`) used for window management and command routing.
+6. **Parent reference only**: `ScreenArea.father` enables coordinate translation and event routing within the window hierarchy, but no sibling navigation.
+7. **Method-override event dispatch**: `ScreenArea.handleEvent` dispatches via a `switch` to overridable methods; no macro tables.
+8. **PaintContext**: Local-coordinate translation is managed in `PaintContext`; callers always draw in their own (0,0)-based coordinate space.
 8. **Scrollbar drag capture**: Like Window title-bar drag, Scrollbar returns `true` from `mouseMove`/`mouseLUp` while `dragging==true` regardless of contains, so the thumb follows the mouse even outside the bar.
 9. **Scroller viewport buffer**: Content renders at viewport size (not virtual size), so only the visible slice is computed. The scrollbar range tracks the virtual size independently. Scroll offset is forwarded to the content widget via callback.
 
@@ -136,7 +137,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 |------------|--------------|
 | `PointTest` | Constructor, copy, arithmetic |
 | `RectTest` | Constructors, geometry ops, intersect/union |
-| `TZoneTest` | Bounds, absolute position with parent chain, contains, visibility, status flags |
+| `ScreenAreaTest` | Bounds, absolute position with parent chain, contains, visibility, status flags |
 | `CheckBoxTest` | Checked state, bitmask groups, disabled state |
 | `TRadioBoxTest` | Mutual exclusion, getValue, disabled state |
 | `EditLineTest` | setText, max length, null handling |

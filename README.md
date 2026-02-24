@@ -11,7 +11,7 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 ### What's implemented
 
 - Overlapping windows with drag, resize, close, and z-ordering
-- Custom widget painting (TZone-based drawing areas)
+- Custom widget painting (ScreenArea-based drawing areas)
 - Event system (mouse, keyboard, commands) routed through object hierarchy
 - Gadgets: Button, CheckBox, RadioBox, GroupBox, EditLine, Label, Menu, MenuChoice, Dialog, Scrollbar, Scroller
 - Sample applications: Hello (custom windows), Dialog (full gadget demo), Mandel (Mandelbrot viewer with zoom + scrollbars)
@@ -33,8 +33,8 @@ src/main/java/net/eric_nicolas/sword/
 ├── ui/               - Geometry (Point, Rect)
 │   ├── events/       - Event, EventMouse, EventKeyboard, EventCommand
 │   ├── driver/       - AwtDriver, EventAwtAdapter  (all AWT coupling here)
-│   ├── base/         - Core layer: TZone, Widget, Canvas, Window, Screen,
-│   │                   TColors, PaintContext, TApp
+│   ├── base/         - Core layer: ScreenArea, Widget, Canvas, Window, Screen,
+│   │                   TColors, PaintContext, Application
 │   └── widgets/      - UI components: Button, CheckBox, RadioBox, GroupBox,
 │                       EditLine, Label, Menu, MenuChoice, Dialog, StandardButtons,
 │                       AbstractButton, ItemBox, Scrollbar, Scroller
@@ -91,13 +91,13 @@ The port preserves the original layered model:
 ```
 samples/          (Hello, Dialog, Mandel)
     ↓
-ui.base/          (TApp – application shell, menu, Screen)
+ui.base/          (Application – application shell, menu, Screen)
     ↓
 ui.widgets/       (Button, EditLine, Menu, Dialog, Scrollbar…)
     ↓
-ui.base/          (Window, Canvas, Screen)
+ui.base/          (Window, Canvas)
     ↓
-ui.base/          (TZone – flags, parent ref, event dispatch, drawing)
+ui.base/          (ScreenArea – flags, parent ref, event dispatch, drawing)
     ↓
 ui/ + ui.events/  (Point, Rect, Event hierarchy)
     ↓
@@ -106,13 +106,15 @@ ui.driver/        (AwtDriver, EventAwtAdapter – AWT isolation layer)
 AWT Graphics2D    (replaces libgrx20)
 ```
 
+Note: `Screen` is a standalone class (not a `ScreenArea` subclass). It sits alongside the hierarchy and holds `Window` instances; windows reference their Screen directly via `Window.getScreen()`.
+
 Key adaptations from C++:
 - TAtom linked sibling tree removed; children managed in `LinkedList` in Canvas/Screen
-- `TObject` and `TZone` merged into a single `TZone` class (mechanism + graphics in one)
-- `TDesktop` renamed to `Screen`; `TApp` is a plain class (not a TZone subclass)
+- `TObject` and `TZone` merged into a single `ScreenArea` class (mechanism + graphics in one)
+- `TDesktop` → `Screen` (plain class, not in the ScreenArea hierarchy); `TApp` → `Application` (plain class)
 - All AWT coupling isolated in `ui.driver`; framework core has zero AWT imports
-- Macro event tables replaced by virtual method overrides in `TZone` subclasses
-- Single `father` parent reference retained for command routing up the hierarchy
+- Macro event tables replaced by virtual method overrides in `ScreenArea` subclasses
+- `father` parent reference retained within the window hierarchy for coordinate translation; Screen sits outside this chain
 - C++ bitmask option/status flags replaced by plain booleans where it simplifies the API (`Widget.enabled`, `Menu.mainMenu`, `MenuChoice.separator`)
 
 See [IMPLEMENTATION.md](IMPLEMENTATION.md) for detailed notes on all classes, design decisions, and known limitations.
