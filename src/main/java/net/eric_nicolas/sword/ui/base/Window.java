@@ -113,7 +113,7 @@ public class Window extends TZone {
      * Effective border width: full BORDER for resizable windows,
      * 1 pixel (thin outline only) for non-resizable windows.
      */
-    private int eb() { return resizable ? BORDER : 1; }
+    protected int eb() { return resizable ? BORDER : 1; }
 
     /** Width of the usable content area (inside border and sidebar). */
     public int getContentWidth() {

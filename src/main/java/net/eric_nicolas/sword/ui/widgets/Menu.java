@@ -48,6 +48,7 @@ public class Menu extends Window {
     protected void init(String title) {
         setBackgroundColor(TColors.FACE_GRAY);
         setClosable(false);
+        setResizable(false);
     }
 
     /** All MenuChoices living in this menu's canvas. */
@@ -147,8 +148,8 @@ public class Menu extends Window {
     }
 
     protected int compHeight() {
-        // Base: 2 × BORDER (outer border) + 4 px top margin + 4 px bottom margin
-        int h = Window.BORDER * 2 + 8;
+        // Base: 2 × effective border + 4 px top margin + 4 px bottom margin
+        int h = eb() * 2 + 8;
         for (MenuChoice choice : getChoices()) {
             h += choice.separator ? 6 : 20;
         }
