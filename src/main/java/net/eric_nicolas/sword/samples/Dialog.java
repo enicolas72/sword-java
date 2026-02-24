@@ -41,10 +41,10 @@ public class Dialog {
         }
 
         protected boolean doDialogTest() {
-            int dX = (640 - 270) / 2;
+            int dX = (640 - 296) / 2;
             int dY = (480 - 300) / 2;
             net.eric_nicolas.sword.ui.widgets.Dialog dialog =
-                new net.eric_nicolas.sword.ui.widgets.Dialog(dX, dY, 270, 300, "Dialog sample");
+                new net.eric_nicolas.sword.ui.widgets.Dialog(dX, dY, 296, 300, "Dialog sample");
 
             Canvas dc = dialog.getCanvas();
 

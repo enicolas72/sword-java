@@ -73,13 +73,11 @@ public class Hello {
                 300, 200, title
             );
 
-            // Create THello zone inside window (with padding for title bar)
-            // Coordinates are relative to parent window
+            // Coordinates are relative to the window's content canvas origin
             THello hello = new THello(
-                2,   // 2 pixels from window's left edge
-                22,  // 22 pixels from window's top edge (below title bar)
-                window.getBounds().width() - 4,
-                window.getBounds().height() - 24
+                0, 0,
+                window.getContentWidth(),
+                window.getContentHeight()
             );
             window.getCanvas().add(hello);
 

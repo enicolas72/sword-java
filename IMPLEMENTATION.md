@@ -117,8 +117,6 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 ## Known Limitations
 
-- **No window resize**: Resize handles not implemented
-- **No close/min/max buttons**: Title bar decorations only
 - **No window focus styling**: Active window not visually distinct
 - **Dialog modal loop**: `execDialog()` is a stub; modal blocking not yet implemented
 - **No COMMON subsystem**: No path utilities, error handling, or debug facilities

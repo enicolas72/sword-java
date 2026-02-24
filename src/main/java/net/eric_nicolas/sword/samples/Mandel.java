@@ -239,20 +239,16 @@ public class Mandel {
                     30 + offset, 50 + offset, winW, winH,
                     "Mandelbrot #" + viewerCount);
 
-            // Available area inside the window frame + title bar
-            int contentAreaW = winW - 4;   // 456
-            int contentAreaH = winH - 24;  // 386
-
             // Viewport = content area minus the two scrollbar strips
-            int viewW = contentAreaW - Scrollbar.THICKNESS;  // 440
-            int viewH = contentAreaH - Scrollbar.THICKNESS;  // 370
+            int viewW = win.getContentWidth()  - Scrollbar.THICKNESS;
+            int viewH = win.getContentHeight() - Scrollbar.THICKNESS;
 
             // MandelWidget renders exactly the viewport; its virtual world
             // starts at viewW × viewH (= no scrolling at zoom 1) and doubles
             // with each zoom step.
             MandelWidget widget = new MandelWidget(0, 0, viewW, viewH);
             Scroller scroller = new Scroller(
-                    2, 22, viewW, viewH,
+                    0, 0, viewW, viewH,
                     widget, viewW, viewH,   // initial virtual size = viewport (zoom 1)
                     true, true);
 

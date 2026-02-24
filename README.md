@@ -10,7 +10,7 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 
 ### What's implemented
 
-- Overlapping windows with drag and z-ordering
+- Overlapping windows with drag, resize, close, and z-ordering
 - Custom widget painting (TZone-based drawing areas)
 - Event system (mouse, keyboard, commands) routed through object hierarchy
 - Gadgets: Button, CheckBox, RadioBox, GroupBox, EditLine, Label, Menu, MenuChoice, Dialog, Scrollbar, Scroller
@@ -19,7 +19,6 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 
 ### What's deferred
 
-- Window resize handles / close button
 - TGauge (progress bar)
 - Modal dialog event loop
 - COMMON / DRIVERS subsystems (file system, error handling)
