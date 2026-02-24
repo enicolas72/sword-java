@@ -46,6 +46,12 @@ public class Mandel {
         private int offsetX = 0;    // view origin in virtual pixels (X)
         private int offsetY = 0;    // view origin in virtual pixels (Y)
 
+        // Base viewport size: fixed at construction; virtualW/H are baseW/H × zoom.
+        // Decoupling virtual world size from the live viewport size ensures that
+        // resizing the window reveals more complex-plane area rather than stretching
+        // the existing view.
+        private final int baseW, baseH;
+
         // Undo history: each entry stores [zoom, offsetX, offsetY]
         private final Deque<int[]> history = new ArrayDeque<>();
 
@@ -56,6 +62,8 @@ public class Mandel {
 
         public MandelWidget(int x, int y, int width, int height) {
             super(x, y, width, height);
+            this.baseW = width;
+            this.baseH = height;
         }
 
         // ===== Public state accessors =====
@@ -72,11 +80,18 @@ public class Mandel {
             rendered = null;
         }
 
-        /** Virtual content width at the current zoom level. */
-        public int virtualW() { return bounds.width()  * zoom; }
+        /**
+         * Virtual content width at the current zoom level.
+         * Uses baseW (fixed at construction) so that resizing the viewport does
+         * not change the virtual world size — only zooming does.
+         */
+        public int virtualW() { return baseW * zoom; }
 
-        /** Virtual content height at the current zoom level. */
-        public int virtualH() { return bounds.height() * zoom; }
+        /**
+         * Virtual content height at the current zoom level.
+         * Uses baseH (fixed at construction) for the same reason as virtualW.
+         */
+        public int virtualH() { return baseH * zoom; }
 
         public int getOffsetX() { return offsetX; }
         public int getOffsetY() { return offsetY; }
@@ -175,8 +190,8 @@ public class Mandel {
             int viewH   = bounds.height();
             int newOffX = 2 * vx - viewW / 2;
             int newOffY = 2 * vy - viewH / 2;
-            newOffX = Math.max(0, Math.min(newOffX, viewW * newZoom - viewW));
-            newOffY = Math.max(0, Math.min(newOffY, viewH * newZoom - viewH));
+            newOffX = Math.max(0, Math.min(newOffX, baseW * newZoom - viewW));
+            newOffY = Math.max(0, Math.min(newOffY, baseH * newZoom - viewH));
 
             zoom    = newZoom;
             offsetX = newOffX;

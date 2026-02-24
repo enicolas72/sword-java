@@ -57,7 +57,7 @@ net.eric_nicolas.sword.samples         → Hello, Dialog, Mandel (sample applica
 3. **Status/Options Flags:**
    - Bitmask flags live in `TZone`: `SF_VISIBLE`, `SF_SELECTED`, `SF_MOUSE_IN`, `SF_DOWN`, `SF_FOCUSED`, `SF_MODIFIED`
    - Use `setStatus`/`clearStatus`/`hasStatus`
-   - Widget-specific boolean state uses plain fields instead of flags: `Widget.enabled`, `Menu.mainMenu`, `MenuChoice.separator`
+   - Widget-specific boolean state uses plain fields instead of flags: `Widget.enabled`, `Menu.mainMenu`, `MenuChoice.separator`, `Window.resizable`, `Window.closable`
 
 4. **Naming:**
    - Core classes keep the T prefix: `TZone`, `TApp`, `TColors`
@@ -92,16 +92,16 @@ java -cp target/classes net.eric_nicolas.sword.samples.Mandel
 
 **Phase 2 complete.** Core infrastructure, all main gadgets, and scrolling are working.
 
-✅ Overlapping windows with drag and z-ordering
+✅ Overlapping windows with drag, resize, close, and z-ordering
+✅ Window options: `resizable` (thick border + resize handles vs. 1-px outline) and `closable` (shows/hides close button)
 ✅ Event system (mouse, keyboard, commands) routed through object hierarchy
 ✅ Gadgets: Button, CheckBox, RadioBox, GroupBox, EditLine, Label, Menu, MenuChoice, Dialog
 ✅ Scrollbar (TLift port): arrow buttons, thumb drag, page click, H/V orientations
-✅ Scroller (TScroller port): viewport-sized buffer, zoom-aware content/scrollbar sync
-✅ Sample applications: Hello, Dialog, Mandel (Mandelbrot fractal viewer with zoom + pan)
+✅ Scroller (TScroller port): viewport-sized buffer, zoom-aware content/scrollbar sync; `resize()` for live viewport resize
+✅ Sample applications: Hello, Dialog, Mandel (Mandelbrot fractal viewer with zoom + pan; resize reveals more of the plane)
 ✅ ~54 unit tests
 
 **Deferred:**
-- Window resize handles / close button
 - TGauge (progress bar)
 - Modal dialog event loop
 - COMMON / DRIVERS subsystems (file system, error handling)
@@ -135,10 +135,25 @@ java -cp target/classes net.eric_nicolas.sword.samples.Mandel
 - Mouse/keyboard events wrapped by `EventAwtAdapter` (in `ui.driver`) and dispatched to `Screen.handleEvent()`
 - Global menu hotkeys are intercepted by `TApp`'s hotkey predicate before desktop dispatch; matched via `Menu.processHotKey(keyCode)` which calls `MenuChoice.sendCommand()` up to `Screen`
 
+**Window chrome:**
+- Left sidebar (SIDEBAR_W=16 px): grip lines at top, optional close button (×) below
+- Outer resize border (BORDER=5 px, resizable windows) or 1-px outline (non-resizable); `eb()` helper returns the effective border width
+- Corner zones (CORNER=12 px from each corner) marked by black tick lines; drag to resize in two axes
+- `setResizable(false)` → no thick border, no resize hit-testing (used by Dialog)
+- `setClosable(false)` → no close button drawn, sidebar click does nothing (used by Menu)
+- `drawOverlay()` redraws the sidebar separator + content border AFTER canvas children, so widget background fills never hide them
+- `setOnResize(Runnable)` callback fired only during actual resize (not drag); used by samples to reflow content
+
 **Scrollbar / Scroller design:**
 - `Scrollbar` renders its own arrow buttons and thumb; handles drag capture (returns true from `mouseMove`/`mouseLUp` while dragging, even outside bounds)
 - `Scroller` is a `Canvas`; its content widget renders into a viewport-sized `BufferedImage`; the virtual content size (for scrollbar ranges) is independent of the buffer
+- `Scroller.resize(newViewW, newViewH)` resizes viewport, content widget, and scrollbar dimensions/ranges in one call
 - Zoom-aware wiring: `scroller.setOnScroll(→ widget.setOffset)` + `widget.setOnZoomChange(→ scroller.setContentSize/setScrollPosition)`
+
+**Mandel virtual world:**
+- `MandelWidget` stores `baseW`, `baseH` fixed at construction; `virtualW() = baseW * zoom` (not `bounds.width() * zoom`)
+- Resizing the viewport reveals more of the complex plane instead of stretching the existing view
+- Complex-plane units per pixel depend only on zoom level, not viewport size
 
 ---
 

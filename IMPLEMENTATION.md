@@ -26,7 +26,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`TZone`** — Root of the visual hierarchy: `father` reference, status bitmask flags (`SF_VISIBLE`, `SF_SELECTED`, `SF_MOUSE_IN`, `SF_DOWN`, `SF_FOCUSED`, `SF_MODIFIED`), virtual event handlers (`mouseLDown`, `mouseMove`, `keyDown`, `command`, …), drawing area with `bounds`, `clipRect`, `draw()` / `paint()`, `getAbsolutePosition()`, `contains()`
 - **`Widget`** — Extends TZone; adds `enabled` boolean (`isEnabled()` / `setEnabled()`)
 - **`Canvas`** — Transparent container for Widget children stored in `LinkedList<Widget>`; dispatches events in reverse (topmost first) z-order
-- **`Window`** — Overlapping window: draggable title bar, 3D frame, internal `Canvas`; `bringToFront()` / `remove()`
+- **`Window`** — Overlapping window: left sidebar (drag grip + optional close button), outer resize border; internal `Canvas`; `bringToFront()` / `remove()`. Options: `setResizable(bool)` (thick border + resize handles vs. 1-px outline), `setClosable(bool)` (show/hide × button). `setOnResize(Runnable)` callback fired on resize. `drawOverlay()` redraws inner chrome after canvas children so widget fills never obscure it.
 - **`Screen`** — Manages `LinkedList<Window>` with z-ordering; dispatches events; routes unhandled commands to the registered `IntPredicate` command handler
 - **`TColors`** — Static colour palette (standard + UI theme: `FACE_GRAY`, `MEDIUM_GRAY`, `DESKTOP_BG`, …)
 - **`PaintContext`** — `Graphics2D` wrapper with local-coordinate translation via `withOrigin(Point)`; covers draw/fill/clip/image primitives
@@ -52,13 +52,13 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`Dialog`** — Window subclass with result codes (`CM_OK`, `CM_CANCEL`, `CM_YES`, `CM_NO`); `execDialog()` stub
 - **`StandardButtons`** — Factory for standard OK / Cancel / Yes / No button instances
 - **`Scrollbar`** — Port of `TLift`: H/V scrollbar with arrow buttons, thumb drag, page click; `setRange(contentSize, viewSize)`, `getPosition()`, `setOnChange(Runnable)`. Drag capture: `mouseLUp`/`mouseMove` return true while dragging even outside bounds.
-- **`Scroller`** — Port of `TScroller`: scrollable viewport backed by a viewport-sized `BufferedImage`. Virtual content size (governs scrollbar range) is independent of the buffer. Mouse events are forwarded as viewport-local coordinates. Public API: `setContentSize`, `setScrollPosition`, `getScrollX/Y`, `setOnScroll`.
+- **`Scroller`** — Port of `TScroller`: scrollable viewport backed by a viewport-sized `BufferedImage`. Virtual content size (governs scrollbar range) is independent of the buffer. Mouse events are forwarded as viewport-local coordinates. Public API: `setContentSize`, `setScrollPosition`, `getScrollX/Y`, `setOnScroll`, `resize(newViewW, newViewH)` (live viewport resize).
 
 ### `net.eric_nicolas.sword.samples`
 
 - **`Hello`** — Multiple overlapping draggable windows with a custom `THello` widget drawing "Hello World!"
 - **`Dialog`** — Demonstrates `Dialog`, `Button`, `CheckBox`, `RadioBox`, `GroupBox`, `EditLine`, `Label`
-- **`Mandel`** — Mandelbrot fractal viewer with zoom + pan. `MandelWidget` renders only the current viewport into a `BufferedImage`, tracking `zoom` and `offsetX/Y`. Left-click zooms in 2× (virtual world doubles, thumb halves); right-click undoes zoom. Wired to `Scroller` via `onZoomChange` / `onScroll` callbacks so scrollbars always reflect zoom level and enable full panning.
+- **`Mandel`** — Mandelbrot fractal viewer with zoom + pan. `MandelWidget` renders only the current viewport into a `BufferedImage`, tracking `zoom` and `offsetX/Y`. Virtual world size is fixed at `baseW × baseH` (set at construction) and scales with zoom (`virtualW = baseW * zoom`), so resizing the window reveals more of the complex plane rather than stretching the view. Left-click zooms in 2× (virtual world doubles, thumb halves); right-click undoes zoom. Wired to `Scroller` via `onZoomChange` / `onScroll` callbacks so scrollbars always reflect zoom level and enable full panning.
 
 ---
 
@@ -80,6 +80,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 | `TDesktop` | Background application desktop | Renamed to `Screen` |
 | `sfDisabled` flag | Status bitmask | `Widget.enabled` boolean |
 | `opMainMenu` / `opSeparator` | Option bitmasks | `Menu.mainMenu` / `MenuChoice.separator` booleans |
+| `opWinSizeable` / `opWinCloseBox` | Option bitmasks | `Window.resizable` / `Window.closable` booleans |
 | Button `BO_*` options | Constructor parameter | Removed; use `setEnabled(false)` after construction |
 | Packages | Flat subsystem names | `ui.base`, `ui.widgets`, `ui.events`, `ui.driver` |
 
