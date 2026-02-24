@@ -81,6 +81,55 @@ class TZoneTest {
         assertFalse(parent.isVisible());
     }
 
+    // ===== Status flag tests (formerly TObjectTest) =====
+
+    @Test
+    void testInitialStatus() {
+        TZone obj = new TZone(0, 0, 10, 10);
+        assertTrue(obj.hasStatus(TZone.SF_VISIBLE));
+        assertFalse(obj.hasStatus(TZone.SF_SELECTED));
+    }
+
+    @Test
+    void testSetAndClearStatus() {
+        TZone obj = new TZone(0, 0, 10, 10);
+        obj.setStatus(TZone.SF_SELECTED);
+        assertTrue(obj.hasStatus(TZone.SF_SELECTED));
+        assertTrue(obj.hasStatus(TZone.SF_VISIBLE)); // unaffected
+
+        obj.clearStatus(TZone.SF_SELECTED);
+        assertFalse(obj.hasStatus(TZone.SF_SELECTED));
+    }
+
+    @Test
+    void testMultipleStatusFlags() {
+        TZone obj = new TZone(0, 0, 10, 10);
+        obj.setStatus(TZone.SF_SELECTED);
+        obj.setStatus(TZone.SF_FOCUSED);
+        assertTrue(obj.hasStatus(TZone.SF_SELECTED));
+        assertTrue(obj.hasStatus(TZone.SF_FOCUSED));
+        assertTrue(obj.hasStatus(TZone.SF_VISIBLE));
+    }
+
+    @Test
+    void testSetVisibleToggle() {
+        TZone obj = new TZone(0, 0, 10, 10);
+        obj.setVisible(false);
+        assertFalse(obj.isVisible());
+        obj.setVisible(true);
+        assertTrue(obj.isVisible());
+    }
+
+    @Test
+    void testIsSelected() {
+        TZone obj = new TZone(0, 0, 10, 10);
+        assertFalse(obj.isSelected());
+        obj.setSelected(true);
+        assertTrue(obj.isSelected());
+        obj.setSelected(false);
+        assertFalse(obj.isSelected());
+    }
+
     @Test
     void testSetBackgroundColor() {
         parent.setBackgroundColor(TColors.RED);

@@ -126,15 +126,15 @@ public class AbstractButton extends Widget {
      * Send command up the hierarchy.
      */
     protected void sendCommand(int cmd) {
-        // Find the desktop or dialog
-        TObject current = this;
-        while (current != null && !(current instanceof Desktop) && !(current instanceof Dialog)) {
+        // Find the screen or dialog
+        TZone current = this;
+        while (current != null && !(current instanceof Screen) && !(current instanceof Dialog)) {
             current = current.father();
         }
 
         // Send command event
-        if (current instanceof TObject currentObject) {
-            currentObject.handleEvent(new EventCommand(cmd));
+        if (current != null) {
+            current.handleEvent(new EventCommand(cmd));
         }
     }
 

@@ -225,9 +225,9 @@ public class Mandel {
         }
 
         @Override
-        protected boolean command(int commandId) {
+        protected boolean handleCommand(int commandId) {
             if (commandId == CM_NEW_VIEWER) return doNewViewer();
-            return super.command(commandId);
+            return super.handleCommand(commandId);
         }
 
         private boolean doNewViewer() {
@@ -267,7 +267,7 @@ public class Mandel {
             });
 
             win.getCanvas().add(scroller);
-            getDesktop().add(win);
+            getScreen().add(win);
             return true;
         }
     }

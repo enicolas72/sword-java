@@ -1,196 +1,64 @@
 package net.eric_nicolas.sword.ui.base;
 
+import net.eric_nicolas.sword.ui.driver.AwtDriver;
 import net.eric_nicolas.sword.ui.widgets.Menu;
 import net.eric_nicolas.sword.ui.widgets.MenuChoice;
-import net.eric_nicolas.sword.ui.events.EventCommand;
-import net.eric_nicolas.sword.ui.events.Event;
-import net.eric_nicolas.sword.ui.events.EventAwtAdapter;
-import net.eric_nicolas.sword.ui.events.EventKeyboard;
 
-import java.awt.*;
-import java.awt.Canvas;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
+/**
+ * TApp - Main application shell.
+ *
+ * Creates the Screen and AwtDriver, registers the command handler and menu
+ * hotkey handler, then delegates the event loop to AwtDriver.
+ *
+ * Subclasses override createMenuChoices() to populate the menu bar and
+ * handleCommand() to respond to application-level commands.
+ */
+public class TApp {
 
-public class TApp extends TObject implements Runnable {
-
-    // Command constants
     public static final int CM_QUIT = 100;
 
-    protected Frame frame;
-    protected Desktop desktop;
-    protected java.awt.Canvas canvas;
-    protected BufferedImage backBuffer;
-    protected Graphics2D backGraphics;
-    protected boolean running;
+    protected Screen screen;
+    protected AwtDriver driver;
     protected Menu mainMenu;
 
     public TApp(String title, int width, int height) {
-        super();
-        frame = new Frame(title);
-        desktop = new Desktop(width, height);
-        desktop.setApplication(this); // Set this as the application for command routing
-        frame.setSize(width, height);
-        frame.setResizable(false);
-
-        canvas = new Canvas() {
-            @Override
-            public void paint(Graphics g) {
-                if (backBuffer != null) {
-                    g.drawImage(backBuffer, 0, 0, null);
-                }
-            }
-        };
-        canvas.setSize(width, height);
-        frame.add(canvas);
-
-        backBuffer = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        backGraphics = backBuffer.createGraphics();
-        backGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        canvas.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                Event event = EventAwtAdapter.ofMousePressedEvent(e);
-                if (desktop.handleEvent(event)) {
-                    forceRepaint();
-                }
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                Event event = EventAwtAdapter.ofMouseReleasedEvent(e);
-                if (desktop.handleEvent(event)) {
-                    forceRepaint();
-                }
-            }
-        });
-
-        canvas.addMouseMotionListener(new MouseMotionAdapter() {
-            @Override
-            public void mouseMoved(MouseEvent e) {
-                Event event = EventAwtAdapter.ofMouseMouseEvent(e);
-                if (desktop.handleEvent(event)) {
-                    forceRepaint();
-                }
-            }
-
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                Event event = EventAwtAdapter.ofMouseDraggedEvent(e);
-                if (desktop.handleEvent(event)) {
-                    forceRepaint();
-                }
-            }
-        });
-
-        canvas.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                EventKeyboard event = EventAwtAdapter.ofKeyPressedEvent(e, '\0');
-                // First try to handle as hotkey
-                if (keyDown(event)) {
-                    forceRepaint();
-                    return;
-                }
-                // Then pass to desktop
-                if (desktop.handleEvent(event)) {
-                    forceRepaint();
-                }
-            }
-
-            @Override
-            public void keyTyped(KeyEvent e) {
-                // Handle actual character input (keyboard layout aware)
-                char ch = e.getKeyChar();
-                if (!Character.isISOControl(ch) || ch == '\b' || ch == '\n') {
-                    Event event = EventAwtAdapter.ofKeyPressedEvent(e, ch);
-                    if (desktop.handleEvent(event)) {
-                        forceRepaint();
-                    }
-                }
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                Event event = EventAwtAdapter.ofKeyReleasedEvent(e);
-                desktop.handleEvent(event);
-            }
-        });
-
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                quit();
-            }
-        });
-
-        running = false;
-
-        // Create menu after initialization
+        screen = new Screen(width, height);
+        screen.setCommandHandler(this::handleCommand);
+        driver = new AwtDriver(title, width, height, screen, this::processHotKey);
         initializeMenu();
     }
 
+    private boolean processHotKey(int keyCode) {
+        return mainMenu != null && mainMenu.processHotKey(keyCode);
+    }
+
     protected void initializeMenu() {
-        // Create main menu (regular window, stays visible)
         mainMenu = new Menu("Menu", false);
         createMenuChoices(mainMenu);
         mainMenu.initChoices();
-        desktop.add(mainMenu);
+        screen.add(mainMenu);
     }
 
     /**
-     * Override this method to create menu choices.
-     * Default implementation adds just a Quit option.
+     * Override to populate the menu bar with MenuChoice items.
+     * Default: adds a single Quit entry.
      */
     protected void createMenuChoices(Menu menu) {
         menu.getCanvas().add(new MenuChoice("&Quit", 0, CM_QUIT));
     }
 
-    @Override
-    protected boolean keyDown(EventKeyboard event) {
-        // Process menu hotkeys
-        if (mainMenu != null) {
-            return processMenuHotKey(event.keyCode, mainMenu);
-        }
-        return false;
-    }
-
     /**
-     * Process menu hotkeys recursively.
+     * Override to handle application commands.
+     * Call super.handleCommand(commandId) to keep the default CM_QUIT handling.
      */
-    protected boolean processMenuHotKey(int keyCode, Menu menu) {
-        MenuChoice choice = menu.firstChoice();
-        while (choice != null) {
-            if (choice.getSubMenu() != null) {
-                // Check submenu hotkeys
-                if (processMenuHotKey(keyCode, choice.getSubMenu())) {
-                    return true;
-                }
-            } else {
-                // Check this choice's hotkey
-                if (keyCode == choice.getGlobalScanCode()) {
-                    // Send command
-                    handleEvent(new EventCommand(choice.getCommand()));
-                    return true;
-                }
-            }
-            choice = choice.nextChoice();
-        }
-        return false;
-    }
-
-    @Override
-    protected boolean command(int commandId) {
-        if (commandId == CM_QUIT) {
-            return doQuit();
-        }
+    protected boolean handleCommand(int commandId) {
+        if (commandId == CM_QUIT) return doQuit();
         return false;
     }
 
     protected boolean doQuit() {
         if (canClose()) {
-            quit();
+            driver.quit();
             return true;
         }
         return false;
@@ -200,52 +68,15 @@ public class TApp extends TObject implements Runnable {
         return true;
     }
 
-    public Desktop getDesktop() {
-        return desktop;
+    public Screen getScreen() {
+        return screen;
     }
 
     public void run() {
-        running = true;
-
-        // Initial draw
-        forceRepaint();
-
-        frame.setVisible(true);
-
-        // Event loop - just keep running, actual redraws happen in forceRepaint()
-        while (running) {
-            try {
-                Thread.sleep(50); // Just keep alive, don't redraw continuously
-            } catch (InterruptedException e) {
-                break;
-            }
-        }
-    }
-
-    public void quit() {
-        running = false;
-        if (backGraphics != null) backGraphics.dispose();
-        frame.dispose();
-        System.exit(0);
+        driver.run();
     }
 
     public void repaint() {
-        forceRepaint();
-    }
-
-    public void forceRepaint() {
-        if (backBuffer != null && backGraphics != null) {
-            // Create paint context and draw to back buffer
-            PaintContext ctx = PaintContext.ofAWT(backGraphics);
-            desktop.draw(ctx);
-
-            // Copy back buffer to screen immediately (synchronously)
-            Graphics g = canvas.getGraphics();
-            if (g != null) {
-                g.drawImage(backBuffer, 0, 0, null);
-                Toolkit.getDefaultToolkit().sync(); // Force synchronization
-                g.dispose();
-            }
-        }
+        driver.forceRepaint();
     }
 }

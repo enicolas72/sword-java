@@ -106,15 +106,15 @@ public class Window extends TZone {
     }
 
     public void bringToFront() {
-        if (father instanceof Desktop desktop) {
-            desktop.bringToFront(this);
+        if (father instanceof Screen screen) {
+            screen.bringToFront(this);
         }
     }
 
     public void remove() {
-        if (father instanceof Desktop desktop) {
+        if (father instanceof Screen screen) {
             father = null;
-            desktop.remove(this);
+            screen.remove(this);
         }
     }
 

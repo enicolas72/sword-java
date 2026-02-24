@@ -1,60 +1,62 @@
 package net.eric_nicolas.sword.ui.base;
 
 import net.eric_nicolas.sword.ui.events.Event;
-import net.eric_nicolas.sword.ui.events.EventCommand;
 import net.eric_nicolas.sword.ui.events.EventMouse;
 
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.function.IntPredicate;
 
 /**
- * TDesktop - Main application desktop/background.
- * Windows are stored in a private LinkedList<Window>; the TAtom sibling
- * structure is not used for Desktop children.
+ * Screen - Main application screen / desktop background.
+ * Manages the z-ordered stack of Windows; dispatches events topmost-first.
+ *
+ * The application registers a command handler via setCommandHandler() so that
+ * commands (e.g. CM_QUIT) bubble up from menus and buttons to the app.
  */
-public class Desktop extends TZone {
+public class Screen extends TZone {
 
     private final LinkedList<Window> windows = new LinkedList<>();
-    private TObject application;
+    private IntPredicate commandHandler;
 
-    public Desktop(int width, int height) {
+    public Screen(int width, int height) {
         super(0, 0, width, height);
         setBackgroundColor(TColors.DESKTOP_BG);
     }
 
-    public void setApplication(TObject app) {
-        this.application = app;
+    /**
+     * Register the application-level command handler.
+     * Called with the commandId; returns true if handled.
+     */
+    public void setCommandHandler(IntPredicate handler) {
+        this.commandHandler = handler;
     }
 
-    /** Add a Window as a child of this desktop. */
+    /** Add a Window (or Menu, Dialog…) to the screen. */
     public void add(Window window) {
         window.setParent(this);
         windows.add(window);
     }
 
-    /** Move window to top (last in list = drawn last = on top). */
+    /** Move window to top (last drawn = on top). */
     void bringToFront(Window window) {
         windows.remove(window);
         windows.addLast(window);
     }
 
-    /** Remove window from the desktop. */
+    /** Remove window from the screen. */
     void remove(Window window) {
         windows.remove(window);
     }
 
     @Override
     public void draw(PaintContext ctx) {
-        super.draw(ctx);  // fill background, paint() (no-op), _Son (empty)
+        super.draw(ctx);
         for (Window window : windows) {
             window.draw(ctx);
         }
     }
 
-    /**
-     * Dispatch events to windows in reverse order (topmost first),
-     * then fall through to local handling via super.
-     */
     @Override
     public boolean handleEvent(Event event) {
         if (event.what != Event.EV_NOTHING) {
@@ -71,8 +73,8 @@ public class Desktop extends TZone {
 
     @Override
     protected boolean command(int commandId) {
-        if (application != null) {
-            return application.handleEvent(new EventCommand(commandId));
+        if (commandHandler != null) {
+            return commandHandler.test(commandId);
         }
         return false;
     }
@@ -84,6 +86,6 @@ public class Desktop extends TZone {
 
     @Override
     protected void paint(PaintContext ctx) {
-        // Desktop draws only background (filled in parent draw method)
+        // Background fill is handled by draw() in the base class
     }
 }

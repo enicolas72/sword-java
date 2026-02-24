@@ -2,7 +2,7 @@ package net.eric_nicolas.sword.ui.widgets;
 
 import net.eric_nicolas.sword.ui.base.PaintContext;
 import net.eric_nicolas.sword.ui.base.TColors;
-import net.eric_nicolas.sword.ui.base.TObject;
+import net.eric_nicolas.sword.ui.base.TZone;
 
 /**
  * TRadioBox - Radio button control.
@@ -53,7 +53,7 @@ public class RadioBox extends ItemBox {
     @Override
     protected void action() {
         if (isEnabled()) {
-            TObject parentAtom = father();
+            TZone parentAtom = father();
             if (parentAtom instanceof GroupBox parentGroupBox) {
                 parentGroupBox.value = this.value;
             }
@@ -61,7 +61,7 @@ public class RadioBox extends ItemBox {
     }
 
     public boolean isRadioSelected() {
-        TObject parentAtom = father();
+        TZone parentAtom = father();
         if (parentAtom instanceof GroupBox parentGroupBox) {
             return parentGroupBox.value == this.value;
         }

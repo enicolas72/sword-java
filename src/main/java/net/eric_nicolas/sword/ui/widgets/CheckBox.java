@@ -2,7 +2,7 @@ package net.eric_nicolas.sword.ui.widgets;
 
 import net.eric_nicolas.sword.ui.base.PaintContext;
 import net.eric_nicolas.sword.ui.base.TColors;
-import net.eric_nicolas.sword.ui.base.TObject;
+import net.eric_nicolas.sword.ui.base.TZone;
 
 /**
  * TCheckBox - Checkbox control with bitmask state.
@@ -66,7 +66,7 @@ public class CheckBox extends ItemBox {
     }
 
     protected void updateParentValue() {
-        TObject parentAtom = father();
+        TZone parentAtom = father();
         if (parentAtom instanceof GroupBox parent) {
             if (checked) {
                 parent.value |= mask; // Set bit

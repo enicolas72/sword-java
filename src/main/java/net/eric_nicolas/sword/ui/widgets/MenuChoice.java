@@ -1,6 +1,10 @@
 package net.eric_nicolas.sword.ui.widgets;
 
-import net.eric_nicolas.sword.ui.base.*;
+import net.eric_nicolas.sword.ui.base.PaintContext;
+import net.eric_nicolas.sword.ui.base.Screen;
+import net.eric_nicolas.sword.ui.base.TColors;
+import net.eric_nicolas.sword.ui.base.TZone;
+import net.eric_nicolas.sword.ui.base.Widget;
 import net.eric_nicolas.sword.ui.events.EventCommand;
 import net.eric_nicolas.sword.ui.events.EventMouse;
 
@@ -94,9 +98,9 @@ public class MenuChoice extends Widget {
 
     /** Walk up Canvas → Menu to find the containing menu. */
     private Menu containingMenu() {
-        TObject canvas = father();          // the Menu's Canvas
+        TZone canvas = father();          // the Menu's Canvas
         if (canvas == null) return null;
-        TObject menu = canvas.father();     // the Menu (Window)
+        TZone menu = canvas.father();     // the Menu (Window)
         return menu instanceof Menu m ? m : null;
     }
 
@@ -204,12 +208,12 @@ public class MenuChoice extends Widget {
     }
 
     protected void sendCommand(int cmd) {
-        TObject current = this;
-        while (current != null && !(current instanceof Desktop)) {
+        TZone current = this;
+        while (current != null && !(current instanceof Screen)) {
             current = current.father();
         }
-        if (current instanceof Desktop desktop) {
-            desktop.handleEvent(new EventCommand(cmd));
+        if (current instanceof Screen screen) {
+            screen.handleEvent(new EventCommand(cmd));
         }
     }
 

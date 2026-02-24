@@ -15,7 +15,7 @@ public class EventKeyboard extends Event {
     public char keyChar;
     public int modifiers;
 
-    EventKeyboard(int what, int keyCode, char keyChar, int modifiers) {
+    public EventKeyboard(int what, int keyCode, char keyChar, int modifiers) {
         super(what);
         this.keyCode = keyCode;
         this.keyChar = keyChar;

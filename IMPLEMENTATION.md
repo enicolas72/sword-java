@@ -23,15 +23,19 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 ### `net.eric_nicolas.sword.ui.base`
 
-- **`TObject`** — Root of the object hierarchy: `father` reference, status bitmask flags (`SF_VISIBLE`, `SF_SELECTED`, `SF_MOUSE_IN`, `SF_DOWN`, `SF_FOCUSED`, `SF_MODIFIED`), virtual event handlers (`mouseLDown`, `mouseMove`, `keyDown`, `command`, …)
-- **`TZone`** — Drawing area: `bounds`, `clipRect`, background/foreground colours, `draw()` / `paint()`, `getAbsolutePosition()`, `contains()`
+- **`TZone`** — Root of the visual hierarchy: `father` reference, status bitmask flags (`SF_VISIBLE`, `SF_SELECTED`, `SF_MOUSE_IN`, `SF_DOWN`, `SF_FOCUSED`, `SF_MODIFIED`), virtual event handlers (`mouseLDown`, `mouseMove`, `keyDown`, `command`, …), drawing area with `bounds`, `clipRect`, `draw()` / `paint()`, `getAbsolutePosition()`, `contains()`
 - **`Widget`** — Extends TZone; adds `enabled` boolean (`isEnabled()` / `setEnabled()`)
 - **`Canvas`** — Transparent container for Widget children stored in `LinkedList<Widget>`; dispatches events in reverse (topmost first) z-order
 - **`Window`** — Overlapping window: draggable title bar, 3D frame, internal `Canvas`; `bringToFront()` / `remove()`
-- **`Desktop`** — Manages `LinkedList<Window>` with z-ordering; dispatches events and repaints
+- **`Screen`** — Manages `LinkedList<Window>` with z-ordering; dispatches events; routes unhandled commands to the registered `IntPredicate` command handler
 - **`TColors`** — Static colour palette (standard + UI theme: `FACE_GRAY`, `MEDIUM_GRAY`, `DESKTOP_BG`, …)
 - **`PaintContext`** — `Graphics2D` wrapper with local-coordinate translation via `withOrigin(Point)`; covers draw/fill/clip/image primitives
-- **`TApp`** — Main application: AWT event loop, double-buffered back buffer, `Desktop`, menu bar; extend and override `createMenuChoices()` + `command()`
+- **`TApp`** — Application shell (plain class, not a TZone): owns a `Screen` and an `AwtDriver`; extend and override `createMenuChoices()` + `handleCommand()`
+
+### `net.eric_nicolas.sword.ui.driver`
+
+- **`AwtDriver`** — AWT event loop, `Frame`, back-buffered `Canvas`, `forceRepaint()`; translates AWT events via `EventAwtAdapter` and forwards them to `Screen`; calls the registered `hotKeyHandler` before desktop dispatch for global menu shortcuts
+- **`EventAwtAdapter`** — Converts AWT `MouseEvent`/`KeyEvent` → S.W.O.R.D events
 
 ### `net.eric_nicolas.sword.ui.widgets`
 
@@ -64,26 +68,32 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 | Aspect | C++ Original | Java Port |
 |--------|-------------|-----------|
-| Naming | All classes T-prefixed | T-prefix on core mechanism classes; gadgets/geometry omit it |
-| Tree structure | TAtom: `_Next/_Previous/_Son/_Father` sibling chain | Only `father` parent ref in TObject; children in `LinkedList` |
-| Child storage | TAtom linked tree | `LinkedList<Widget>` in Canvas, `LinkedList<Window>` in Desktop |
-| Event tables | C++ macros `DEFINE_EVENTS_TABLE` | Virtual method overrides in TObject subclasses |
+| Naming | All classes T-prefixed | T-prefix on core classes; gadgets/geometry omit it |
+| Tree structure | TAtom: `_Next/_Previous/_Son/_Father` sibling chain | Only `father` parent ref in TZone; children in `LinkedList` |
+| Child storage | TAtom linked tree | `LinkedList<Widget>` in Canvas, `LinkedList<Window>` in Screen |
+| Event tables | C++ macros `DEFINE_EVENTS_TABLE` | Virtual method overrides in TZone subclasses |
 | Graphics backend | libgrx20 calls | AWT `Graphics2D` via `PaintContext` wrapper |
+| AWT coupling | N/A | Isolated in `ui.driver` (AwtDriver + EventAwtAdapter) |
 | Data exchange | `SetData()/GetData()/DataSize()` | Removed |
-| `TShell` | Trivial TObject subclass | Removed; `TApp` extends `TObject` directly |
+| `TShell` | Trivial TObject subclass | Removed; `TApp` is a plain class |
+| `TObject` + `TZone` | Separate mechanism/graphics layers | Merged into `TZone` |
+| `TDesktop` | Background application desktop | Renamed to `Screen` |
 | `sfDisabled` flag | Status bitmask | `Widget.enabled` boolean |
 | `opMainMenu` / `opSeparator` | Option bitmasks | `Menu.mainMenu` / `MenuChoice.separator` booleans |
 | Button `BO_*` options | Constructor parameter | Removed; use `setEnabled(false)` after construction |
-| Packages | Flat subsystem names | `ui.base`, `ui.widgets`, `ui.events` |
+| Packages | Flat subsystem names | `ui.base`, `ui.widgets`, `ui.events`, `ui.driver` |
 
 ### Key Design Decisions
 
-1. **No TAtom**: The linked sibling tree is removed. Children live in explicit `LinkedList` containers in Canvas and Desktop.
-2. **Parent reference only**: `TObject.father` enables upward command routing, but no sibling navigation.
-3. **Method-override event dispatch**: `TObject.handleEvent` dispatches via a `switch` to overridable methods; no macro tables.
-4. **PaintContext**: Local-coordinate translation is managed in `PaintContext`; callers always draw in their own (0,0)-based coordinate space.
-5. **Scrollbar drag capture**: Like Window title-bar drag, Scrollbar returns `true` from `mouseMove`/`mouseLUp` while `dragging==true` regardless of contains, so the thumb follows the mouse even outside the bar.
-6. **Scroller viewport buffer**: Content renders at viewport size (not virtual size), so only the visible slice is computed. The scrollbar range tracks the virtual size independently. Scroll offset is forwarded to the content widget via callback.
+1. **No TAtom**: The linked sibling tree is removed. Children live in explicit `LinkedList` containers in Canvas and Screen.
+2. **TObject merged into TZone**: The former mechanism/graphics split is collapsed. `TZone` is the single root for all visual objects; it holds `father`, `status`, event dispatch, bounds, and drawing.
+3. **TApp is a plain class**: No longer extends TZone/TObject. Owns a `Screen` and an `AwtDriver`; registers command/hotkey handlers via lambdas.
+4. **AWT isolated in `ui.driver`**: `AwtDriver` holds the `Frame`, `Canvas`, back buffer, and all AWT listeners. `EventAwtAdapter` translates AWT events. No AWT imports outside this package.
+5. **Parent reference only**: `TZone.father` enables upward command routing, but no sibling navigation.
+6. **Method-override event dispatch**: `TZone.handleEvent` dispatches via a `switch` to overridable methods; no macro tables.
+7. **PaintContext**: Local-coordinate translation is managed in `PaintContext`; callers always draw in their own (0,0)-based coordinate space.
+8. **Scrollbar drag capture**: Like Window title-bar drag, Scrollbar returns `true` from `mouseMove`/`mouseLUp` while `dragging==true` regardless of contains, so the thumb follows the mouse even outside the bar.
+9. **Scroller viewport buffer**: Content renders at viewport size (not virtual size), so only the visible slice is computed. The scrollbar range tracks the virtual size independently. Scroll offset is forwarded to the content widget via callback.
 
 ---
 
@@ -121,14 +131,13 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 ## Test Coverage
 
-8 test classes, 57 tests (JUnit 5):
+7 test classes, 54 tests (JUnit 5):
 
 | Test Class | What It Tests |
 |------------|--------------|
 | `PointTest` | Constructor, copy, arithmetic |
 | `RectTest` | Constructors, geometry ops, intersect/union |
-| `TObjectTest` | Flag management (status), visibility, selection |
-| `TZoneTest` | Bounds, absolute position with parent chain, contains, visibility |
+| `TZoneTest` | Bounds, absolute position with parent chain, contains, visibility, status flags |
 | `CheckBoxTest` | Checked state, bitmask groups, disabled state |
 | `TRadioBoxTest` | Mutual exclusion, getValue, disabled state |
 | `EditLineTest` | setText, max length, null handling |
@@ -139,7 +148,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 ## File Statistics
 
 - Java source files: 33 (src/main)
-- Test files: 8 (src/test)
-- Total tests: 57
-- Packages: 5 (ui, ui.events, ui.base, ui.widgets, samples)
+- Test files: 7 (src/test)
+- Total tests: 54
+- Packages: 6 (ui, ui.events, ui.base, ui.widgets, ui.driver, samples)
 - Classes: 33

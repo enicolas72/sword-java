@@ -27,10 +27,10 @@ Create a Java port of the S.W.O.R.D C++ framework that preserves the original ar
 
 ```
 net.eric_nicolas.sword.ui              → Point, Rect
-net.eric_nicolas.sword.ui.events       → Event, EventMouse, EventKeyboard,
-                                         EventCommand, EventAwtAdapter
-net.eric_nicolas.sword.ui.base         → TObject, TZone, Widget, Window, Canvas,
-                                         Desktop, TColors, PaintContext, TApp
+net.eric_nicolas.sword.ui.events       → Event, EventMouse, EventKeyboard, EventCommand
+net.eric_nicolas.sword.ui.driver       → AwtDriver, EventAwtAdapter  (all AWT coupling here)
+net.eric_nicolas.sword.ui.base         → TZone, Widget, Window, Canvas,
+                                         Screen, TColors, PaintContext, TApp
 net.eric_nicolas.sword.ui.widgets      → Button, CheckBox, RadioBox, GroupBox,
                                          EditLine, Label, Menu, MenuChoice,
                                          Dialog, StandardButtons, AbstractButton,
@@ -43,31 +43,34 @@ net.eric_nicolas.sword.samples         → Hello, Dialog, Mandel (sample applica
 **Stay close to C++ patterns - do not force Java idioms:**
 
 1. **Object Hierarchy:**
-   - TAtom sibling tree is removed; children are managed in `LinkedList` inside `Canvas` and `Desktop`
-   - Single `father` reference (in `TObject`) is retained for command routing up the hierarchy
+   - TAtom sibling tree is removed; children are managed in `LinkedList` inside `Canvas` and `Screen`
+   - Single `father` reference (in `TZone`) is retained for command routing up the hierarchy
    - No Collections framework for parent traversal — walk `father()` manually
 
 2. **Event Handling:**
-   - C++ macro event tables replaced by virtual method overrides in `TObject` subclasses
+   - C++ macro event tables replaced by virtual method overrides in `TZone` subclasses
    - Override `mouseLDown`, `mouseLUp`, `mouseMove`, `keyDown`, `keyUp`, `command` as needed
+   - `TApp` subclasses override `handleCommand(int)` (not `command`) and call `super.handleCommand(commandId)`
    - Event constants use EV_ prefix (EV_MOUSE_LDOWN, EV_KEY_DOWN, EV_COMMAND, etc.)
    - Command IDs use CM_ prefix (CM_QUIT, CM_OK, CM_CANCEL, etc.)
 
 3. **Status/Options Flags:**
-   - Remaining bitmask flags live in `TObject`: `SF_VISIBLE`, `SF_SELECTED`, `SF_MOUSE_IN`, `SF_DOWN`, `SF_FOCUSED`, `SF_MODIFIED`
+   - Bitmask flags live in `TZone`: `SF_VISIBLE`, `SF_SELECTED`, `SF_MOUSE_IN`, `SF_DOWN`, `SF_FOCUSED`, `SF_MODIFIED`
    - Use `setStatus`/`clearStatus`/`hasStatus`
    - Widget-specific boolean state uses plain fields instead of flags: `Widget.enabled`, `Menu.mainMenu`, `MenuChoice.separator`
 
 4. **Naming:**
-   - Core classes keep the T prefix: `TObject`, `TZone`, `TApp`, `TColors`
+   - Core classes keep the T prefix: `TZone`, `TApp`, `TColors`
    - Gadget classes use plain names: `Button`, `Menu`, `Dialog`, `EditLine`, `Scrollbar`, etc.
    - Java conventions: camelCase for methods/fields, UPPER_CASE for constants
 
 5. **AWT Integration:**
-   - AWT events (MouseEvent, KeyEvent) are wrapped into `EventMouse`/`EventKeyboard` by `EventAwtAdapter`
-   - The AWT `Canvas` in `TApp` receives all AWT input and dispatches to `Desktop.handleEvent()`
+   - All AWT code lives in `ui.driver`; the framework core has zero AWT imports
+   - `AwtDriver` owns the `Frame`, back-buffered `Canvas`, and all AWT listeners
+   - `EventAwtAdapter` converts AWT `MouseEvent`/`KeyEvent` → SWORD events
+   - `TApp` wires things up via lambdas: `screen.setCommandHandler(this::handleCommand)` and a hotkey predicate passed to `AwtDriver`
    - `PaintContext` wraps `Graphics2D`; all drawing goes through it
-   - `TApp.forceRepaint()` redraws the full desktop to a back buffer then blits to screen
+   - `AwtDriver.forceRepaint()` redraws the full screen to a back buffer then blits to screen
 
 ### Maven Build Commands
 
@@ -95,7 +98,7 @@ java -cp target/classes net.eric_nicolas.sword.samples.Mandel
 ✅ Scrollbar (TLift port): arrow buttons, thumb drag, page click, H/V orientations
 ✅ Scroller (TScroller port): viewport-sized buffer, zoom-aware content/scrollbar sync
 ✅ Sample applications: Hello, Dialog, Mandel (Mandelbrot fractal viewer with zoom + pan)
-✅ ~57 unit tests
+✅ ~54 unit tests
 
 **Deferred:**
 - Window resize handles / close button
@@ -110,25 +113,27 @@ java -cp target/classes net.eric_nicolas.sword.samples.Mandel
 
 | C++ | Java |
 |-----|------|
-| `TAtom` sibling tree (`_Next`, `_Son`…) | `LinkedList<Widget>` in `Canvas`/`Desktop` |
-| `_Father` pointer | `TObject.father` reference |
-| `TShell` (trivial TObject subclass) | Removed; `TApp` extends `TObject` directly |
+| `TAtom` sibling tree (`_Next`, `_Son`…) | `LinkedList<Widget>` in `Canvas`/`Screen` |
+| `_Father` pointer | `TZone.father` reference |
+| `TObject` + `TZone` (two-layer split) | Single `TZone` class |
+| `TDesktop` | `Screen` |
+| `TShell` (trivial TObject subclass) | Removed; `TApp` is a plain class |
 | `void*` | `Object` or specific types |
 | Manual memory management | Garbage collection |
 | Header/implementation split | Single `.java` file per class |
-| Macro event tables | Virtual method overrides in `TObject` |
+| Macro event tables | Virtual method overrides in `TZone` |
 | `sfDisabled` status flag | `Widget.enabled` boolean |
 | `opMainMenu` / `opSeparator` option flags | `Menu.mainMenu` / `MenuChoice.separator` booleans |
 | Button `BO_DISABLED`, `BO_NO_CASE` options | Removed; use `setEnabled(false)` after construction |
-| libgrx20 graphics calls | AWT `Graphics2D` via `PaintContext` |
+| libgrx20 graphics calls | AWT `Graphics2D` via `PaintContext` (isolated in `ui.driver`) |
 | `TLift` | `Scrollbar` |
 | `TScroller` | `Scroller` |
 
-**Graphics Layer:**
-- Single AWT `Canvas` in `TApp` covers the full window
-- `Desktop` holds all top-level `Window` objects in a `LinkedList`; each `Window` owns a `Canvas` holding `Widget` children
-- Double-buffered rendering: `TApp` draws to a `BufferedImage`, then blits to screen
-- Mouse/keyboard events wrapped by `EventAwtAdapter` and dispatched through the object hierarchy
+**Graphics / Driver Layer:**
+- `AwtDriver` owns the single AWT `Canvas` covering the full window; double-buffered via `BufferedImage`
+- `Screen` holds all top-level `Window` objects in a `LinkedList`; each `Window` owns a `Canvas` holding `Widget` children
+- Mouse/keyboard events wrapped by `EventAwtAdapter` (in `ui.driver`) and dispatched to `Screen.handleEvent()`
+- Global menu hotkeys are intercepted by `TApp`'s hotkey predicate before desktop dispatch; matched via `Menu.processHotKey(keyCode)` which calls `MenuChoice.sendCommand()` up to `Screen`
 
 **Scrollbar / Scroller design:**
 - `Scrollbar` renders its own arrow buttons and thumb; handles drag capture (returns true from `mouseMove`/`mouseLUp` while dragging, even outside bounds)

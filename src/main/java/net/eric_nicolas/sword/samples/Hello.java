@@ -56,11 +56,11 @@ public class Hello {
         }
 
         @Override
-        protected boolean command(int commandId) {
+        protected boolean handleCommand(int commandId) {
             if (commandId == CM_HELLO_WINDOW) {
                 return doHelloWindow();
             }
-            return super.command(commandId);
+            return super.handleCommand(commandId);
         }
 
         protected boolean doHelloWindow() {
@@ -84,7 +84,7 @@ public class Hello {
             window.getCanvas().add(hello);
 
             // Insert window in desktop
-            getDesktop().add(window);
+            getScreen().add(window);
 
             helloCounter++;
             return true;

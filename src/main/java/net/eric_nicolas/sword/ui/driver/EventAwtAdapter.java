@@ -1,9 +1,16 @@
-package net.eric_nicolas.sword.ui.events;
+package net.eric_nicolas.sword.ui.driver;
+
+import net.eric_nicolas.sword.ui.events.EventKeyboard;
+import net.eric_nicolas.sword.ui.events.EventMouse;
 
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 
+/**
+ * EventAwtAdapter - Converts AWT MouseEvent/KeyEvent into S.W.O.R.D events.
+ * Lives in the driver layer to isolate all AWT coupling from the framework core.
+ */
 public class EventAwtAdapter {
 
     public static EventMouse ofMousePressedEvent(MouseEvent e) {
@@ -48,9 +55,9 @@ public class EventAwtAdapter {
 
     private static int getModifiers(InputEvent e) {
         int modifiers = 0;
-        if (e.isShiftDown()) modifiers |= EventKeyboard.KM_SHIFT;
+        if (e.isShiftDown())   modifiers |= EventKeyboard.KM_SHIFT;
         if (e.isControlDown()) modifiers |= EventKeyboard.KM_CTRL;
-        if (e.isAltDown()) modifiers |= EventKeyboard.KM_ALT;
+        if (e.isAltDown())     modifiers |= EventKeyboard.KM_ALT;
         return modifiers;
     }
 }

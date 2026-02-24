@@ -6,7 +6,7 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 
 ## Current Status
 
-**Phase 2 largely complete.** Core infrastructure plus gadgets (buttons, dialogs, menus, text editing) are working.
+**Phase 2 complete.** Core infrastructure, all gadgets, scrolling, and a Mandelbrot viewer are working.
 
 ### What's implemented
 
@@ -15,7 +15,7 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 - Event system (mouse, keyboard, commands) routed through object hierarchy
 - Gadgets: Button, CheckBox, RadioBox, GroupBox, EditLine, Label, Menu, MenuChoice, Dialog, Scrollbar, Scroller
 - Sample applications: Hello (custom windows), Dialog (full gadget demo), Mandel (Mandelbrot viewer with zoom + scrollbars)
-- ~57 unit tests covering geometry, object state, and gadget behavior
+- 54 unit tests covering geometry, object state, and gadget behavior
 
 ### What's deferred
 
@@ -24,7 +24,6 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 - Modal dialog event loop
 - COMMON / DRIVERS subsystems (file system, error handling)
 - IMAGE / MATH toolboxes
-- Complex samples (MANDEL, IMAGE viewer)
 
 ---
 
@@ -33,16 +32,17 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 ```
 src/main/java/net/eric_nicolas/sword/
 ├── ui/               - Geometry (Point, Rect)
-│   ├── events/       - Event, EventMouse, EventKeyboard, EventCommand, EventAwtAdapter
-│   ├── base/         - Core layer: TObject, TZone, Widget, Window, Canvas, Desktop,
+│   ├── events/       - Event, EventMouse, EventKeyboard, EventCommand
+│   ├── driver/       - AwtDriver, EventAwtAdapter  (all AWT coupling here)
+│   ├── base/         - Core layer: TZone, Widget, Canvas, Window, Screen,
 │   │                   TColors, PaintContext, TApp
-│   └── widgets/      - UI components: Button, CheckBox, RadioBox, GroupBox, EditLine,
-│                       Label, Menu, MenuChoice, Dialog, StandardButtons,
-│                       Scrollbar, Scroller
-└── samples/          - Example applications (Hello, Dialog)
+│   └── widgets/      - UI components: Button, CheckBox, RadioBox, GroupBox,
+│                       EditLine, Label, Menu, MenuChoice, Dialog, StandardButtons,
+│                       AbstractButton, ItemBox, Scrollbar, Scroller
+└── samples/          - Example applications (Hello, Dialog, Mandel)
 ```
 
-The original C++ source is in `210 original/`.
+The original C++ source is in `210_original/`.
 
 ---
 
@@ -51,39 +51,28 @@ The original C++ source is in `210 original/`.
 ### Requirements
 
 - Java 21+
-- Maven 3.6+ (optional)
+- Maven 3.6+
 
 ### With Maven
 
 ```bash
-cd java   # or from repo root
-
 mvn clean compile     # compile
 mvn test              # run tests
 mvn package           # build JAR
 ```
 
-### Run the Hello sample
+### Run the samples
 
 ```bash
-cd java
-mvn exec:java -Dexec.mainClass=net.eric_nicolas.sword.samples.Hello
-# or
 java -cp target/classes net.eric_nicolas.sword.samples.Hello
-```
-
-### Run the Dialog sample
-
-```bash
-cd java
 java -cp target/classes net.eric_nicolas.sword.samples.Dialog
+java -cp target/classes net.eric_nicolas.sword.samples.Mandel
 ```
 
-### Run the Mandel sample
+Or with Maven:
 
 ```bash
-cd java
-java -cp target/classes net.eric_nicolas.sword.samples.Mandel
+mvn exec:java -Dexec.mainClass=net.eric_nicolas.sword.samples.Hello
 ```
 
 ### With javac directly
@@ -101,26 +90,30 @@ java -cp target/classes net.eric_nicolas.sword.samples.Hello
 The port preserves the original layered model:
 
 ```
-samples/          (Hello, Dialog)
+samples/          (Hello, Dialog, Mandel)
     ↓
-ui.base/          (TApp – AWT event loop, desktop, menu)
+ui.base/          (TApp – application shell, menu, Screen)
     ↓
-ui.widgets/       (Button, EditLine, Menu, Dialog…)
+ui.widgets/       (Button, EditLine, Menu, Dialog, Scrollbar…)
     ↓
-ui.base/          (Window, TZone, Canvas, Desktop)
+ui.base/          (Window, Canvas, Screen)
     ↓
-ui.base/          (TObject – flags, parent ref, event dispatch)
+ui.base/          (TZone – flags, parent ref, event dispatch, drawing)
     ↓
 ui/ + ui.events/  (Point, Rect, Event hierarchy)
+    ↓
+ui.driver/        (AwtDriver, EventAwtAdapter – AWT isolation layer)
     ↓
 AWT Graphics2D    (replaces libgrx20)
 ```
 
 Key adaptations from C++:
-- TAtom linked sibling tree removed; children managed in `LinkedList` in Canvas/Desktop
-- Macro event tables replaced by virtual method overrides in TObject subclasses
-- libgrx20 replaced by AWT `Graphics2D` via `PaintContext` coordinate wrapper
-- Single `_Father` parent reference retained for command routing up the hierarchy
+- TAtom linked sibling tree removed; children managed in `LinkedList` in Canvas/Screen
+- `TObject` and `TZone` merged into a single `TZone` class (mechanism + graphics in one)
+- `TDesktop` renamed to `Screen`; `TApp` is a plain class (not a TZone subclass)
+- All AWT coupling isolated in `ui.driver`; framework core has zero AWT imports
+- Macro event tables replaced by virtual method overrides in `TZone` subclasses
+- Single `father` parent reference retained for command routing up the hierarchy
 - C++ bitmask option/status flags replaced by plain booleans where it simplifies the API (`Widget.enabled`, `Menu.mainMenu`, `MenuChoice.separator`)
 
 See [IMPLEMENTATION.md](IMPLEMENTATION.md) for detailed notes on all classes, design decisions, and known limitations.
@@ -131,4 +124,4 @@ See [IMPLEMENTATION.md](IMPLEMENTATION.md) for detailed notes on all classes, de
 
 - `CLAUDE.md` - Architecture documentation and development guidelines
 - `IMPLEMENTATION.md` - Class inventory, architecture notes, test coverage
-- `210 original/DOCS/` - Original C++ manual and reference
+- `210_original/DOCS/` - Original C++ manual and reference

@@ -206,6 +206,22 @@ public class Menu extends Window {
         return super.keyDown(event);
     }
 
+    /**
+     * Scan all choices recursively for a global hotkey match and fire the
+     * command if found. Called by TApp's key handler for keyboard shortcuts.
+     */
+    public boolean processHotKey(int keyCode) {
+        for (MenuChoice choice : getChoices()) {
+            if (choice.getSubMenu() != null) {
+                if (choice.getSubMenu().processHotKey(keyCode)) return true;
+            } else if (keyCode != 0 && keyCode == choice.getGlobalScanCode()) {
+                choice.sendCommand(choice.getCommand());
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void closeMenu() {
         if (!mainMenu) {
             remove();

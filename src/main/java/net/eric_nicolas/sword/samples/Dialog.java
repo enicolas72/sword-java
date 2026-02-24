@@ -33,11 +33,11 @@ public class Dialog {
         }
 
         @Override
-        protected boolean command(int commandId) {
+        protected boolean handleCommand(int commandId) {
             if (commandId == CM_DIALOG_TEST) {
                 return doDialogTest();
             }
-            return super.command(commandId);
+            return super.handleCommand(commandId);
         }
 
         protected boolean doDialogTest() {
@@ -82,7 +82,7 @@ public class Dialog {
             editLine.setText("Sample text edit");
             dc.add(editLine);
 
-            getDesktop().add(dialog);
+            getScreen().add(dialog);
             dialogResult = dialog.execDialog();
 
             return true;

@@ -22,7 +22,7 @@ public class EventMouse extends Event {
     public int buttons;
     public int modifiers;
 
-    EventMouse(int what, int x, int y, int buttons, int modifiers) {
+    public EventMouse(int what, int x, int y, int buttons, int modifiers) {
         super(what);
         this.where = new Point(x, y);
         this.buttons = buttons;
