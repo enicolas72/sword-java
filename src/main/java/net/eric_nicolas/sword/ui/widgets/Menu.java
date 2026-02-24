@@ -1,6 +1,5 @@
 package net.eric_nicolas.sword.ui.widgets;
 
-import net.eric_nicolas.sword.ui.Point;
 import net.eric_nicolas.sword.ui.Rect;
 import net.eric_nicolas.sword.ui.base.PaintContext;
 import net.eric_nicolas.sword.ui.base.TColors;
@@ -87,7 +86,9 @@ public class Menu extends Window {
                     choice.getSubMenu().initChoices();
                 }
 
-                Rect choiceBounds = new Rect(Point.plus(myBounds.origin(), x, 2), width, height - 4);
+                // Canvas-relative coordinates (no menu origin added; getAbsolutePosition
+                // walks the parent chain and adds the offsets automatically).
+                Rect choiceBounds = new Rect(x, 2, width, height - 4);
                 choice.setBounds(choiceBounds);
                 x += width;
             }
@@ -104,10 +105,11 @@ public class Menu extends Window {
 
         Rect newBounds = getBounds();
         newBounds = new Rect(newBounds.origin(), width, height);
-        setBounds(newBounds);
+        setBounds(newBounds);  // triggers updateCanvasBounds() via Window.setBounds override
 
-        int y = 26;
-        Rect myBounds = getBounds();
+        // Canvas-relative y: start just inside the content area (no title-bar offset).
+        int y = 4;
+        int canvasW = getContentWidth();
         for (MenuChoice choice : getChoices()) {
             if (choice.getSubMenu() != null) {
                 choice.getSubMenu().fatherMenu = this;
@@ -115,7 +117,8 @@ public class Menu extends Window {
             }
 
             int h = choice.separator ? 6 : 20;
-            Rect choiceBounds = new Rect(Point.plus(myBounds.origin(), 7, y), width - 15, h);
+            // Canvas-relative coordinates.
+            Rect choiceBounds = new Rect(7, y, canvasW - 14, h);
             choice.setBounds(choiceBounds);
             y += h;
         }
@@ -143,7 +146,8 @@ public class Menu extends Window {
     }
 
     protected int compHeight() {
-        int h = 32;
+        // Base: 2 × BORDER (outer border) + 4 px top margin + 4 px bottom margin
+        int h = Window.BORDER * 2 + 8;
         for (MenuChoice choice : getChoices()) {
             h += choice.separator ? 6 : 20;
         }
@@ -263,22 +267,11 @@ public class Menu extends Window {
         if (mainMenu) {
             ctx.setColor(TColors.FACE_GRAY);
             ctx.fillRect(0, 0, bounds.width(), bounds.height());
-
             ctx.setColor(TColors.DARK_GRAY);
-            ctx.drawLine(0, -1, bounds.width() - 1, bounds.height() - 1);
+            ctx.drawLine(0, bounds.height() - 1, bounds.width() - 1, bounds.height() - 1);
         } else {
-            ctx.setColor(TColors.FACE_GRAY);
-            ctx.fillRect(0, 0, bounds.width(), bounds.height());
-
-            ctx.setColor(TColors.DARK_GRAY);
-            ctx.drawRect(0, 0, bounds.width() - 1, bounds.height() - 1);
-
-            ctx.setColor(TColors.DARK_GRAY);
-            ctx.fillRect(1, 1, bounds.width() - 2, 20);
-
-            ctx.setColor(TColors.WHITE);
-            ctx.setFont(menuFont);
-            ctx.drawString(5, 15, title);
+            // Use the standard Window chrome (sidebar + border).
+            super.paint(ctx);
         }
     }
 }

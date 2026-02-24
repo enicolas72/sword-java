@@ -26,7 +26,7 @@ import java.util.ListIterator;
 public class Scroller extends Canvas {
 
     private final Widget content;
-    private final int viewW, viewH;  // viewport dimensions (no scrollbar strips)
+    private int viewW, viewH;        // viewport dimensions (no scrollbar strips)
     private int contentW, contentH;  // virtual content size → scrollbar range
     private final Scrollbar hbar, vbar;
     private int scrollX, scrollY;
@@ -135,6 +135,42 @@ public class Scroller extends Canvas {
 
     /** Force content to be re-rendered on the next draw(). */
     public void invalidateContent() { contentDirty = true; }
+
+    /**
+     * Resize the viewport.  Updates the Scroller bounds, content widget bounds,
+     * scrollbar sizes and ranges, and forces a content re-render.
+     *
+     * @param newViewW new viewport width  (scrollbar thickness NOT included)
+     * @param newViewH new viewport height (scrollbar thickness NOT included)
+     */
+    public void resize(int newViewW, int newViewH) {
+        viewW = Math.max(1, newViewW);
+        viewH = Math.max(1, newViewH);
+
+        // Update Scroller's own bounds (position unchanged)
+        setBounds(new Rect(bounds.origin(),
+                           viewW + (vbar != null ? Scrollbar.THICKNESS : 0),
+                           viewH + (hbar != null ? Scrollbar.THICKNESS : 0)));
+
+        // Resize the content widget
+        content.setBounds(new Rect(0, 0, viewW, viewH));
+
+        // Reposition and resize scrollbars
+        if (hbar != null) {
+            hbar.setBounds(new Rect(0, viewH, viewW, Scrollbar.THICKNESS));
+            hbar.setRange(contentW, viewW);
+            hbar.setStep(Math.max(1, viewW / 10));
+        }
+        if (vbar != null) {
+            vbar.setBounds(new Rect(viewW, 0, Scrollbar.THICKNESS, viewH));
+            vbar.setRange(contentH, viewH);
+            vbar.setStep(Math.max(1, viewH / 10));
+        }
+
+        // Force buffer re-allocation on next draw
+        contentBuffer = null;
+        contentDirty = true;
+    }
 
     // ===== Geometry helpers =====
 

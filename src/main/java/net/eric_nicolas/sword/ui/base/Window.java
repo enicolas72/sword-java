@@ -27,6 +27,10 @@ import net.eric_nicolas.sword.ui.events.EventMouse;
  * Resize border (BORDER pixels wide on every side):
  *   - Edge zones: drag to resize in one axis
  *   - Corner zones (CORNER px from each corner): drag to resize in two axes
+ *   - Corner boundaries are marked by short black tick marks on the border
+ *
+ * Inner chrome (sidebar separator + content border) is redrawn AFTER canvas
+ * children so it is never hidden by widget background fills.
  */
 public class Window extends TZone {
 
@@ -56,6 +60,9 @@ public class Window extends TZone {
     private Point resizeStart;
     private Rect resizeStartBounds;
 
+    // Resize notification callback
+    private Runnable onResize;
+
     public Window(int x, int y, int width, int height, String title) {
         super(x, y, width, height);
         this.title = title;
@@ -76,10 +83,27 @@ public class Window extends TZone {
         return Math.max(1, bounds.height() - BORDER * 2);
     }
 
-    private void updateCanvasBounds() {
+    /** Update canvas bounds to match the current window size. */
+    protected void updateCanvasBounds() {
         canvas.setBounds(new Rect(BORDER + SIDEBAR_W, BORDER,
                                   getContentWidth(), getContentHeight()));
     }
+
+    /**
+     * Override setBounds to keep canvas layout in sync whenever window
+     * bounds change (e.g. from Menu.initChoices rebuilding the menu size).
+     */
+    @Override
+    public void setBounds(Rect r) {
+        super.setBounds(r);
+        if (canvas != null) updateCanvasBounds();
+    }
+
+    /**
+     * Register a callback invoked after every resize operation.
+     * Not called for pure drag (position-only) moves.
+     */
+    public void setOnResize(Runnable r) { this.onResize = r; }
 
     public Canvas getCanvas() { return canvas; }
 
@@ -146,22 +170,25 @@ public class Window extends TZone {
         ctx.setColor(TColors.DARK_GRAY);
         ctx.drawRect(0, 0, w - 1, h - 1);
 
-        // Corner markers: small filled squares to visually signal "resize here"
-        int cs = BORDER - 1;
-        ctx.setColor(TColors.MEDIUM_GRAY);
-        ctx.fillRect(1,         1,         cs, cs);  // NW
-        ctx.fillRect(w - cs - 1, 1,         cs, cs);  // NE
-        ctx.fillRect(1,         h - cs - 1, cs, cs);  // SW
-        ctx.fillRect(w - cs - 1, h - cs - 1, cs, cs); // SE
+        // Corner tick marks: short perpendicular lines at the corner zone
+        // boundaries, dividing each border edge into "edge" and "corner" zones.
+        ctx.setColor(TColors.BLACK);
+        // Top edge
+        ctx.drawLine(CORNER, 0, CORNER, BORDER - 1);
+        ctx.drawLine(w - 1 - CORNER, 0, w - 1 - CORNER, BORDER - 1);
+        // Bottom edge
+        ctx.drawLine(CORNER, h - BORDER, CORNER, h - 1);
+        ctx.drawLine(w - 1 - CORNER, h - BORDER, w - 1 - CORNER, h - 1);
+        // Left edge
+        ctx.drawLine(0, CORNER, BORDER - 1, CORNER);
+        ctx.drawLine(0, h - 1 - CORNER, BORDER - 1, h - 1 - CORNER);
+        // Right edge
+        ctx.drawLine(w - BORDER, CORNER, w - 1, CORNER);
+        ctx.drawLine(w - BORDER, h - 1 - CORNER, w - 1, h - 1 - CORNER);
 
         // ── Left sidebar ─────────────────────────────────────────────────────
         ctx.setColor(TColors.MEDIUM_GRAY);
         ctx.fillRect(BORDER, BORDER, SIDEBAR_W, h - 2 * BORDER);
-
-        // Sidebar right-edge separator
-        ctx.setColor(TColors.DARK_GRAY);
-        ctx.drawLine(BORDER + SIDEBAR_W, BORDER,
-                     BORDER + SIDEBAR_W, h - BORDER - 1);
 
         // Drag grip: three horizontal embossed lines
         int gx1 = BORDER + 3;
@@ -183,12 +210,27 @@ public class Window extends TZone {
         ctx.drawRect(cbx, cby, CLOSE_SZ - 1, CLOSE_SZ - 1);
         ctx.drawLine(cbx + 2, cby + 2, cbx + CLOSE_SZ - 3, cby + CLOSE_SZ - 3);
         ctx.drawLine(cbx + CLOSE_SZ - 3, cby + 2, cbx + 2, cby + CLOSE_SZ - 3);
+    }
 
-        // ── Content area border ───────────────────────────────────────────────
-        ctx.setColor(TColors.DARK_GRAY);
-        ctx.drawRect(BORDER + SIDEBAR_W, BORDER,
-                     w - BORDER * 2 - SIDEBAR_W - 1,
-                     h - BORDER * 2 - 1);
+    /**
+     * Draw the sidebar separator and content-area border on top of canvas
+     * children.  Called from draw() after canvas.draw() so widget background
+     * fills cannot obscure these lines.
+     */
+    protected void drawOverlay(PaintContext ctx) {
+        Point absPos = getAbsolutePosition();
+        PaintContext localCtx = ctx.withOrigin(absPos);
+        int w = bounds.width();
+        int h = bounds.height();
+        localCtx.setClip(0, 0, w, h);
+        localCtx.setColor(TColors.DARK_GRAY);
+        // Sidebar right-edge separator
+        localCtx.drawLine(BORDER + SIDEBAR_W, BORDER,
+                          BORDER + SIDEBAR_W, h - BORDER - 1);
+        // Content area border
+        localCtx.drawRect(BORDER + SIDEBAR_W, BORDER,
+                          w - BORDER * 2 - SIDEBAR_W - 1,
+                          h - BORDER * 2 - 1);
     }
 
     // ===== Event handling =====
@@ -241,6 +283,7 @@ public class Window extends TZone {
     protected boolean mouseMove(EventMouse event) {
         if (dragging) {
             Point newOrigin = Point.minus(event.where, dragOffset);
+            // Direct field update for drag: no size change, no canvas resize needed
             bounds = new Rect(newOrigin, bounds.width(), bounds.height());
             clipRect = new Rect(bounds);
             return true;
@@ -268,9 +311,9 @@ public class Window extends TZone {
                 nh = newH;
             }
 
-            bounds = new Rect(nx, ny, nw, nh);
-            clipRect = new Rect(bounds);
-            updateCanvasBounds();
+            // setBounds() triggers updateCanvasBounds() via override
+            setBounds(new Rect(nx, ny, nw, nh));
+            if (onResize != null) onResize.run();
             return true;
         }
 
@@ -281,8 +324,9 @@ public class Window extends TZone {
 
     @Override
     public void draw(PaintContext ctx) {
-        super.draw(ctx);  // fills background, calls paint()
-        canvas.draw(ctx); // draws widgets
+        super.draw(ctx);    // fills background, calls paint()
+        canvas.draw(ctx);   // draws widgets
+        drawOverlay(ctx);   // redraws inner chrome on top of widgets
     }
 
     @Override

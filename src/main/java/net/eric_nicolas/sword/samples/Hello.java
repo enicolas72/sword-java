@@ -81,6 +81,11 @@ public class Hello {
             );
             window.getCanvas().add(hello);
 
+            // Keep THello filling the content area when the window is resized
+            window.setOnResize(() ->
+                hello.setBounds(new net.eric_nicolas.sword.ui.Rect(
+                    0, 0, window.getContentWidth(), window.getContentHeight())));
+
             // Insert window in desktop
             getScreen().add(window);
 

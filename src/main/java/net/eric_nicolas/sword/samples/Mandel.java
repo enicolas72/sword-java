@@ -133,7 +133,12 @@ public class Mandel {
 
         @Override
         protected void paint(PaintContext ctx) {
-            if (rendered == null) render();
+            // Invalidate cached image when viewport size changes (e.g. after window resize)
+            if (rendered == null
+                    || rendered.getWidth()  != bounds.width()
+                    || rendered.getHeight() != bounds.height()) {
+                render();
+            }
             ctx.drawImage(rendered, 0, 0);
         }
 
@@ -263,6 +268,21 @@ public class Mandel {
             });
 
             win.getCanvas().add(scroller);
+
+            // When the window is resized, resize the scroller to fill the new
+            // content area, then update the scrollbar ranges to reflect the new
+            // viewport size relative to the current virtual world.
+            win.setOnResize(() -> {
+                int vw = win.getContentWidth()  - Scrollbar.THICKNESS;
+                int vh = win.getContentHeight() - Scrollbar.THICKNESS;
+                scroller.resize(vw, vh);
+                // widget.virtualW/H use bounds.width/height (just updated by resize)
+                scroller.setContentSize(widget.virtualW(), widget.virtualH());
+                // Clamp current scroll offset to new valid range
+                widget.setOffset(widget.getOffsetX(), widget.getOffsetY());
+                scroller.setScrollPosition(widget.getOffsetX(), widget.getOffsetY());
+            });
+
             getScreen().add(win);
             return true;
         }
