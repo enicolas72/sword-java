@@ -47,6 +47,7 @@ public class Menu extends Window {
 
     protected void init(String title) {
         setBackgroundColor(TColors.FACE_GRAY);
+        setClosable(false);
     }
 
     /** All MenuChoices living in this menu's canvas. */

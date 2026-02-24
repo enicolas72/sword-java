@@ -8,7 +8,7 @@ import net.eric_nicolas.sword.ui.events.EventMouse;
 /**
  * TWindow - Overlapped window with left-sidebar controls and outer resize border.
  *
- * Layout (all measurements in pixels):
+ * Layout (resizable window, all measurements in pixels):
  *
  *   ┌──────────────────────────────────────────┐  ← BORDER (resize zone)
  *   │ ┌────┬──────────────────────────────────┐ │
@@ -19,12 +19,19 @@ import net.eric_nicolas.sword.ui.events.EventMouse;
  *   └──────────────────────────────────────────┘
  *        ↑ SIDEBAR_W
  *
- * Sidebar (left strip, inside the border):
+ * When resizable=false the thick 5-pixel resize border is replaced by a
+ * plain 1-pixel outline (eb()=1 instead of BORDER=5), and resize hit-testing
+ * and corner tick marks are disabled.
+ *
+ * When closable=false the close button (×) is not drawn and clicking the
+ * sidebar never triggers removal.
+ *
+ * Sidebar (left strip, inside the effective border):
  *   - Grip lines (drag handle) at the top
- *   - Close button (×) below the grip
+ *   - Close button (×) below the grip (only if closable)
  *   - The rest of the sidebar is also a drag area
  *
- * Resize border (BORDER pixels wide on every side):
+ * Resize border (BORDER pixels wide on every side, resizable windows only):
  *   - Edge zones: drag to resize in one axis
  *   - Corner zones (CORNER px from each corner): drag to resize in two axes
  *   - Corner boundaries are marked by short black tick marks on the border
@@ -39,7 +46,7 @@ public class Window extends TZone {
     public static final int SIDEBAR_W = 16;  // left sidebar width
 
     private static final int CORNER   = 12;  // corner hit-zone extension (pixels from corner)
-    private static final int CLOSE_Y  = 18;  // close button top, relative to (BORDER, BORDER)
+    private static final int CLOSE_Y  = 18;  // close button top, relative to (eb, eb)
     private static final int CLOSE_SZ = 12;  // close button size
     private static final int MIN_W    = BORDER * 2 + SIDEBAR_W + 40;
     private static final int MIN_H    = BORDER * 2 + 40;
@@ -49,6 +56,12 @@ public class Window extends TZone {
 
     protected String title;
     protected Canvas canvas;
+
+    /** True if the window can be resized by dragging its border. */
+    protected boolean resizable = true;
+
+    /** True if the window shows a close button and can be closed by it. */
+    protected boolean closable = true;
 
     // Drag state
     private boolean dragging;
@@ -71,21 +84,51 @@ public class Window extends TZone {
         updateCanvasBounds();
     }
 
+    // ===== Options =====
+
+    /**
+     * Enable or disable resizing.  When disabled the thick border zone is
+     * replaced by a 1-pixel outline; resize hit-testing is turned off.
+     * Triggers a canvas layout update.
+     */
+    public void setResizable(boolean resizable) {
+        this.resizable = resizable;
+        if (canvas != null) updateCanvasBounds();
+    }
+
+    /**
+     * Enable or disable the close button.  When disabled the × button is not
+     * drawn and clicking the sidebar never triggers removal.
+     */
+    public void setClosable(boolean closable) {
+        this.closable = closable;
+    }
+
+    public boolean isResizable() { return resizable; }
+    public boolean isClosable()  { return closable; }
+
     // ===== Layout =====
+
+    /**
+     * Effective border width: full BORDER for resizable windows,
+     * 1 pixel (thin outline only) for non-resizable windows.
+     */
+    private int eb() { return resizable ? BORDER : 1; }
 
     /** Width of the usable content area (inside border and sidebar). */
     public int getContentWidth() {
-        return Math.max(1, bounds.width() - BORDER * 2 - SIDEBAR_W);
+        return Math.max(1, bounds.width() - eb() * 2 - SIDEBAR_W);
     }
 
     /** Height of the usable content area (inside border). */
     public int getContentHeight() {
-        return Math.max(1, bounds.height() - BORDER * 2);
+        return Math.max(1, bounds.height() - eb() * 2);
     }
 
     /** Update canvas bounds to match the current window size. */
     protected void updateCanvasBounds() {
-        canvas.setBounds(new Rect(BORDER + SIDEBAR_W, BORDER,
+        int eb = eb();
+        canvas.setBounds(new Rect(eb + SIDEBAR_W, eb,
                                   getContentWidth(), getContentHeight()));
     }
 
@@ -111,9 +154,12 @@ public class Window extends TZone {
 
     /**
      * Returns a DIR_* bitmask if (mx,my) is inside a resize zone, 0 otherwise.
+     * Always returns 0 for non-resizable windows.
      * mx/my are window-local (origin = window top-left).
      */
     private int hitResize(int mx, int my) {
+        if (!resizable) return 0;
+
         int w = bounds.width();
         int h = bounds.height();
 
@@ -130,32 +176,34 @@ public class Window extends TZone {
         if (inT) dir |= DIR_N;
         if (inB) dir |= DIR_S;
 
-        // Extend corner detection: when on an edge near a window corner, add the
-        // perpendicular direction so the corner zone is easier to grab.
+        // Extend corner detection
         if (dir == DIR_W || dir == DIR_E) {
-            if (my < CORNER)          dir |= DIR_N;
+            if (my < CORNER)           dir |= DIR_N;
             else if (my >= h - CORNER) dir |= DIR_S;
         }
         if (dir == DIR_N || dir == DIR_S) {
-            if (mx < CORNER)          dir |= DIR_W;
+            if (mx < CORNER)           dir |= DIR_W;
             else if (mx >= w - CORNER) dir |= DIR_E;
         }
 
         return dir;
     }
 
-    /** True if (mx,my) is over the close button (window-local coords). */
+    /** True if (mx,my) is over the close button (window-local coords).
+     *  Always false for non-closable windows. */
     private boolean hitClose(int mx, int my) {
-        int cbx = BORDER + 2;
-        int cby = BORDER + CLOSE_Y;
+        if (!closable) return false;
+        int cbx = eb() + 2;
+        int cby = eb() + CLOSE_Y;
         return mx >= cbx && mx < cbx + CLOSE_SZ
             && my >= cby && my < cby + CLOSE_SZ;
     }
 
     /** True if (mx,my) is in the sidebar drag area (whole sidebar minus close button). */
     private boolean hitDrag(int mx, int my) {
-        return mx >= BORDER && mx < BORDER + SIDEBAR_W
-            && my >= BORDER && my < bounds.height() - BORDER
+        int eb = eb();
+        return mx >= eb && mx < eb + SIDEBAR_W
+            && my >= eb && my < bounds.height() - eb
             && !hitClose(mx, my);
     }
 
@@ -165,51 +213,58 @@ public class Window extends TZone {
     protected void paint(PaintContext ctx) {
         int w = bounds.width();
         int h = bounds.height();
+        int eb = eb();
 
-        // ── Outer resize border ──────────────────────────────────────────────
+        // ── Outer border ─────────────────────────────────────────────────────
+        // Resizable: full BORDER-wide zone drawn as dark-gray rect + corner ticks.
+        // Non-resizable: plain 1-pixel outline, no corner ticks.
         ctx.setColor(TColors.DARK_GRAY);
         ctx.drawRect(0, 0, w - 1, h - 1);
 
-        // Corner tick marks: short perpendicular lines at the corner zone
-        // boundaries, dividing each border edge into "edge" and "corner" zones.
-        ctx.setColor(TColors.BLACK);
-        // Top edge
-        ctx.drawLine(CORNER, 0, CORNER, BORDER - 1);
-        ctx.drawLine(w - 1 - CORNER, 0, w - 1 - CORNER, BORDER - 1);
-        // Bottom edge
-        ctx.drawLine(CORNER, h - BORDER, CORNER, h - 1);
-        ctx.drawLine(w - 1 - CORNER, h - BORDER, w - 1 - CORNER, h - 1);
-        // Left edge
-        ctx.drawLine(0, CORNER, BORDER - 1, CORNER);
-        ctx.drawLine(0, h - 1 - CORNER, BORDER - 1, h - 1 - CORNER);
-        // Right edge
-        ctx.drawLine(w - BORDER, CORNER, w - 1, CORNER);
-        ctx.drawLine(w - BORDER, h - 1 - CORNER, w - 1, h - 1 - CORNER);
+        if (resizable) {
+            // Corner tick marks: short perpendicular lines at the corner zone
+            // boundaries, dividing each border edge into "edge" and "corner" zones.
+            ctx.setColor(TColors.BLACK);
+            // Top edge
+            ctx.drawLine(CORNER,         0,          CORNER,         BORDER - 1);
+            ctx.drawLine(w-1-CORNER,     0,          w-1-CORNER,     BORDER - 1);
+            // Bottom edge
+            ctx.drawLine(CORNER,         h - BORDER, CORNER,         h - 1);
+            ctx.drawLine(w-1-CORNER,     h - BORDER, w-1-CORNER,     h - 1);
+            // Left edge
+            ctx.drawLine(0,              CORNER,     BORDER - 1,     CORNER);
+            ctx.drawLine(0,              h-1-CORNER, BORDER - 1,     h-1-CORNER);
+            // Right edge
+            ctx.drawLine(w - BORDER,     CORNER,     w - 1,          CORNER);
+            ctx.drawLine(w - BORDER,     h-1-CORNER, w - 1,          h-1-CORNER);
+        }
 
         // ── Left sidebar ─────────────────────────────────────────────────────
         ctx.setColor(TColors.MEDIUM_GRAY);
-        ctx.fillRect(BORDER, BORDER, SIDEBAR_W, h - 2 * BORDER);
+        ctx.fillRect(eb, eb, SIDEBAR_W, h - 2 * eb);
 
         // Drag grip: three horizontal embossed lines
-        int gx1 = BORDER + 3;
-        int gx2 = BORDER + SIDEBAR_W - 4;
+        int gx1 = eb + 3;
+        int gx2 = eb + SIDEBAR_W - 4;
         for (int i = 0; i < 3; i++) {
-            int gy = BORDER + 4 + i * 3;
+            int gy = eb + 4 + i * 3;
             ctx.setColor(TColors.DARK_GRAY);
             ctx.drawLine(gx1, gy, gx2, gy);
             ctx.setColor(TColors.WHITE);
             ctx.drawLine(gx1, gy + 1, gx2, gy + 1);
         }
 
-        // Close button (box with ×)
-        int cbx = BORDER + 2;
-        int cby = BORDER + CLOSE_Y;
-        ctx.setColor(TColors.FACE_GRAY);
-        ctx.fillRect(cbx, cby, CLOSE_SZ, CLOSE_SZ);
-        ctx.setColor(TColors.DARK_GRAY);
-        ctx.drawRect(cbx, cby, CLOSE_SZ - 1, CLOSE_SZ - 1);
-        ctx.drawLine(cbx + 2, cby + 2, cbx + CLOSE_SZ - 3, cby + CLOSE_SZ - 3);
-        ctx.drawLine(cbx + CLOSE_SZ - 3, cby + 2, cbx + 2, cby + CLOSE_SZ - 3);
+        // Close button (box with ×) – only when closable
+        if (closable) {
+            int cbx = eb + 2;
+            int cby = eb + CLOSE_Y;
+            ctx.setColor(TColors.FACE_GRAY);
+            ctx.fillRect(cbx, cby, CLOSE_SZ, CLOSE_SZ);
+            ctx.setColor(TColors.DARK_GRAY);
+            ctx.drawRect(cbx, cby, CLOSE_SZ - 1, CLOSE_SZ - 1);
+            ctx.drawLine(cbx + 2, cby + 2, cbx + CLOSE_SZ - 3, cby + CLOSE_SZ - 3);
+            ctx.drawLine(cbx + CLOSE_SZ - 3, cby + 2, cbx + 2, cby + CLOSE_SZ - 3);
+        }
     }
 
     /**
@@ -222,15 +277,16 @@ public class Window extends TZone {
         PaintContext localCtx = ctx.withOrigin(absPos);
         int w = bounds.width();
         int h = bounds.height();
+        int eb = eb();
         localCtx.setClip(0, 0, w, h);
         localCtx.setColor(TColors.DARK_GRAY);
         // Sidebar right-edge separator
-        localCtx.drawLine(BORDER + SIDEBAR_W, BORDER,
-                          BORDER + SIDEBAR_W, h - BORDER - 1);
+        localCtx.drawLine(eb + SIDEBAR_W, eb,
+                          eb + SIDEBAR_W, h - eb - 1);
         // Content area border
-        localCtx.drawRect(BORDER + SIDEBAR_W, BORDER,
-                          w - BORDER * 2 - SIDEBAR_W - 1,
-                          h - BORDER * 2 - 1);
+        localCtx.drawRect(eb + SIDEBAR_W, eb,
+                          w - eb * 2 - SIDEBAR_W - 1,
+                          h - eb * 2 - 1);
     }
 
     // ===== Event handling =====
@@ -251,7 +307,7 @@ public class Window extends TZone {
             return true;
         }
 
-        // Resize border
+        // Resize border (hitResize returns 0 when resizable=false)
         int dir = hitResize(mx, my);
         if (dir != 0) {
             resizing = true;

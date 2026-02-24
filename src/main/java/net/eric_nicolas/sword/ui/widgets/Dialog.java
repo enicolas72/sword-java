@@ -26,6 +26,7 @@ public class Dialog extends Window {
         dialogResult = 0;
         modal = false;
         setBackgroundColor(TColors.FACE_GRAY);
+        setResizable(false);
     }
 
     @Override
