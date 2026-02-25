@@ -14,6 +14,7 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 - Custom widget painting (ScreenArea-based drawing areas)
 - Event system (mouse, keyboard, commands) routed through object hierarchy
 - Gadgets: Button, CheckBox, RadioBox, GroupBox, EditLine, Label, Menu, MenuChoice, Dialog, Scrollbar, Scroller
+- **Window palette system** — three colour schemes: STANDARD (gray), GREEN (Menu/MenuChoice), BLUE (Dialog); propagates automatically via `PaintContext`
 - **Modal dialog event loop** (`execDialog()` — GLFW-based mini-loop, fully functional)
 - Sample applications: Hello (custom windows), Dialog (full gadget demo), Mandel (Mandelbrot viewer with zoom + scrollbars)
 - 54 unit tests covering geometry, object state, and gadget behavior

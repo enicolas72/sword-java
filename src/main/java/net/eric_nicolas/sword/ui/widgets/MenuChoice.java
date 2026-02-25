@@ -1,8 +1,8 @@
 package net.eric_nicolas.sword.ui.widgets;
 
 import net.eric_nicolas.sword.ui.base.PaintContext;
-import net.eric_nicolas.sword.ui.base.TColors;
 import net.eric_nicolas.sword.ui.base.ScreenArea;
+import net.eric_nicolas.sword.ui.base.WindowPalette;
 import net.eric_nicolas.sword.ui.base.Widget;
 import net.eric_nicolas.sword.ui.base.Window;
 import net.eric_nicolas.sword.ui.events.EventCommand;
@@ -108,27 +108,28 @@ public class MenuChoice extends Widget {
     protected void paint(PaintContext ctx) {
         int width = bounds.width();
         int height = bounds.height();
+        WindowPalette pal = ctx.palette();
 
         if (separator) {
-            ctx.setColor(TColors.DARK_GRAY);
+            ctx.setColor(pal.dark);
             ctx.drawLine(0, 2, width - 1, 2);
-            ctx.setColor(TColors.LIGHT_GRAY);
+            ctx.setColor(pal.face);
             ctx.drawLine(0, 3, width - 1, 3);
         } else {
             if (hasStatus(SF_MENU_CHOICE_DOWN)) {
-                ctx.setColor(TColors.DARK_GRAY);
+                ctx.setColor(pal.dark);
             } else {
-                ctx.setColor(TColors.FACE_GRAY);
+                ctx.setColor(pal.face);
             }
             ctx.fillRect(0, 0, width, height);
 
             ctx.setFont(menuFont);
             if (!isEnabled()) {
-                ctx.setColor(TColors.MEDIUM_GRAY);
+                ctx.setColor(pal.medium);
             } else if (hasStatus(SF_MENU_CHOICE_DOWN)) {
-                ctx.setColor(TColors.WHITE);
+                ctx.setColor(pal.white);
             } else {
-                ctx.setColor(TColors.BLACK);
+                ctx.setColor(pal.black);
             }
 
             String displayText = text != null ? text.replace("&", "") : "";

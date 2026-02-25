@@ -41,7 +41,6 @@ public class Scrollbar extends Widget {
               horizontal ? length : THICKNESS,
               horizontal ? THICKNESS : length);
         this.horizontal = horizontal;
-        setBackgroundColor(TColors.FACE_GRAY);
     }
 
     public void setRange(int contentSize, int viewSize) {
@@ -92,9 +91,10 @@ public class Scrollbar extends Widget {
     protected void paint(PaintContext ctx) {
         int bar = barLength();
         boolean scrollable = contentSize > viewSize;
+        WindowPalette pal = ctx.palette();
 
         // Track groove (sunken background between the two buttons)
-        ctx.setColor(TColors.MEDIUM_GRAY);
+        ctx.setColor(pal.medium);
         if (horizontal) ctx.fillRect(THICKNESS, 1, bar - 2 * THICKNESS, THICKNESS - 2);
         else             ctx.fillRect(1, THICKNESS, THICKNESS - 2, bar - 2 * THICKNESS);
 
@@ -102,14 +102,14 @@ public class Scrollbar extends Widget {
         if (scrollable) {
             int tp = THICKNESS + thumbOffset();
             int tl = thumbLength();
-            ctx.setColor(TColors.FACE_GRAY);
+            ctx.setColor(pal.face);
             if (horizontal) {
                 ctx.fillRect(tp, 1, tl, THICKNESS - 2);
-                ctx.setColor(TColors.DARK_GRAY);
+                ctx.setColor(pal.dark);
                 ctx.drawRect(tp, 1, tl - 1, THICKNESS - 3);
             } else {
                 ctx.fillRect(1, tp, THICKNESS - 2, tl);
-                ctx.setColor(TColors.DARK_GRAY);
+                ctx.setColor(pal.dark);
                 ctx.drawRect(1, tp, THICKNESS - 3, tl - 1);
             }
         }
@@ -125,18 +125,20 @@ public class Scrollbar extends Widget {
      * @param inc  true = increment direction (right/down), false = decrement (left/up)
      */
     private void drawArrowButton(PaintContext ctx, int pos, boolean inc) {
+        WindowPalette pal = ctx.palette();
+
         // Background
-        ctx.setColor(TColors.FACE_GRAY);
+        ctx.setColor(pal.face);
         if (horizontal) ctx.fillRect(pos, 0, THICKNESS, THICKNESS);
         else             ctx.fillRect(0, pos, THICKNESS, THICKNESS);
 
         // Border
-        ctx.setColor(TColors.DARK_GRAY);
+        ctx.setColor(pal.dark);
         if (horizontal) ctx.drawRect(pos, 0, THICKNESS - 1, THICKNESS - 1);
         else             ctx.drawRect(0, pos, THICKNESS - 1, THICKNESS - 1);
 
         // Triangle arrow
-        ctx.setColor(TColors.BLACK);
+        ctx.setColor(pal.black);
         int[] xp, yp;
         int m = THICKNESS / 2;   // midpoint = 8
         int a = 4, b = 12;       // near and far edges of the triangle

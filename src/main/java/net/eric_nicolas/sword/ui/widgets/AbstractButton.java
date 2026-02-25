@@ -38,21 +38,21 @@ public class AbstractButton extends Widget {
     protected void init(long command, int scanCode) {
         this.command = command;
         this.scanCode = scanCode;
-        setBackgroundColor(TColors.FACE_GRAY);
     }
 
     @Override
     protected void paint(PaintContext ctx) {
         int width = bounds.width();
         int height = bounds.height();
+        WindowPalette pal = ctx.palette();
 
         // Draw button background
         if (!isEnabled()) {
-            ctx.setColor(TColors.MEDIUM_GRAY);
+            ctx.setColor(pal.medium);
         } else if (pressed) {
-            ctx.setColor(TColors.DARK_GRAY);
+            ctx.setColor(pal.dark);
         } else {
-            ctx.setColor(TColors.FACE_GRAY);
+            ctx.setColor(pal.face);
         }
         ctx.fillRect(0, 0, width, height);
 
@@ -68,21 +68,22 @@ public class AbstractButton extends Widget {
         int y = 0;
         int w = bounds.width();
         int h = bounds.height();
+        WindowPalette pal = ctx.palette();
 
         if (pressed) {
-            // Pressed: dark on top/left
-            ctx.setColor(TColors.DARK_GRAY);
+            // Pressed: dark on top/left, face on bottom/right
+            ctx.setColor(pal.dark);
             ctx.drawLine(x, y, x + w - 1, y);
             ctx.drawLine(x, y, x, y + h - 1);
-            ctx.setColor(TColors.LIGHT_GRAY);
+            ctx.setColor(pal.face);
             ctx.drawLine(x + w - 1, y, x + w - 1, y + h - 1);
             ctx.drawLine(x, y + h - 1, x + w - 1, y + h - 1);
         } else {
-            // Normal: light on top/left, dark on bottom/right
-            ctx.setColor(TColors.LIGHT_GRAY);
+            // Normal: face on top/left (highlight), dark on bottom/right (shadow)
+            ctx.setColor(pal.face);
             ctx.drawLine(x, y, x + w - 2, y);
             ctx.drawLine(x, y, x, y + h - 2);
-            ctx.setColor(TColors.DARK_GRAY);
+            ctx.setColor(pal.dark);
             ctx.drawLine(x + w - 1, y, x + w - 1, y + h - 1);
             ctx.drawLine(x, y + h - 1, x + w - 1, y + h - 1);
         }

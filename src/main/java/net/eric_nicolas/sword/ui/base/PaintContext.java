@@ -18,12 +18,13 @@ import java.awt.RenderingHints;
 public class PaintContext {
 
     public static PaintContext ofAWT(Graphics2D g) {
-        return new PaintContext(g, new Point(0, 0));
+        return new PaintContext(g, new Point(0, 0), WindowPalette.STANDARD);
     }
 
     /**
      * Return a new PaintContext whose origin is this context's origin PLUS
-     * the given delta.  The underlying Graphics2D is shared.
+     * the given delta.  The underlying Graphics2D is shared, and the current
+     * palette is propagated unchanged.
      *
      * Callers pass an element's absolute screen position as the delta.
      * Because origins accumulate, a context pre-shifted by (-ox, -oy) (used by
@@ -31,8 +32,20 @@ public class PaintContext {
      * coords: (-ox, -oy) + absPos(ox+...) = buffer-local position.
      */
     public PaintContext withOrigin(Point delta) {
-        return new PaintContext(g, Point.plus(this.origin, delta));
+        return new PaintContext(g, Point.plus(this.origin, delta), this.palette);
     }
+
+    /**
+     * Return a new PaintContext with a different palette; origin is unchanged.
+     * Used by Window.draw() to inject the window's own palette at the root
+     * of the rendering tree.
+     */
+    public PaintContext withPalette(WindowPalette p) {
+        return new PaintContext(g, this.origin, p);
+    }
+
+    /** The palette active for this rendering context. */
+    public WindowPalette palette() { return palette; }
 
     // ===== Color operations =====
 
@@ -259,11 +272,13 @@ public class PaintContext {
         return result;
     }
 
-    private PaintContext(Graphics2D g, Point origin) {
+    private PaintContext(Graphics2D g, Point origin, WindowPalette palette) {
         this.g = g;
         this.origin = origin;
+        this.palette = palette;
     }
 
     private final Graphics2D g;
     private final Point origin;
+    private final WindowPalette palette;
 }

@@ -2,8 +2,8 @@ package net.eric_nicolas.sword.ui.widgets;
 
 import net.eric_nicolas.sword.ui.Point;
 import net.eric_nicolas.sword.ui.base.PaintContext;
-import net.eric_nicolas.sword.ui.base.TColors;
 import net.eric_nicolas.sword.ui.base.Widget;
+import net.eric_nicolas.sword.ui.base.WindowPalette;
 import net.eric_nicolas.sword.ui.events.EventKeyboard;
 import net.eric_nicolas.sword.ui.events.EventMouse;
 
@@ -39,7 +39,6 @@ public class EditLine extends Widget {
         this.editFont = new Font("Monospaced", Font.PLAIN, 12);
         this.lastBlinkTime = System.currentTimeMillis();
         this.drawBorder = border;
-        setBackgroundColor(TColors.WHITE);
     }
 
     /**
@@ -55,20 +54,21 @@ public class EditLine extends Widget {
         int y = 0;
         int w = bounds.width();
         int h = bounds.height();
+        WindowPalette pal = ctx.palette();
 
         // Draw background
-        ctx.setColor(!isEnabled() ? TColors.MEDIUM_GRAY : TColors.WHITE);
+        ctx.setColor(!isEnabled() ? pal.medium : pal.white);
         ctx.fillRect(x, y, w, h);
 
         // Draw border if enabled
         if (drawBorder) {
-            ctx.setColor(hasFocus ? TColors.BLACK : TColors.DARK_GRAY);
+            ctx.setColor(hasFocus ? pal.black : pal.dark);
             ctx.drawRect(x, y, w - 1, h - 1);
         }
 
         // Draw text
         if (text != null && !text.isEmpty()) {
-            ctx.setColor(TColors.BLACK);
+            ctx.setColor(pal.black);
             ctx.setFont(editFont);
             ctx.drawString(x + 4, y + 15, text);
         }
@@ -82,7 +82,7 @@ public class EditLine extends Widget {
                 lastBlinkTime = now;
             }
 
-            ctx.setColor(TColors.BLACK);
+            ctx.setColor(pal.black);
             ctx.setFont(editFont);
             int cursorX = x + 4;
             if (cursorPos > 0 && text.length() >= cursorPos) {

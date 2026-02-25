@@ -1,7 +1,6 @@
 package net.eric_nicolas.sword.ui.widgets;
 
 import net.eric_nicolas.sword.ui.base.PaintContext;
-import net.eric_nicolas.sword.ui.base.TColors;
 
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -35,11 +34,7 @@ public class Button extends AbstractButton {
         if (text == null || text.isEmpty()) return;
 
         // Set text color based on state
-        if (!isEnabled()) {
-            ctx.setColor(TColors.DARK_GRAY);
-        } else {
-            ctx.setColor(TColors.BLACK);
-        }
+        ctx.setColor(!isEnabled() ? ctx.palette().dark : ctx.palette().black);
 
         // Draw text centered
         ctx.setFont(buttonFont);

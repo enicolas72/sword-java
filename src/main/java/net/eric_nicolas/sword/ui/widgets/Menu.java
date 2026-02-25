@@ -2,9 +2,9 @@ package net.eric_nicolas.sword.ui.widgets;
 
 import net.eric_nicolas.sword.ui.Rect;
 import net.eric_nicolas.sword.ui.base.PaintContext;
-import net.eric_nicolas.sword.ui.base.TColors;
 import net.eric_nicolas.sword.ui.base.Widget;
 import net.eric_nicolas.sword.ui.base.Window;
+import net.eric_nicolas.sword.ui.base.WindowPalette;
 import net.eric_nicolas.sword.ui.events.EventKeyboard;
 import net.eric_nicolas.sword.ui.events.EventMouse;
 
@@ -46,7 +46,7 @@ public class Menu extends Window {
     }
 
     protected void init(String title) {
-        setBackgroundColor(TColors.FACE_GRAY);
+        setPalette(WindowPalette.GREEN);
         setClosable(false);
         setResizable(false);
     }
@@ -267,9 +267,10 @@ public class Menu extends Window {
     @Override
     protected void paint(PaintContext ctx) {
         if (mainMenu) {
-            ctx.setColor(TColors.FACE_GRAY);
+            WindowPalette pal = ctx.palette();
+            ctx.setColor(pal.face);
             ctx.fillRect(0, 0, bounds.width(), bounds.height());
-            ctx.setColor(TColors.DARK_GRAY);
+            ctx.setColor(pal.dark);
             ctx.drawLine(0, bounds.height() - 1, bounds.width() - 1, bounds.height() - 1);
         } else {
             // Use the standard Window chrome (sidebar + border).

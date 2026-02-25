@@ -163,6 +163,16 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 - `drawOverlay()` redraws the sidebar separator + content border AFTER canvas children, so widget background fills never hide them
 - `setOnResize(Runnable)` callback fired only during actual resize (not drag); used by samples to reflow content
 
+**Window palette system:**
+- `WindowPalette` defines five colour roles: `black`, `dark`, `medium`, `face`, `white` — all specified as `new Color(r,g,b)` (no Java `Color.*` constants anywhere)
+- Three pre-built instances: `STANDARD` (neutral grays, default), `GREEN` (slightly green-tinted, for Menu/MenuChoice), `BLUE` (slightly blue-tinted, for Dialog)
+- Palette is set on a `Window` via `setPalette(WindowPalette)`; `Menu.init()` sets `GREEN`, `Dialog` constructor sets `BLUE`
+- `Window.draw()` injects the palette into the context with `ctx.withPalette(palette)` before delegating to `super.draw()`, `canvas.draw()`, and `drawOverlay()` — every widget in the hierarchy automatically receives the correct palette
+- `PaintContext.withOrigin()` copies the palette field, so it propagates without any extra wiring
+- All widget `paint()` methods use `ctx.palette().dark` / `.face` / `.black` etc. instead of `TColors` constants
+- `ScreenArea.draw()` uses `ctx.palette().face` as the default background fill when `bgColor == null`; explicit `setBackgroundColor()` still overrides when needed (e.g., for non-palette colours)
+- `TColors` is kept for `DESKTOP_BG` and miscellaneous colours; all its constants are defined by explicit RGB
+
 **Scrollbar / Scroller design:**
 - `Scrollbar` renders its own arrow buttons and thumb; handles drag capture (returns true from `mouseMove`/`mouseLUp` while dragging, even outside bounds)
 - `Scroller` is a `Canvas`; its content widget renders into a viewport-sized `BufferedImage`; the virtual content size (for scrollbar ranges) is independent of the buffer

@@ -1,7 +1,6 @@
 package net.eric_nicolas.sword.ui.widgets;
 
 import net.eric_nicolas.sword.ui.base.PaintContext;
-import net.eric_nicolas.sword.ui.base.TColors;
 import net.eric_nicolas.sword.ui.base.Widget;
 
 import java.awt.Font;
@@ -29,7 +28,6 @@ public class Label extends Widget {
         super(x, y, width, height);
         this.text = text != null ? text : "";
         this.textFont = new Font("SansSerif", Font.PLAIN, 12);
-        setBackgroundColor(TColors.FACE_GRAY);
     }
 
     @Override
@@ -37,7 +35,7 @@ public class Label extends Widget {
         if (text == null || text.isEmpty()) return;
 
         // Draw text
-        ctx.setColor(TColors.BLACK);
+        ctx.setColor(ctx.palette().black);
         ctx.setFont(textFont);
         FontMetrics fm = ctx.getFontMetrics();
 

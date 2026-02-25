@@ -2,7 +2,7 @@ package net.eric_nicolas.sword.ui.widgets;
 
 import net.eric_nicolas.sword.ui.base.Canvas;
 import net.eric_nicolas.sword.ui.base.PaintContext;
-import net.eric_nicolas.sword.ui.base.TColors;
+import net.eric_nicolas.sword.ui.base.WindowPalette;
 
 import java.awt.Font;
 
@@ -31,7 +31,6 @@ public class GroupBox extends Canvas {
         this.text = text;
         this.value = 0;
         this.groupFont = new Font("SansSerif", Font.PLAIN, 12);
-        setBackgroundColor(TColors.FACE_GRAY);
     }
 
     /**
@@ -47,24 +46,25 @@ public class GroupBox extends Canvas {
         int y = 0;
         int w = bounds.width();
         int h = bounds.height();
+        WindowPalette pal = ctx.palette();
 
         if (text != null && !text.isEmpty()) {
             // Draw titled group box with frame
-            ctx.setColor(TColors.DARK_GRAY);
+            ctx.setColor(pal.dark);
             ctx.drawRect(x, y + 8, w - 1, h - 9);
 
             // Draw title background
-            ctx.setColor(TColors.FACE_GRAY);
+            ctx.setColor(pal.face);
             ctx.setFont(groupFont);
             int textWidth = ctx.getFontMetrics().stringWidth(text);
             ctx.fillRect(x + 10, y, textWidth + 6, 16);
 
             // Draw title text
-            ctx.setColor(TColors.BLACK);
+            ctx.setColor(pal.black);
             ctx.drawString(x + 13, y + 12, text);
         } else {
             // Draw simple frame
-            ctx.setColor(TColors.DARK_GRAY);
+            ctx.setColor(pal.dark);
             ctx.drawRect(x, y, w - 1, h - 1);
         }
     }

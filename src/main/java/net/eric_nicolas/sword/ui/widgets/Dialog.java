@@ -1,8 +1,8 @@
 package net.eric_nicolas.sword.ui.widgets;
 
 import net.eric_nicolas.sword.ui.base.Screen;
-import net.eric_nicolas.sword.ui.base.TColors;
 import net.eric_nicolas.sword.ui.base.Window;
+import net.eric_nicolas.sword.ui.base.WindowPalette;
 
 /**
  * TDialog - Standard dialog box for modal and modeless dialogs.
@@ -26,7 +26,7 @@ public class Dialog extends Window {
         super(x, y, width, height, title);
         dialogResult = 0;
         modal = false;
-        setBackgroundColor(TColors.FACE_GRAY);
+        setPalette(WindowPalette.BLUE);
         setResizable(false);
     }
 

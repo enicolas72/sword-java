@@ -1,8 +1,8 @@
 package net.eric_nicolas.sword.ui.widgets;
 
 import net.eric_nicolas.sword.ui.base.PaintContext;
-import net.eric_nicolas.sword.ui.base.TColors;
 import net.eric_nicolas.sword.ui.base.ScreenArea;
+import net.eric_nicolas.sword.ui.base.WindowPalette;
 
 /**
  * TRadioBox - Radio button control.
@@ -24,26 +24,23 @@ public class RadioBox extends ItemBox {
     protected void drawInside(PaintContext ctx, int offset) {
         int x = 0;
         int y = 0;
+        WindowPalette pal = ctx.palette();
 
         // Draw radio button circle (12x12)
-        ctx.setColor(TColors.WHITE);
+        ctx.setColor(pal.white);
         ctx.fillOval(x + 2, y + 4, 12, 12);
-        ctx.setColor(TColors.DARK_GRAY);
+        ctx.setColor(pal.dark);
         ctx.drawOval(x + 2, y + 4, 12, 12);
 
         // Draw filled circle if selected
         if (isRadioSelected()) {
-            ctx.setColor(TColors.BLACK);
+            ctx.setColor(pal.black);
             ctx.fillOval(x + 5, y + 7, 6, 6);
         }
 
         // Draw text
         if (text != null && !text.isEmpty()) {
-            if (!isEnabled()) {
-                ctx.setColor(TColors.DARK_GRAY);
-            } else {
-                ctx.setColor(TColors.BLACK);
-            }
+            ctx.setColor(!isEnabled() ? pal.dark : pal.black);
             ctx.setFont(itemFont);
             String displayText = text.replace("&", "");
             ctx.drawString(x + 18, y + 14, displayText);

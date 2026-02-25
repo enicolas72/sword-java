@@ -38,7 +38,7 @@ public class ScreenArea {
         this.status = SF_VISIBLE;
         this.bounds = new Rect(x, y, width, height);
         this.clipRect = new Rect(bounds);
-        this.bgColor = TColors.WINDOW_BG;
+        this.bgColor = null;  // null means: inherit palette face colour
         this.fgColor = TColors.BLACK;
     }
 
@@ -123,7 +123,7 @@ public class ScreenArea {
         Point absPos = getAbsolutePosition();
         PaintContext localCtx = ctx.withOrigin(absPos);
         localCtx.setClip(0, 0, bounds.width(), bounds.height());
-        localCtx.setColor(bgColor);
+        localCtx.setColor(bgColor != null ? bgColor : localCtx.palette().face);
         localCtx.fillRect(0, 0, bounds.width(), bounds.height());
         paint(localCtx);
     }

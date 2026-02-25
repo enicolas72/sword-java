@@ -76,6 +76,9 @@ public class Window extends ScreenArea {
     // Screen this window lives on (set by Screen.add; null when not on screen)
     private Screen screen;
 
+    // Colour palette for this window and all widgets it contains
+    private WindowPalette palette = WindowPalette.STANDARD;
+
     // Per-window render buffer for OpenGL compositing
     private BufferedImage renderBuffer;
 
@@ -109,6 +112,9 @@ public class Window extends ScreenArea {
 
     public boolean isResizable() { return resizable; }
     public boolean isClosable()  { return closable; }
+
+    public void setPalette(WindowPalette p) { this.palette = p; }
+    public WindowPalette getPalette()       { return palette; }
 
     // ===== Layout =====
 
@@ -218,16 +224,18 @@ public class Window extends ScreenArea {
         int h = bounds.height();
         int eb = eb();
 
+        WindowPalette pal = ctx.palette();
+
         // ── Outer border ─────────────────────────────────────────────────────
-        // Resizable: full BORDER-wide zone drawn as dark-gray rect + corner ticks.
+        // Resizable: full BORDER-wide zone drawn as dark rect + corner ticks.
         // Non-resizable: plain 1-pixel outline, no corner ticks.
-        ctx.setColor(TColors.DARK_GRAY);
+        ctx.setColor(pal.dark);
         ctx.drawRect(0, 0, w - 1, h - 1);
 
         if (resizable) {
             // Corner tick marks: short perpendicular lines at the corner zone
             // boundaries, dividing each border edge into "edge" and "corner" zones.
-            ctx.setColor(TColors.BLACK);
+            ctx.setColor(pal.black);
             // Top edge
             ctx.drawLine(CORNER,         0,          CORNER,         BORDER - 1);
             ctx.drawLine(w-1-CORNER,     0,          w-1-CORNER,     BORDER - 1);
@@ -243,7 +251,7 @@ public class Window extends ScreenArea {
         }
 
         // ── Left sidebar ─────────────────────────────────────────────────────
-        ctx.setColor(TColors.MEDIUM_GRAY);
+        ctx.setColor(pal.medium);
         ctx.fillRect(eb, eb, SIDEBAR_W, h - 2 * eb);
 
         // Drag grip: three horizontal embossed lines
@@ -251,9 +259,9 @@ public class Window extends ScreenArea {
         int gx2 = eb + SIDEBAR_W - 4;
         for (int i = 0; i < 3; i++) {
             int gy = eb + 4 + i * 3;
-            ctx.setColor(TColors.DARK_GRAY);
+            ctx.setColor(pal.dark);
             ctx.drawLine(gx1, gy, gx2, gy);
-            ctx.setColor(TColors.WHITE);
+            ctx.setColor(pal.white);
             ctx.drawLine(gx1, gy + 1, gx2, gy + 1);
         }
 
@@ -261,9 +269,9 @@ public class Window extends ScreenArea {
         if (closable) {
             int cbx = eb + 2;
             int cby = eb + CLOSE_Y;
-            ctx.setColor(TColors.FACE_GRAY);
+            ctx.setColor(pal.face);
             ctx.fillRect(cbx, cby, CLOSE_SZ, CLOSE_SZ);
-            ctx.setColor(TColors.DARK_GRAY);
+            ctx.setColor(pal.dark);
             ctx.drawRect(cbx, cby, CLOSE_SZ - 1, CLOSE_SZ - 1);
             ctx.drawLine(cbx + 2, cby + 2, cbx + CLOSE_SZ - 3, cby + CLOSE_SZ - 3);
             ctx.drawLine(cbx + CLOSE_SZ - 3, cby + 2, cbx + 2, cby + CLOSE_SZ - 3);
@@ -282,7 +290,7 @@ public class Window extends ScreenArea {
         int h = bounds.height();
         int eb = eb();
         localCtx.setClip(0, 0, w, h);
-        localCtx.setColor(TColors.DARK_GRAY);
+        localCtx.setColor(ctx.palette().dark);
         // Sidebar right-edge separator
         localCtx.drawLine(eb + SIDEBAR_W, eb,
                           eb + SIDEBAR_W, h - eb - 1);
@@ -383,9 +391,12 @@ public class Window extends ScreenArea {
 
     @Override
     public void draw(PaintContext ctx) {
-        super.draw(ctx);    // fills background, calls paint()
-        canvas.draw(ctx);   // draws widgets
-        drawOverlay(ctx);   // redraws inner chrome on top of widgets
+        // Inject this window's palette into the context so all widgets in the
+        // hierarchy automatically paint with the correct colour scheme.
+        PaintContext palCtx = ctx.withPalette(palette);
+        super.draw(palCtx);    // fills background, calls paint()
+        canvas.draw(palCtx);   // draws widgets
+        drawOverlay(palCtx);   // redraws inner chrome on top of widgets
     }
 
     @Override

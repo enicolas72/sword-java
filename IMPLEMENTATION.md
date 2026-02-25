@@ -26,10 +26,11 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`ScreenArea`** — Root of the visual hierarchy: `father` reference, status bitmask flags (`SF_VISIBLE`, `SF_SELECTED`, `SF_MOUSE_IN`, `SF_DOWN`, `SF_FOCUSED`, `SF_MODIFIED`), virtual event handlers (`mouseLDown`, `mouseMove`, `keyDown`, `command`, …), drawing area with `bounds`, `clipRect`, `draw()` / `paint()`, `getAbsolutePosition()`, `contains()`
 - **`Widget`** — Extends ScreenArea; adds `enabled` boolean (`isEnabled()` / `setEnabled()`)
 - **`Canvas`** — Transparent container for Widget children stored in `LinkedList<Widget>`; dispatches events in reverse (topmost first) z-order
-- **`Window`** — Overlapping window: left sidebar (drag grip + optional close button), outer resize border; internal `Canvas`; `bringToFront()` / `remove()`. Options: `setResizable(bool)` (thick border + resize handles vs. 1-px outline), `setClosable(bool)` (show/hide × button). `setOnResize(Runnable)` callback fired on resize. `drawOverlay()` redraws inner chrome after canvas children so widget fills never obscure it.
+- **`Window`** — Overlapping window: left sidebar (drag grip + optional close button), outer resize border; internal `Canvas`; `bringToFront()` / `remove()`. Options: `setResizable(bool)` (thick border + resize handles vs. 1-px outline), `setClosable(bool)` (show/hide × button), `setPalette(WindowPalette)` (colour scheme for this window and all its widgets). `setOnResize(Runnable)` callback fired on resize. `draw()` injects the window's palette into the `PaintContext` before delegating to `super.draw()`, `canvas.draw()`, and `drawOverlay()` so the entire hierarchy uses the same palette automatically.
 - **`Screen`** — Plain class (not a `ScreenArea`): manages `LinkedList<Window>` with z-ordering; dispatches events topmost-first; routes unhandled commands to the registered `IntPredicate` command handler. Windows hold a direct `screen` reference (`Window.getScreen()`) set by `Screen.add()`; `Screen` is never in the `ScreenArea.father` chain. Application-level commands (those not consumed by any window) are queued in `pendingCommands` and drained by `processPendingCommands()` from the main loop — outside GLFW callbacks — so that modal handlers like `execDialog()` can safely pump the GLFW event loop.
-- **`TColors`** — Static colour palette (standard + UI theme: `FACE_GRAY`, `MEDIUM_GRAY`, `DESKTOP_BG`, …)
-- **`PaintContext`** — `Graphics2D` wrapper with local-coordinate translation via `withOrigin(Point)`; covers draw/fill/clip/image primitives
+- **`TColors`** — Static colour constants (all defined by explicit RGB; no Java `Color.*` constants). Used for `DESKTOP_BG` and miscellaneous colours; window/widget chrome colours are provided by `WindowPalette`.
+- **`WindowPalette`** — Set of five coordinated colours (`black`, `dark`, `medium`, `face`, `white`) that defines the visual appearance of a window and all its widgets. Three pre-built instances: `STANDARD` (neutral grays, default), `GREEN` (slightly green-tinted, used by Menu/MenuChoice), `BLUE` (slightly blue-tinted, used by Dialog). Assigned via `Window.setPalette()`; injected into `PaintContext` by `Window.draw()` and propagated automatically through `withOrigin()`.
+- **`PaintContext`** — `Graphics2D` wrapper with local-coordinate translation via `withOrigin(Point)` and palette propagation via `withPalette(WindowPalette)`; covers draw/fill/clip/image primitives. `palette()` getter lets every `paint()` method read `black/dark/medium/face/white` without any static colour reference.
 - **`Application`** — Application shell (plain class, not a ScreenArea): owns a `Screen` and a `LwjglDriver`; extend and override `createMenuChoices()` + `handleCommand()`
 
 ### `net.eric_nicolas.sword.ui.driver`
@@ -94,8 +95,9 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 6. **Parent reference only**: `ScreenArea.father` enables coordinate translation and event routing within the window hierarchy, but no sibling navigation.
 7. **Method-override event dispatch**: `ScreenArea.handleEvent` dispatches via a `switch` to overridable methods; no macro tables.
 8. **PaintContext**: Local-coordinate translation is managed in `PaintContext`; callers always draw in their own (0,0)-based coordinate space.
-8. **Scrollbar drag capture**: Like Window title-bar drag, Scrollbar returns `true` from `mouseMove`/`mouseLUp` while `dragging==true` regardless of contains, so the thumb follows the mouse even outside the bar.
-9. **Scroller viewport buffer**: Content renders at viewport size (not virtual size), so only the visible slice is computed. The scrollbar range tracks the virtual size independently. Scroll offset is forwarded to the content widget via callback.
+9. **Window palette propagation**: `Window.draw()` calls `ctx.withPalette(palette)` before passing to `super.draw()`, `canvas.draw()`, and `drawOverlay()`. `PaintContext.withOrigin()` copies the palette, so every `paint()` method in the hierarchy receives `ctx.palette()` with the correct colour scheme — no extra wiring required. All widget paint methods read `ctx.palette().black/dark/medium/face/white` instead of static `TColors` constants.
+10. **Scrollbar drag capture**: Like Window title-bar drag, Scrollbar returns `true` from `mouseMove`/`mouseLUp` while `dragging==true` regardless of contains, so the thumb follows the mouse even outside the bar.
+11. **Scroller viewport buffer**: Content renders at viewport size (not virtual size), so only the visible slice is computed. The scrollbar range tracks the virtual size independently. Scroll offset is forwarded to the content widget via callback.
 
 ---
 
@@ -118,6 +120,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - ✅ Scrollbar (arrow, thumb drag, page click, H/V)
 - ✅ Scroller (viewport buffer, zoom-aware content/scrollbar sync)
 - ✅ Mandel sample (fractal, zoom history, pan with scrollbars)
+- ✅ Window palette system (`WindowPalette`: STANDARD / GREEN / BLUE; propagated via PaintContext)
 
 ## Known Limitations
 
