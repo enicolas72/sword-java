@@ -53,11 +53,11 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`StandardButtons`** — Factory for standard OK / Cancel / Yes / No button instances
 - **`Scrollbar`** — Port of `TLift`: H/V scrollbar with arrow buttons, thumb drag, page click; `setRange(contentSize, viewSize)`, `getPosition()`, `setOnChange(Runnable)`. Drag capture: `mouseLUp`/`mouseMove` return true while dragging even outside bounds.
 - **`Scroller`** — Port of `TScroller`: scrollable viewport backed by a viewport-sized `BufferedImage`. Virtual content size (governs scrollbar range) is independent of the buffer. Mouse events are forwarded as viewport-local coordinates. Public API: `setContentSize`, `setScrollPosition`, `getScrollX/Y`, `setOnScroll`, `resize(newViewW, newViewH)` (live viewport resize).
-- **`LatexWidget`** — Displays a LaTeX formula string rendered by JLaTeXMath. Rendering is lazy (first paint) and cached in a `BufferedImage`; the cache is invalidated by `setLatex()` or `setFontSize()`. Text colour is read from `ctx.palette().black`, so the formula automatically adapts to the window's colour scheme. The rendered image is centred within the widget bounds. Requires `org.scilab.forge:jlatexmath` on the classpath.
+- **`TexWidget`** — Displays TeX-formatted content rendered by JLaTeXMath. Input is written in text mode; math content is delimited by `\math{...}` blocks; newlines produce line breaks. The input is converted automatically to a JLaTeXMath-compatible formula (`\begin{array}{l}...\end{array}`). Rendering is lazy (first paint) and cached in a `BufferedImage`; the cache is invalidated by `setTex()` or `setFontSize()`. Text colour is read from `ctx.palette().black`. Requires `org.scilab.forge:jlatexmath` on the classpath.
 
 ### `net.eric_nicolas.sword.samples`
 
-- **`Hello`** — Multiple overlapping draggable windows; each window contains a `LatexWidget` rendering the Gaussian integral formula
+- **`Hello`** — Multiple overlapping draggable windows; each window contains a `TexWidget` rendering the Gaussian integral formula
 - **`Dialog`** — Demonstrates `Dialog`, `Button`, `CheckBox`, `RadioBox`, `GroupBox`, `EditLine`, `Label`
 - **`Mandel`** — Mandelbrot fractal viewer with zoom + pan. `MandelWidget` renders only the current viewport into a `BufferedImage`, tracking `zoom` and `offsetX/Y`. Virtual world size is fixed at `baseW × baseH` (set at construction) and scales with zoom (`virtualW = baseW * zoom`), so resizing the window reveals more of the complex plane rather than stretching the view. Left-click zooms in 2× (virtual world doubles, thumb halves); right-click undoes zoom. Wired to `Scroller` via `onZoomChange` / `onScroll` callbacks so scrollbars always reflect zoom level and enable full panning.
 
@@ -121,7 +121,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - ✅ Scroller (viewport buffer, zoom-aware content/scrollbar sync)
 - ✅ Mandel sample (fractal, zoom history, pan with scrollbars)
 - ✅ Window palette system (`WindowPalette`: STANDARD / GREEN / BLUE; propagated via PaintContext)
-- ✅ LatexWidget (JLaTeXMath rendering, lazy cache, palette-aware text colour)
+- ✅ TexWidget (JLaTeXMath rendering, lazy cache, palette-aware text colour)
 
 ## Known Limitations
 
@@ -156,7 +156,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 | `MenuTest` | GREEN palette, not closable/resizable, choices list |
 | `GroupBoxTest` | Title text, value field, null title, all constructors |
 | `ScrollbarTest` | Initial state, H/V dimensions, setRange clamping, setPosition clamping |
-| `LatexWidgetTest` | getLatex/setLatex, getFontSize/setFontSize, bounds, visibility |
+| `TexWidgetTest` | getLatex/setLatex, getFontSize/setFontSize, bounds, visibility |
 
 ---
 

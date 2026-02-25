@@ -5,34 +5,47 @@ import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for LatexWidget — state management (no rendering invoked).
+ * Unit tests for TexWidget — state management (no rendering invoked).
  */
-class LatexWidgetTest {
+class TexWidgetTest {
 
-    private LatexWidget widget;
+    private TexWidget widget;
 
     @BeforeEach
     void setUp() {
-        widget = new LatexWidget(10, 20, 200, 100, "E = mc^2", 24f);
+        widget = new TexWidget(10, 20, 200, 100, "Hello World !", 24f);
     }
 
-    // ===== Latex string =====
+    // ===== TeX content =====
 
     @Test
-    void testGetLatex() {
-        assertEquals("E = mc^2", widget.getLatex());
-    }
-
-    @Test
-    void testSetLatex() {
-        widget.setLatex("x^2 + y^2 = r^2");
-        assertEquals("x^2 + y^2 = r^2", widget.getLatex());
+    void testGetTex() {
+        assertEquals("Hello World !", widget.getTex());
     }
 
     @Test
-    void testSetLatexEmpty() {
-        widget.setLatex("");
-        assertEquals("", widget.getLatex());
+    void testSetTex() {
+        widget.setTex("\\math{E = mc^2}");
+        assertEquals("\\math{E = mc^2}", widget.getTex());
+    }
+
+    @Test
+    void testSetTexEmpty() {
+        widget.setTex("");
+        assertEquals("", widget.getTex());
+    }
+
+    @Test
+    void testSetTexWithNewline() {
+        widget.setTex("Line one\nLine two");
+        assertEquals("Line one\nLine two", widget.getTex());
+    }
+
+    @Test
+    void testSetTexWithMathBlock() {
+        String src = "Gauss:\n\\math{\\int_{-\\infty}^{+\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}}";
+        widget.setTex(src);
+        assertEquals(src, widget.getTex());
     }
 
     // ===== Font size =====

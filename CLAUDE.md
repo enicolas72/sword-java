@@ -39,7 +39,7 @@ net.eric_nicolas.sword.ui.base         → ScreenArea, Widget, Window, Canvas,
 net.eric_nicolas.sword.ui.widgets      → Button, CheckBox, RadioBox, GroupBox,
                                          EditLine, Label, Menu, MenuChoice,
                                          Dialog, StandardButtons, AbstractButton,
-                                         ItemBox, Scrollbar, Scroller, LatexWidget
+                                         ItemBox, Scrollbar, Scroller, TexWidget
 net.eric_nicolas.sword.samples         → Hello, Dialog, Mandel (sample applications)
 ```
 
@@ -67,7 +67,7 @@ net.eric_nicolas.sword.samples         → Hello, Dialog, Mandel (sample applica
 
 4. **Naming:**
    - Core classes use plain names: `ScreenArea`, `Application`, `WindowPalette`, `Screen`, etc. — no T-prefixed classes remain
-   - Gadget classes use plain names: `Button`, `Menu`, `Dialog`, `EditLine`, `Scrollbar`, `LatexWidget`, etc.
+   - Gadget classes use plain names: `Button`, `Menu`, `Dialog`, `EditLine`, `Scrollbar`, `TexWidget`, etc.
    - Java conventions: camelCase for methods/fields, UPPER_CASE for constants
 
 5. **Driver Integration:**
@@ -115,8 +115,8 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 ✅ Modal dialog event loop (`execDialog()` — GLFW-based mini-loop via `Screen.frameStep`)
 ✅ Scrollbar (TLift port): arrow buttons, thumb drag, page click, H/V orientations
 ✅ Scroller (TScroller port): viewport-sized buffer, zoom-aware content/scrollbar sync; `resize()` for live viewport resize
-✅ Sample applications: Hello (LatexWidget), Dialog (with working modal dialog), Mandel (Mandelbrot fractal viewer with zoom + pan; resize reveals more of the plane)
-✅ LatexWidget — renders a LaTeX formula via JLaTeXMath; lazy cached `BufferedImage`; text colour from `ctx.palette().black`
+✅ Sample applications: Hello (TexWidget), Dialog (with working modal dialog), Mandel (Mandelbrot fractal viewer with zoom + pan; resize reveals more of the plane)
+✅ TexWidget — TeX text mode with `\math{...}` for formulas; lazy cached `BufferedImage`; text colour from `ctx.palette().black`
 ✅ 164 unit tests (16 test classes)
 
 **Deferred:**
@@ -146,7 +146,7 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 | `TLift` | `Scrollbar` |
 | `TScroller` | `Scroller` |
 | Static colour constants (`TColors`) | Removed; colours defined inline as `new Color(r,g,b)` in `WindowPalette`; desktop background in `Screen.DESKTOP_BG` |
-| Formula/text rendering (none in original) | `LatexWidget` — renders LaTeX via JLaTeXMath into a cached `BufferedImage` |
+| Formula/text rendering (none in original) | `TexWidget` — renders LaTeX via JLaTeXMath into a cached `BufferedImage` |
 
 **Graphics / Driver Layer:**
 - `LwjglDriver` owns the GLFW window and OpenGL 3.3 compositor; renders each S.W.O.R.D `Window` as a textured quad (per-window `BufferedImage` → OpenGL texture, uploaded every frame)
@@ -176,10 +176,12 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 - `ScreenArea.draw()` uses `ctx.palette().face` as the default background fill when `bgColor == null`; explicit `setBackgroundColor()` still overrides when needed
 - Desktop background colour is `Screen.DESKTOP_BG = new Color(35, 50, 76)`, defined locally in `Screen`; `LwjglDriver` reads it for the OpenGL clear colour
 
-**LatexWidget:**
-- Extends `Widget`; renders a LaTeX source string via `org.scilab.forge.jlatexmath` (JLaTeXMath)
-- Rendering is lazy and cached: `paint()` renders to a `BufferedImage` on first call, or when the formula/colour changes; the cache is invalidated by `setLatex()` / `setFontSize()`
-- Text colour is taken from `ctx.palette().black` so the formula adapts to the window's colour scheme
+**TexWidget:**
+- Extends `Widget`; renders TeX-formatted content via `org.scilab.forge.jlatexmath` (JLaTeXMath)
+- Input is written in **text mode**; math content is wrapped in `\math{...}` blocks; newlines produce row breaks
+- The input is converted to a JLaTeXMath formula via `toLatex()`: plain text → `\text{...}`, `\math{...}` → raw math, lines joined with `\\` inside `\begin{array}{l}...\end{array}`
+- Rendering is lazy and cached: `paint()` renders to a `BufferedImage` on first call, or when content/colour changes; the cache is invalidated by `setTex()` / `setFontSize()`
+- Text colour is taken from `ctx.palette().black` so the output adapts to the window's colour scheme
 - The rendered image is centred within the widget bounds; no stretching
 - Declared exceptions from JLaTeXMath are caught silently; `cache` stays null and nothing is drawn
 - JLaTeXMath works in headless mode (`-Djava.awt.headless=true`) because it uses Java2D internally

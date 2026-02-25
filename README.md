@@ -14,10 +14,10 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 - Custom widget painting (ScreenArea-based drawing areas)
 - Event system (mouse, keyboard, commands) routed through object hierarchy
 - Gadgets: Button, CheckBox, RadioBox, GroupBox, EditLine, Label, Menu, MenuChoice, Dialog, Scrollbar, Scroller
-- **LatexWidget** — displays a LaTeX formula rendered by JLaTeXMath (lazy cached, palette-aware)
+- **TexWidget** — displays a LaTeX formula rendered by JLaTeXMath (lazy cached, palette-aware)
 - **Window palette system** — three colour schemes: STANDARD (gray), GREEN (Menu/MenuChoice), BLUE (Dialog); propagates automatically via `PaintContext`
 - **Modal dialog event loop** (`execDialog()` — GLFW-based mini-loop, fully functional)
-- Sample applications: Hello (LatexWidget formula), Dialog (full gadget demo), Mandel (Mandelbrot viewer with zoom + scrollbars)
+- Sample applications: Hello (TexWidget formula), Dialog (full gadget demo), Mandel (Mandelbrot viewer with zoom + scrollbars)
 - 164 unit tests (16 test classes) covering geometry, palette, window layout, screen management, and gadget behavior
 
 ### What's deferred
@@ -39,7 +39,7 @@ src/main/java/net/eric_nicolas/sword/
 │   │                   WindowPalette, PaintContext, Application
 │   └── widgets/      - UI components: Button, CheckBox, RadioBox, GroupBox,
 │                       EditLine, Label, Menu, MenuChoice, Dialog, StandardButtons,
-│                       AbstractButton, ItemBox, Scrollbar, Scroller, LatexWidget
+│                       AbstractButton, ItemBox, Scrollbar, Scroller, TexWidget
 └── samples/          - Example applications (Hello, Dialog, Mandel)
 ```
 

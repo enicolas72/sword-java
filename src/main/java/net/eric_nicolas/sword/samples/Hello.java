@@ -1,9 +1,9 @@
 package net.eric_nicolas.sword.samples;
 
 import net.eric_nicolas.sword.ui.base.*;
-import net.eric_nicolas.sword.ui.widgets.LatexWidget;
 import net.eric_nicolas.sword.ui.widgets.Menu;
 import net.eric_nicolas.sword.ui.widgets.MenuChoice;
+import net.eric_nicolas.sword.ui.widgets.TexWidget;
 
 /**
  * Hello - Simple Hello World application demonstrating S.W.O.R.D framework.
@@ -13,9 +13,9 @@ public class Hello {
     // Command constants
     public static final int CM_HELLO_WINDOW = 10000;
 
-    /** LaTeX formula shown in each Hello window. */
-    private static final String FORMULA =
-            "\\int_{-\\infty}^{+\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}";
+    /** TeX content shown in each Hello window: greeting text + formula on a new line. */
+    private static final String TEX =
+            "Hello World !\n\\math{\\int_{-\\infty}^{+\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}}";
 
     /**
      * HelloApp - Main application.
@@ -54,18 +54,18 @@ public class Hello {
                 300, 200, title
             );
 
-            // Formula widget fills the content area
-            LatexWidget latex = new LatexWidget(
+            // TexWidget fills the content area
+            TexWidget tex = new TexWidget(
                 0, 0,
                 window.getContentWidth(),
                 window.getContentHeight(),
-                FORMULA, 28f
+                TEX, 22f
             );
-            window.getCanvas().add(latex);
+            window.getCanvas().add(tex);
 
             // Keep the widget filling the content area on resize
             window.setOnResize(() ->
-                latex.setBounds(new net.eric_nicolas.sword.ui.Rect(
+                tex.setBounds(new net.eric_nicolas.sword.ui.Rect(
                     0, 0, window.getContentWidth(), window.getContentHeight())));
 
             // Insert window in desktop
