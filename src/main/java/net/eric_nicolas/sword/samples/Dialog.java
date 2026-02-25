@@ -1,6 +1,6 @@
 package net.eric_nicolas.sword.samples;
 
-import net.eric_nicolas.sword.ui.base.TApp;
+import net.eric_nicolas.sword.ui.base.Application;
 import net.eric_nicolas.sword.ui.widgets.*;
 import net.eric_nicolas.sword.ui.base.Canvas;
 
@@ -16,7 +16,7 @@ public class Dialog {
     /**
      * DialogApp - Main application.
      */
-    static class DialogApp extends TApp {
+    static class DialogApp extends Application {
         private int dialogResult;
 
         public DialogApp() {
@@ -95,8 +95,7 @@ public class Dialog {
 
     public static void main(String[] args) {
         System.out.println("S.W.O.R.D - Dialog Sample");
-        System.out.println("Copyright (C) 1993-1996 The SWORD Group");
-        System.out.println("Java Port 2026");
+        System.out.println("Copyright (C) 1993-2006 Eric NICOLAS");
         System.out.println();
 
         DialogApp app = new DialogApp();

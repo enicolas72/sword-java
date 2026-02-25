@@ -16,12 +16,10 @@ import java.util.Deque;
 /**
  * Mandel - Mandelbrot fractal viewer sample.
  * Port of MANDEL.CC / MANVIEW.CC from C++ S.W.O.R.D.
- *
  * Left-click zooms in 2x around the clicked point.
  * Right-click restores the previous zoom (or resets to full view if no history).
- *
  * The virtual content size grows with each zoom level (doubles each step),
- * so the scrollbar thumb shrinks and you can pan to see the rest of the
+ * so the scrollbar thumb shrinks, and you can pan to see the rest of the
  * fractal at the current zoom level.
  */
 public class Mandel {
@@ -106,7 +104,6 @@ public class Mandel {
 
         /**
          * Render the current viewport into a BufferedImage.
-         *
          * The viewport covers virtual pixels [offsetX, offsetX+viewW) in X and
          * [offsetY, offsetY+viewH) in Y. The virtual world has size virtualW × virtualH.
          * Complex-plane coordinates map linearly from [WORLD_XMIN, WORLD_XMAX] over
@@ -161,8 +158,7 @@ public class Mandel {
 
         /**
          * Left-click: zoom in 2× around the clicked point.
-         *
-         * Coordinates arrive as viewport-local pixels (0..viewW-1, 0..viewH-1)
+         * Coordinates arrive as viewport-local pixels (0...viewW-1, 0...viewH-1)
          * thanks to the Scroller's event translation.
          */
         @Override
@@ -184,7 +180,7 @@ public class Mandel {
 
             // Double the zoom: the virtual world grows 2× in each dimension.
             // In the new space the click point is at (2*vx, 2*vy).
-            // Centre the viewport on that point.
+            // Center the viewport on that point.
             int newZoom = zoom * 2;
             int viewW   = bounds.width();
             int viewH   = bounds.height();
@@ -228,7 +224,7 @@ public class Mandel {
     // MandelApp - application shell
     // -------------------------------------------------------------------
 
-    static class MandelApp extends TApp {
+    static class MandelApp extends Application {
 
         private int viewerCount = 0;
 
@@ -305,8 +301,7 @@ public class Mandel {
 
     public static void main(String[] args) {
         System.out.println("S.W.O.R.D - Mandel Sample");
-        System.out.println("Copyright (C) 1993-1996 The SWORD Group");
-        System.out.println("Java Port 2026");
+        System.out.println("Copyright (C) 1993-2006 Eric NICOLAS");
         new MandelApp().run();
     }
 }

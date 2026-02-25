@@ -18,6 +18,9 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <maven.compiler.release>21</maven.compiler.release>
+        <lwjgl.version>3.3.3</lwjgl.version>
+        <!-- arm64 (Apple Silicon). Change to natives-macos for Intel Mac. -->
+        <lwjgl.natives>natives-macos-arm64</lwjgl.natives>
     </properties>
 
     <dependencies>
@@ -27,6 +30,43 @@
             <artifactId>junit-jupiter</artifactId>
             <version>5.10.1</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- LWJGL 3 - Core, GLFW, OpenGL -->
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl</artifactId>
+            <version>${lwjgl.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-glfw</artifactId>
+            <version>${lwjgl.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-opengl</artifactId>
+            <version>${lwjgl.version}</version>
+        </dependency>
+
+        <!-- LWJGL natives for macOS arm64 -->
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>${lwjgl.natives}</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-glfw</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>${lwjgl.natives}</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-opengl</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>${lwjgl.natives}</classifier>
         </dependency>
     </dependencies>
 
@@ -53,12 +93,20 @@
             </plugin>
 
             <!-- Exec Maven Plugin for running samples -->
+            <!-- macOS + LWJGL requires -XstartOnFirstThread so that GLFW     -->
+            <!-- can use Cocoa on the main thread. When running with           -->
+            <!-- java -cp ... directly, add -XstartOnFirstThread manually.     -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.1</version>
                 <configuration>
                     <mainClass>net.eric_nicolas.sword.samples.Hello</mainClass>
+                    <jvmArgs>
+                        <jvmArg>-XstartOnFirstThread</jvmArg>
+                        <!-- Prevent AWT LWCToolkit from hijacking NSApp events on macOS -->
+                        <jvmArg>-Djava.awt.headless=true</jvmArg>
+                    </jvmArgs>
                 </configuration>
             </plugin>
 

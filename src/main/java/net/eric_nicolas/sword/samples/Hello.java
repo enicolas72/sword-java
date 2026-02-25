@@ -18,7 +18,7 @@ public class Hello {
      * THello - Custom zone that draws "Hello World!" text.
      */
     static class THello extends Widget {
-        private Font bigFont;
+        private final Font bigFont;
 
         public THello(int x, int y, int width, int height) {
             super(x, y, width, height);
@@ -39,7 +39,7 @@ public class Hello {
     /**
      * HelloApp - Main application.
      */
-    static class HelloApp extends TApp {
+    static class HelloApp extends Application {
         private int helloCounter = 1;
 
         public HelloApp() {
@@ -96,8 +96,7 @@ public class Hello {
 
     public static void main(String[] args) {
         System.out.println("S.W.O.R.D - Hello Sample");
-        System.out.println("Copyright (C) 1993-1996 The SWORD Group");
-        System.out.println("Java Port 2026");
+        System.out.println("Copyright (C) 1993-2006 Eric NICOLAS");
 
         HelloApp app = new HelloApp();
         app.run();

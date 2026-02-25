@@ -20,15 +20,20 @@ Create a Java port of the S.W.O.R.D C++ framework that preserves the original ar
 
 - **Java:** 21 (LTS)
 - **Build System:** Maven
-- **Graphics:** Pure AWT (Graphics2D, Canvas) - no Swing
-- **Architecture:** Single AWT window with manually drawn overlapping windows (preserving original C++ approach)
+- **Windowing / Input:** LWJGL 3 + GLFW (OpenGL 3.3 Core Profile)
+- **Rendering:** Java2D (`Graphics2D` / `BufferedImage`) for off-screen per-window painting; OpenGL compositor blits results to screen as textured quads
+- **Architecture:** GLFW window; each S.W.O.R.D Window renders to its own `BufferedImage`, composited in z-order via OpenGL each frame
+
+#### macOS requirements
+
+GLFW must run on the AppKit main thread (`-XstartOnFirstThread`) and Java2D must not initialise its native toolkit (`-Djava.awt.headless=true`) to avoid AWT intercepting GLFW's AppKit events. Both flags are pre-configured in the Maven exec plugin.
 
 ### Package Structure
 
 ```
 net.eric_nicolas.sword.ui              → Point, Rect
 net.eric_nicolas.sword.ui.events       → Event, EventMouse, EventKeyboard, EventCommand
-net.eric_nicolas.sword.ui.driver       → AwtDriver, EventAwtAdapter  (all AWT coupling here)
+net.eric_nicolas.sword.ui.driver       → LwjglDriver, GlfwEventAdapter  (all LWJGL/GLFW coupling here)
 net.eric_nicolas.sword.ui.base         → ScreenArea, Widget, Window, Canvas,
                                          Screen, TColors, PaintContext, Application
 net.eric_nicolas.sword.ui.widgets      → Button, CheckBox, RadioBox, GroupBox,
@@ -65,13 +70,14 @@ net.eric_nicolas.sword.samples         → Hello, Dialog, Mandel (sample applica
    - Gadget classes use plain names: `Button`, `Menu`, `Dialog`, `EditLine`, `Scrollbar`, etc.
    - Java conventions: camelCase for methods/fields, UPPER_CASE for constants
 
-5. **AWT Integration:**
-   - All AWT code lives in `ui.driver`; the framework core has zero AWT imports
-   - `AwtDriver` owns the `Frame`, back-buffered `Canvas`, and all AWT listeners
-   - `EventAwtAdapter` converts AWT `MouseEvent`/`KeyEvent` → SWORD events
-   - `Application` wires things up via lambdas: `screen.setCommandHandler(this::handleCommand)` and a hotkey predicate passed to `AwtDriver`
-   - `PaintContext` wraps `Graphics2D`; all drawing goes through it
-   - `AwtDriver.forceRepaint()` redraws the full screen to a back buffer then blits to screen
+5. **Driver Integration:**
+   - All LWJGL/GLFW code lives in `ui.driver`; the framework core has zero LWJGL imports (AWT imports allowed only in `ui.driver` and `Window.renderToBuffer`)
+   - `LwjglDriver` owns the GLFW window and OpenGL compositor; runs the main event+render loop
+   - `GlfwEventAdapter` converts GLFW callbacks → SWORD `EventMouse`/`EventKeyboard`
+   - `Application` wires things up via lambdas: `screen.setCommandHandler(this::handleCommand)` and a hotkey predicate passed to `LwjglDriver`
+   - `PaintContext` wraps `Graphics2D`; all drawing goes through it (off-screen, into `Window.renderBuffer`)
+   - `LwjglDriver.forceRepaint()` is a no-op; the continuous render loop redraws every frame
+   - Application-level commands are **queued** in `Screen.pendingCommands` (filled inside GLFW callbacks) and drained by `Screen.processPendingCommands()` in the main loop — this allows `Dialog.execDialog()` to safely pump GLFW events in a nested loop without violating GLFW's no-reentrant-poll rule
 
 ### Maven Build Commands
 
@@ -83,28 +89,37 @@ mvn package                # Create JAR
 
 ### Running the Samples
 
+Preferred (Maven handles classpath and JVM flags automatically):
+
 ```bash
-java -cp target/classes net.eric_nicolas.sword.samples.Hello
-java -cp target/classes net.eric_nicolas.sword.samples.Dialog
-java -cp target/classes net.eric_nicolas.sword.samples.Mandel
+mvn exec:java -Dexec.mainClass=net.eric_nicolas.sword.samples.Hello
+mvn exec:java -Dexec.mainClass=net.eric_nicolas.sword.samples.Dialog
+mvn exec:java -Dexec.mainClass=net.eric_nicolas.sword.samples.Mandel
+```
+
+On macOS, direct `java` invocations require two extra flags:
+
+```bash
+java -XstartOnFirstThread -Djava.awt.headless=true \
+     -cp target/classes:<lwjgl-jars> net.eric_nicolas.sword.samples.Hello
 ```
 
 ### Current Status
 
-**Phase 2 complete.** Core infrastructure, all main gadgets, and scrolling are working.
+**Phase 2 complete.** Core infrastructure, all main gadgets, scrolling, and modal dialogs are working.
 
 ✅ Overlapping windows with drag, resize, close, and z-ordering
 ✅ Window options: `resizable` (thick border + resize handles vs. 1-px outline) and `closable` (shows/hides close button)
 ✅ Event system (mouse, keyboard, commands) routed through object hierarchy
 ✅ Gadgets: Button, CheckBox, RadioBox, GroupBox, EditLine, Label, Menu, MenuChoice, Dialog
+✅ Modal dialog event loop (`execDialog()` — GLFW-based mini-loop via `Screen.frameStep`)
 ✅ Scrollbar (TLift port): arrow buttons, thumb drag, page click, H/V orientations
 ✅ Scroller (TScroller port): viewport-sized buffer, zoom-aware content/scrollbar sync; `resize()` for live viewport resize
-✅ Sample applications: Hello, Dialog, Mandel (Mandelbrot fractal viewer with zoom + pan; resize reveals more of the plane)
+✅ Sample applications: Hello, Dialog (with working modal dialog), Mandel (Mandelbrot fractal viewer with zoom + pan; resize reveals more of the plane)
 ✅ ~54 unit tests
 
 **Deferred:**
 - TGauge (progress bar)
-- Modal dialog event loop
 - COMMON / DRIVERS subsystems (file system, error handling)
 - IMAGE / MATH toolboxes
 
@@ -126,17 +141,17 @@ java -cp target/classes net.eric_nicolas.sword.samples.Mandel
 | `sfDisabled` status flag | `Widget.enabled` boolean |
 | `opMainMenu` / `opSeparator` option flags | `Menu.mainMenu` / `MenuChoice.separator` booleans |
 | Button `BO_DISABLED`, `BO_NO_CASE` options | Removed; use `setEnabled(false)` after construction |
-| libgrx20 graphics calls | AWT `Graphics2D` via `PaintContext` (isolated in `ui.driver`) |
+| libgrx20 graphics calls | Java2D `Graphics2D` off-screen + LWJGL/OpenGL compositor (isolated in `ui.driver`) |
 | `TLift` | `Scrollbar` |
 | `TScroller` | `Scroller` |
 
 **Graphics / Driver Layer:**
-- `AwtDriver` owns the single AWT `Canvas` covering the full window; double-buffered via `BufferedImage`
+- `LwjglDriver` owns the GLFW window and OpenGL 3.3 compositor; renders each S.W.O.R.D `Window` as a textured quad (per-window `BufferedImage` → OpenGL texture, uploaded every frame)
 - `Screen` is a plain class (not a `ScreenArea`) that holds `LinkedList<Window>`; each `Window` owns a `Canvas` holding `Widget` children
 - Windows hold a direct `Window.screen` reference (set by `Screen.add()`); `Window.getScreen()` is used for window management and command dispatch
 - The `ScreenArea.father` chain terminates at the top-level `Window` (father = null); Screen is never in the father chain
-- Mouse/keyboard events wrapped by `EventAwtAdapter` (in `ui.driver`) and dispatched to `Screen.handleEvent()`
-- Command dispatch from widgets: `sendCommand()` walks the `father` chain to the nearest `Window`, then calls `window.getScreen().handleEvent(cmd)`
+- Mouse/keyboard events wrapped by `GlfwEventAdapter` (in `ui.driver`) and dispatched to `Screen.handleEvent()` from GLFW callbacks
+- Command dispatch from widgets: `sendCommand()` walks the `father` chain to the nearest `Window`, then calls `window.getScreen().handleEvent(cmd)`. Commands handled by a `Window` (e.g., `CM_OK` by `Dialog`) are consumed immediately within the GLFW callback. Commands unhandled by any window are **queued** in `Screen.pendingCommands` and dispatched to `Application.handleCommand` by `processPendingCommands()` between frames.
 - Global menu hotkeys are intercepted by `Application`'s hotkey predicate before desktop dispatch; matched via `Menu.processHotKey(keyCode)` which calls `MenuChoice.sendCommand()`
 
 **Window chrome:**

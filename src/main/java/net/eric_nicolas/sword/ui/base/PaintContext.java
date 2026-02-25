@@ -22,18 +22,16 @@ public class PaintContext {
     }
 
     /**
-     * Return a new PaintContext with the given absolute origin.
-     * The underlying Graphics2D is shared; only the translation changes.
+     * Return a new PaintContext whose origin is this context's origin PLUS
+     * the given delta.  The underlying Graphics2D is shared.
+     *
+     * Callers pass an element's absolute screen position as the delta.
+     * Because origins accumulate, a context pre-shifted by (-ox, -oy) (used by
+     * Window.renderToBuffer) automatically maps absolute coords to buffer-local
+     * coords: (-ox, -oy) + absPos(ox+...) = buffer-local position.
      */
-    public PaintContext withOrigin(Point origin) {
-        return new PaintContext(g, origin);
-    }
-
-    /**
-     * Get the underlying Graphics2D object (for advanced operations).
-     */
-    public Graphics2D getGraphics2D() {
-        return g;
+    public PaintContext withOrigin(Point delta) {
+        return new PaintContext(g, Point.plus(this.origin, delta));
     }
 
     // ===== Color operations =====
@@ -58,10 +56,6 @@ public class PaintContext {
 
     public FontMetrics getFontMetrics() {
         return g.getFontMetrics();
-    }
-
-    public FontMetrics getFontMetrics(Font font) {
-        return g.getFontMetrics(font);
     }
 
     // ===== Clipping operations =====

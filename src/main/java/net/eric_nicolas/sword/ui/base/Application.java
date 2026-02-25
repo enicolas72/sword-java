@@ -1,30 +1,28 @@
 package net.eric_nicolas.sword.ui.base;
 
-import net.eric_nicolas.sword.ui.driver.AwtDriver;
+import net.eric_nicolas.sword.ui.driver.LwjglDriver;
 import net.eric_nicolas.sword.ui.widgets.Menu;
 import net.eric_nicolas.sword.ui.widgets.MenuChoice;
 
 /**
- * TApp - Main application shell.
- *
- * Creates the Screen and AwtDriver, registers the command handler and menu
- * hotkey handler, then delegates the event loop to AwtDriver.
- *
+ * Application - Main application shell.
+ * Creates the Screen and LwjglDriver (OpenGL/GLFW), registers the command
+ * handler and menu hotkey handler, then delegates the event loop to the driver.
  * Subclasses override createMenuChoices() to populate the menu bar and
  * handleCommand() to respond to application-level commands.
  */
-public class TApp {
+public class Application {
 
     public static final int CM_QUIT = 100;
 
     protected Screen screen;
-    protected AwtDriver driver;
+    protected LwjglDriver driver;
     protected Menu mainMenu;
 
-    public TApp(String title, int width, int height) {
+    public Application(String title, int width, int height) {
         screen = new Screen(width, height);
         screen.setCommandHandler(this::handleCommand);
-        driver = new AwtDriver(title, width, height, screen, this::processHotKey);
+        driver = new LwjglDriver(title, width, height, screen, this::processHotKey);
         initializeMenu();
     }
 
@@ -74,9 +72,5 @@ public class TApp {
 
     public void run() {
         driver.run();
-    }
-
-    public void repaint() {
-        driver.forceRepaint();
     }
 }

@@ -5,11 +5,13 @@ import net.eric_nicolas.sword.ui.Rect;
 import net.eric_nicolas.sword.ui.events.Event;
 import net.eric_nicolas.sword.ui.events.EventMouse;
 
+import java.awt.AlphaComposite;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+
 /**
  * TWindow - Overlapped window with left-sidebar controls and outer resize border.
- *
  * Layout (resizable window, all measurements in pixels):
- *
  *   ┌──────────────────────────────────────────┐  ← BORDER (resize zone)
  *   │ ┌────┬──────────────────────────────────┐ │
  *   │ │grip│                                  │ │
@@ -18,24 +20,19 @@ import net.eric_nicolas.sword.ui.events.EventMouse;
  *   │ └────┴──────────────────────────────────┘ │
  *   └──────────────────────────────────────────┘
  *        ↑ SIDEBAR_W
- *
  * When resizable=false the thick 5-pixel resize border is replaced by a
  * plain 1-pixel outline (eb()=1 instead of BORDER=5), and resize hit-testing
  * and corner tick marks are disabled.
- *
  * When closable=false the close button (×) is not drawn and clicking the
  * sidebar never triggers removal.
- *
  * Sidebar (left strip, inside the effective border):
  *   - Grip lines (drag handle) at the top
  *   - Close button (×) below the grip (only if closable)
  *   - The rest of the sidebar is also a drag area
- *
  * Resize border (BORDER pixels wide on every side, resizable windows only):
  *   - Edge zones: drag to resize in one axis
  *   - Corner zones (CORNER px from each corner): drag to resize in two axes
  *   - Corner boundaries are marked by short black tick marks on the border
- *
  * Inner chrome (sidebar separator + content border) is redrawn AFTER canvas
  * children so it is never hidden by widget background fills.
  */
@@ -78,6 +75,9 @@ public class Window extends ScreenArea {
 
     // Screen this window lives on (set by Screen.add; null when not on screen)
     private Screen screen;
+
+    // Per-window render buffer for OpenGL compositing
+    private BufferedImage renderBuffer;
 
     public Window(int x, int y, int width, int height, String title) {
         super(x, y, width, height);
@@ -192,7 +192,7 @@ public class Window extends ScreenArea {
         return dir;
     }
 
-    /** True if (mx,my) is over the close button (window-local coords).
+    /** True if (mx,my) is over the close button (window-local coordinates).
      *  Always false for non-closable windows. */
     private boolean hitClose(int mx, int my) {
         if (!closable) return false;
@@ -396,6 +396,43 @@ public class Window extends ScreenArea {
         }
         return super.handleEvent(event);
     }
+
+    // ===== Per-window render buffer (used by OpenGL compositor) =====
+
+    /**
+     * Render this window's full visual tree into its own BufferedImage.
+     * We translate the Graphics2D by (-x, -y) before rendering so that the
+     * existing draw() logic — which adds getAbsolutePosition() = (x, y) to
+     * every coordinate — produces output at (0, 0) in the buffer rather than
+     * at the window's screen position.
+     */
+    public void renderToBuffer() {
+        int w = bounds.width();
+        int h = bounds.height();
+        if (renderBuffer == null
+                || renderBuffer.getWidth()  != w
+                || renderBuffer.getHeight() != h) {
+            renderBuffer = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        }
+        java.awt.Graphics2D g = renderBuffer.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Clear the buffer to transparent (buffer-local coordinates: origin is 0,0).
+        g.setComposite(AlphaComposite.Clear);
+        g.fillRect(0, 0, w, h);
+        g.setComposite(AlphaComposite.SrcOver);
+
+        // PaintContext.withOrigin() accumulates, so starting at (-ox, -oy) means
+        // each element's absPos + (-ox, -oy) = its position in the buffer.
+        int ox = bounds.origin().x();
+        int oy = bounds.origin().y();
+        draw(PaintContext.ofAWT(g).withOrigin(new Point(-ox, -oy)));
+        g.dispose();
+    }
+
+    public BufferedImage getRenderBuffer() { return renderBuffer; }
+
+    public boolean isDragging() { return dragging; }
 
     // ===== Window management =====
 

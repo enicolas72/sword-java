@@ -9,22 +9,22 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for TZone - coordinate system and geometry.
  */
-class TZoneTest {
+class ScreenAreaTest {
 
-    private TZone parent;
-    private TZone child;
-    private TZone grandchild;
+    private ScreenArea parent;
+    private ScreenArea child;
+    private ScreenArea grandchild;
 
     @BeforeEach
     void setUp() {
-        parent = new TZone(100, 100, 200, 150);
-        child = new TZone(10, 20, 50, 40);
-        grandchild = new TZone(5, 5, 20, 15);
+        parent = new ScreenArea(100, 100, 200, 150);
+        child = new ScreenArea(10, 20, 50, 40);
+        grandchild = new ScreenArea(5, 5, 20, 15);
     }
 
     @Test
     void testInitialBounds() {
-        TZone zone = new TZone(10, 20, 100, 80);
+        ScreenArea zone = new ScreenArea(10, 20, 100, 80);
         Rect bounds = zone.getBounds();
 
         assertEquals(10, bounds.origin().x());
@@ -85,35 +85,35 @@ class TZoneTest {
 
     @Test
     void testInitialStatus() {
-        TZone obj = new TZone(0, 0, 10, 10);
-        assertTrue(obj.hasStatus(TZone.SF_VISIBLE));
-        assertFalse(obj.hasStatus(TZone.SF_SELECTED));
+        ScreenArea obj = new ScreenArea(0, 0, 10, 10);
+        assertTrue(obj.hasStatus(ScreenArea.SF_VISIBLE));
+        assertFalse(obj.hasStatus(ScreenArea.SF_SELECTED));
     }
 
     @Test
     void testSetAndClearStatus() {
-        TZone obj = new TZone(0, 0, 10, 10);
-        obj.setStatus(TZone.SF_SELECTED);
-        assertTrue(obj.hasStatus(TZone.SF_SELECTED));
-        assertTrue(obj.hasStatus(TZone.SF_VISIBLE)); // unaffected
+        ScreenArea obj = new ScreenArea(0, 0, 10, 10);
+        obj.setStatus(ScreenArea.SF_SELECTED);
+        assertTrue(obj.hasStatus(ScreenArea.SF_SELECTED));
+        assertTrue(obj.hasStatus(ScreenArea.SF_VISIBLE)); // unaffected
 
-        obj.clearStatus(TZone.SF_SELECTED);
-        assertFalse(obj.hasStatus(TZone.SF_SELECTED));
+        obj.clearStatus(ScreenArea.SF_SELECTED);
+        assertFalse(obj.hasStatus(ScreenArea.SF_SELECTED));
     }
 
     @Test
     void testMultipleStatusFlags() {
-        TZone obj = new TZone(0, 0, 10, 10);
-        obj.setStatus(TZone.SF_SELECTED);
-        obj.setStatus(TZone.SF_FOCUSED);
-        assertTrue(obj.hasStatus(TZone.SF_SELECTED));
-        assertTrue(obj.hasStatus(TZone.SF_FOCUSED));
-        assertTrue(obj.hasStatus(TZone.SF_VISIBLE));
+        ScreenArea obj = new ScreenArea(0, 0, 10, 10);
+        obj.setStatus(ScreenArea.SF_SELECTED);
+        obj.setStatus(ScreenArea.SF_FOCUSED);
+        assertTrue(obj.hasStatus(ScreenArea.SF_SELECTED));
+        assertTrue(obj.hasStatus(ScreenArea.SF_FOCUSED));
+        assertTrue(obj.hasStatus(ScreenArea.SF_VISIBLE));
     }
 
     @Test
     void testSetVisibleToggle() {
-        TZone obj = new TZone(0, 0, 10, 10);
+        ScreenArea obj = new ScreenArea(0, 0, 10, 10);
         obj.setVisible(false);
         assertFalse(obj.isVisible());
         obj.setVisible(true);
@@ -122,7 +122,7 @@ class TZoneTest {
 
     @Test
     void testIsSelected() {
-        TZone obj = new TZone(0, 0, 10, 10);
+        ScreenArea obj = new ScreenArea(0, 0, 10, 10);
         assertFalse(obj.isSelected());
         obj.setSelected(true);
         assertTrue(obj.isSelected());

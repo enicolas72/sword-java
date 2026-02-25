@@ -19,7 +19,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`EventMouse`** — Mouse event: `where` (Point), button mask, modifiers; `withOffset(dx,dy)` for coordinate translation
 - **`EventKeyboard`** — Keyboard event: key code, char, modifiers
 - **`EventCommand`** — Command event: `commandId` for routing UI actions up the hierarchy
-- **`EventAwtAdapter`** — Converts AWT `MouseEvent`/`KeyEvent` → S.W.O.R.D events
+- **`GlfwEventAdapter`** — Converts GLFW raw input callbacks → S.W.O.R.D `EventMouse` / `EventKeyboard`
 
 ### `net.eric_nicolas.sword.ui.base`
 
@@ -27,15 +27,15 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`Widget`** — Extends ScreenArea; adds `enabled` boolean (`isEnabled()` / `setEnabled()`)
 - **`Canvas`** — Transparent container for Widget children stored in `LinkedList<Widget>`; dispatches events in reverse (topmost first) z-order
 - **`Window`** — Overlapping window: left sidebar (drag grip + optional close button), outer resize border; internal `Canvas`; `bringToFront()` / `remove()`. Options: `setResizable(bool)` (thick border + resize handles vs. 1-px outline), `setClosable(bool)` (show/hide × button). `setOnResize(Runnable)` callback fired on resize. `drawOverlay()` redraws inner chrome after canvas children so widget fills never obscure it.
-- **`Screen`** — Plain class (not a `ScreenArea`): manages `LinkedList<Window>` with z-ordering; dispatches events topmost-first; routes unhandled commands to the registered `IntPredicate` command handler. Windows hold a direct `screen` reference (`Window.getScreen()`) set by `Screen.add()`; `Screen` is never in the `ScreenArea.father` chain.
+- **`Screen`** — Plain class (not a `ScreenArea`): manages `LinkedList<Window>` with z-ordering; dispatches events topmost-first; routes unhandled commands to the registered `IntPredicate` command handler. Windows hold a direct `screen` reference (`Window.getScreen()`) set by `Screen.add()`; `Screen` is never in the `ScreenArea.father` chain. Application-level commands (those not consumed by any window) are queued in `pendingCommands` and drained by `processPendingCommands()` from the main loop — outside GLFW callbacks — so that modal handlers like `execDialog()` can safely pump the GLFW event loop.
 - **`TColors`** — Static colour palette (standard + UI theme: `FACE_GRAY`, `MEDIUM_GRAY`, `DESKTOP_BG`, …)
 - **`PaintContext`** — `Graphics2D` wrapper with local-coordinate translation via `withOrigin(Point)`; covers draw/fill/clip/image primitives
-- **`Application`** — Application shell (plain class, not a ScreenArea): owns a `Screen` and an `AwtDriver`; extend and override `createMenuChoices()` + `handleCommand()`
+- **`Application`** — Application shell (plain class, not a ScreenArea): owns a `Screen` and a `LwjglDriver`; extend and override `createMenuChoices()` + `handleCommand()`
 
 ### `net.eric_nicolas.sword.ui.driver`
 
-- **`AwtDriver`** — AWT event loop, `Frame`, back-buffered `Canvas`, `forceRepaint()`; translates AWT events via `EventAwtAdapter` and forwards them to `Screen`; calls the registered `hotKeyHandler` before desktop dispatch for global menu shortcuts
-- **`EventAwtAdapter`** — Converts AWT `MouseEvent`/`KeyEvent` → S.W.O.R.D events
+- **`LwjglDriver`** — GLFW window + OpenGL 3.3 compositor. Each `Window` renders into its own `BufferedImage` (via `Window.renderToBuffer()` / Java2D); `LwjglDriver` uploads these as OpenGL textures and composites them in z-order each frame using a textured-quad shader. Provides `forceRepaint()` (no-op; continuous loop), `quit()`, and a `frameStep` `Runnable` registered with `Screen` for modal dialog loops. Requires `-XstartOnFirstThread` and `-Djava.awt.headless=true` on macOS.
+- **`GlfwEventAdapter`** — Converts GLFW raw input (cursor pos, mouse button, key, char callbacks) → S.W.O.R.D `EventMouse` / `EventKeyboard`. GLFW key codes 65–90 and 48–57 match Java `VK_` values directly.
 
 ### `net.eric_nicolas.sword.ui.widgets`
 
@@ -49,7 +49,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`EditLine`** — Single-line text input: cursor, click-to-position, keyboard navigation, max length
 - **`Menu`** — Menu bar (`mainMenu=true`) or dropdown; horizontal/vertical layouts, hotkey support
 - **`MenuChoice`** — Menu item: text, hotkey, command; `separator=true` for dividers
-- **`Dialog`** — Window subclass with result codes (`CM_OK`, `CM_CANCEL`, `CM_YES`, `CM_NO`); `execDialog()` stub
+- **`Dialog`** — Window subclass with result codes (`CM_OK`, `CM_CANCEL`, `CM_YES`, `CM_NO`); `execDialog()` runs a GLFW-based modal loop via `Screen.getFrameStep()`. CM_OK/CM_CANCEL are dispatched directly to `Dialog.command()` within GLFW callbacks (not queued), so `dialogResult` is set immediately and the modal loop exits on the next iteration.
 - **`StandardButtons`** — Factory for standard OK / Cancel / Yes / No button instances
 - **`Scrollbar`** — Port of `TLift`: H/V scrollbar with arrow buttons, thumb drag, page click; `setRange(contentSize, viewSize)`, `getPosition()`, `setOnChange(Runnable)`. Drag capture: `mouseLUp`/`mouseMove` return true while dragging even outside bounds.
 - **`Scroller`** — Port of `TScroller`: scrollable viewport backed by a viewport-sized `BufferedImage`. Virtual content size (governs scrollbar range) is independent of the buffer. Mouse events are forwarded as viewport-local coordinates. Public API: `setContentSize`, `setScrollPosition`, `getScrollX/Y`, `setOnScroll`, `resize(newViewW, newViewH)` (live viewport resize).
@@ -72,8 +72,8 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 | Tree structure | TAtom: `_Next/_Previous/_Son/_Father` sibling chain | Only `father` parent ref in ScreenArea; children in `LinkedList` |
 | Child storage | TAtom linked tree | `LinkedList<Widget>` in Canvas, `LinkedList<Window>` in Screen |
 | Event tables | C++ macros `DEFINE_EVENTS_TABLE` | Virtual method overrides in ScreenArea subclasses |
-| Graphics backend | libgrx20 calls | AWT `Graphics2D` via `PaintContext` wrapper |
-| AWT coupling | N/A | Isolated in `ui.driver` (AwtDriver + EventAwtAdapter) |
+| Graphics backend | libgrx20 calls | Java2D `Graphics2D` off-screen + LWJGL/OpenGL compositor |
+| Driver coupling | N/A | Isolated in `ui.driver` (LwjglDriver + GlfwEventAdapter) |
 | Data exchange | `SetData()/GetData()/DataSize()` | Removed |
 | `TShell` | Trivial TObject subclass | Removed; `Application` is a plain class |
 | `TObject` + `TZone` | Separate mechanism/graphics layers | Merged into `ScreenArea` |
@@ -89,7 +89,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 1. **No TAtom**: The linked sibling tree is removed. Children live in explicit `LinkedList` containers in Canvas and Screen.
 2. **TObject merged into ScreenArea**: The former mechanism/graphics split is collapsed. `ScreenArea` is the single root for all visual objects; it holds `father`, `status`, event dispatch, bounds, and drawing.
 3. **Application is a plain class**: Not a ScreenArea subclass. Owns a `Screen` and an `AwtDriver`; registers command/hotkey handlers via lambdas.
-4. **AWT isolated in `ui.driver`**: `AwtDriver` holds the `Frame`, `Canvas`, back buffer, and all AWT listeners. `EventAwtAdapter` translates AWT events. No AWT imports outside this package.
+4. **Driver isolated in `ui.driver`**: `LwjglDriver` holds the GLFW window and OpenGL compositor. `GlfwEventAdapter` translates GLFW callbacks. No LWJGL/AWT imports outside this package.
 5. **Screen is not a ScreenArea**: Screen sits above the ScreenArea hierarchy. `ScreenArea.father` terminates at the top-level Window (father = null). Windows hold a direct `Screen` reference (`Window.getScreen()`) used for window management and command routing.
 6. **Parent reference only**: `ScreenArea.father` enables coordinate translation and event routing within the window hierarchy, but no sibling navigation.
 7. **Method-override event dispatch**: `ScreenArea.handleEvent` dispatches via a `switch` to overridable methods; no macro tables.
@@ -106,7 +106,9 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - ✅ Window creation, management, z-ordering, drag
 - ✅ Overlapping window rendering
 - ✅ Custom zone/widget painting
-- ✅ AWT event conversion
+- ✅ GLFW input event conversion (GlfwEventAdapter)
+- ✅ OpenGL compositing (LwjglDriver — per-window BufferedImage textures)
+- ✅ Modal dialog event loop (execDialog — GLFW-based mini-loop)
 - ✅ Button (standard push button, 3D pressed effect)
 - ✅ CheckBox / RadioBox / GroupBox
 - ✅ EditLine (text input, cursor, keyboard navigation)
@@ -120,12 +122,12 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 ## Known Limitations
 
 - **No window focus styling**: Active window not visually distinct
-- **Dialog modal loop**: `execDialog()` is a stub; modal blocking not yet implemented
 - **No COMMON subsystem**: No path utilities, error handling, or debug facilities
 - **No DRIVERS subsystem**: No file system or time/date access
 - **No TGauge**: Progress bar not ported
 - **No IMAGE/MATH toolboxes**: Deferred
-- **Mandel render on EDT**: Fractal re-render on zoom/scroll blocks the UI; async rendering is out of scope
+- **Mandel render blocks frame**: Fractal re-render on zoom/scroll blocks the GLFW frame; async rendering is out of scope
+- **`[JRSAppKitAWT markAppIsDaemon]` warning on macOS**: Harmless. GLFW initializes `NSApplication` before Java's headless setup completes natively; partial headless mode is sufficient for off-screen Java2D rendering alongside GLFW.
 
 ---
 
@@ -147,8 +149,8 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 ## File Statistics
 
-- Java source files: 33 (src/main)
+- Java source files: 35 (src/main)
 - Test files: 7 (src/test)
 - Total tests: 54
 - Packages: 6 (ui, ui.events, ui.base, ui.widgets, ui.driver, samples)
-- Classes: 33
+- Classes: 35

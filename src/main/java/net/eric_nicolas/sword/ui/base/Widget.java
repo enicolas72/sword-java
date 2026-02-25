@@ -4,7 +4,7 @@ package net.eric_nicolas.sword.ui.base;
  * Widget - Base class for all gadget components.
  * Widgets live inside a Canvas; compile-time safety is enforced by Canvas.add(Widget).
  */
-public class Widget extends TZone {
+public class Widget extends ScreenArea {
 
     protected boolean enabled = true;
 

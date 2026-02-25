@@ -10,14 +10,12 @@ import net.eric_nicolas.sword.ui.events.EventMouse;
 import java.awt.Color;
 
 /**
- * TZone - Core application object with event handling, parent reference,
+ * ScreenArea - Core application object with event handling, parent reference,
  * status flags, and drawing area with clipping support.
- *
- * Combines the former TObject (mechanism layer) with TZone (graphics layer).
  * Children walk the father chain for coordinate translation; all drawing uses
  * local (0,0)-based coordinates via PaintContext.
  */
-public class TZone {
+public class ScreenArea {
 
     // Status flags (bitmasks)
     public static final int SF_MOUSE_IN  = 0x0001;
@@ -27,7 +25,7 @@ public class TZone {
     public static final int SF_MODIFIED  = 0x0020;
     public static final int SF_FOCUSED   = 0x0040;
 
-    protected TZone father;
+    protected ScreenArea father;
     protected int status;
 
     protected Rect bounds;
@@ -35,7 +33,7 @@ public class TZone {
     protected Color bgColor;
     protected Color fgColor;
 
-    public TZone(int x, int y, int width, int height) {
+    public ScreenArea(int x, int y, int width, int height) {
         this.father = null;
         this.status = SF_VISIBLE;
         this.bounds = new Rect(x, y, width, height);
@@ -46,12 +44,12 @@ public class TZone {
 
     // ===== Parent reference =====
 
-    public TZone father() {
+    public ScreenArea father() {
         return father;
     }
 
     /** Package-private: set parent reference. */
-    void setParent(TZone parent) {
+    void setParent(ScreenArea parent) {
         father = parent;
     }
 
@@ -153,7 +151,7 @@ public class TZone {
      */
     protected Point getAbsolutePosition() {
         Point p = new Point(bounds.origin());
-        TZone parent = father;
+        ScreenArea parent = father;
         while (parent != null) {
             p = Point.plus(p, parent.bounds.origin());
             parent = parent.father;

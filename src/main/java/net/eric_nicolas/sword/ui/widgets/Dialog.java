@@ -1,5 +1,6 @@
 package net.eric_nicolas.sword.ui.widgets;
 
+import net.eric_nicolas.sword.ui.base.Screen;
 import net.eric_nicolas.sword.ui.base.TColors;
 import net.eric_nicolas.sword.ui.base.Window;
 
@@ -40,38 +41,44 @@ public class Dialog extends Window {
 
     protected boolean doQuitDialog(int result) {
         dialogResult = result;
-        if (modal) {
-            return true;
-        } else {
+        if (!modal) {
             remove();
-            return true;
         }
+        return true;
     }
 
-    /** Execute dialog modally and return result code (CM_OK, CM_CANCEL, etc.). */
+    /**
+     * Execute dialog modally and return result code (CM_OK, CM_CANCEL, etc.).
+     *
+     * Implementation note: this method is called from inside
+     * Screen.processPendingCommands(), which is itself called from the main
+     * loop (NOT from inside a GLFW callback).  We therefore pump the driver's
+     * frameStep (glfwPollEvents + render + swap) safely in a nested loop.
+     *
+     * CM_OK / CM_CANCEL are dispatched directly by Screen to Dialog.command()
+     * inside the glfwPollEvents() call, setting dialogResult without going
+     * through the command queue — so the modal loop sees the result on the
+     * very next iteration.
+     */
     public int execDialog() {
         modal = true;
         dialogResult = 0;
 
-        java.awt.EventQueue queue = java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue();
+        Screen s = getScreen();
+        Runnable step = (s != null) ? s.getFrameStep() : null;
 
-        while (dialogResult == 0 && getScreen() != null) {
-            try {
-                java.awt.AWTEvent event = queue.getNextEvent();
-                Object source = event.getSource();
-                if (source instanceof java.awt.Component) {
-                    ((java.awt.Component) source).dispatchEvent(event);
-                } else if (source instanceof java.awt.MenuComponent) {
-                    ((java.awt.MenuComponent) source).dispatchEvent(event);
-                }
-            } catch (InterruptedException e) {
-                break;
-            }
+        while (dialogResult == 0 && getScreen() != null && !isQuitting(s)) {
+            if (step == null) break;  // no driver registered (e.g. in unit tests)
+            step.run();
         }
 
         remove();
         modal = false;
         return dialogResult;
+    }
+
+    private static boolean isQuitting(Screen s) {
+        return s != null && s.isQuitting();
     }
 
     public int getDialogResult() {
