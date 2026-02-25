@@ -31,6 +31,23 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- JLaTeXMath - LaTeX formula rendering -->
+        <dependency>
+            <groupId>org.scilab.forge</groupId>
+            <artifactId>jlatexmath</artifactId>
+            <version>1.0.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scilab.forge</groupId>
+            <artifactId>jlatexmath-font-greek</artifactId>
+            <version>1.0.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scilab.forge</groupId>
+            <artifactId>jlatexmath-font-cyrillic</artifactId>
+            <version>1.0.7</version>
+        </dependency>
+
         <!-- LWJGL 3 - Core, GLFW, OpenGL -->
         <dependency>
             <groupId>org.lwjgl</groupId>

@@ -1,10 +1,9 @@
 package net.eric_nicolas.sword.samples;
 
 import net.eric_nicolas.sword.ui.base.*;
+import net.eric_nicolas.sword.ui.widgets.LatexWidget;
 import net.eric_nicolas.sword.ui.widgets.Menu;
 import net.eric_nicolas.sword.ui.widgets.MenuChoice;
-
-import java.awt.Font;
 
 /**
  * Hello - Simple Hello World application demonstrating S.W.O.R.D framework.
@@ -14,26 +13,9 @@ public class Hello {
     // Command constants
     public static final int CM_HELLO_WINDOW = 10000;
 
-    /**
-     * THello - Custom zone that draws "Hello World!" text.
-     */
-    static class THello extends Widget {
-        private final Font bigFont;
-
-        public THello(int x, int y, int width, int height) {
-            super(x, y, width, height);
-            bigFont = new Font("Serif", Font.BOLD, 32);
-        }
-
-        @Override
-        protected void paint(PaintContext ctx) {
-            // Draw text in local coordinates
-            ctx.setColor(ctx.palette().black);
-            ctx.setFont(bigFont);
-            ctx.drawString(20, 40, "Hello World !");
-            ctx.drawString(20, 80, "S. W. O. R. D.");
-        }
-    }
+    /** LaTeX formula shown in each Hello window. */
+    private static final String FORMULA =
+            "\\int_{-\\infty}^{+\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}";
 
     /**
      * HelloApp - Main application.
@@ -72,17 +54,18 @@ public class Hello {
                 300, 200, title
             );
 
-            // Coordinates are relative to the window's content canvas origin
-            THello hello = new THello(
+            // Formula widget fills the content area
+            LatexWidget latex = new LatexWidget(
                 0, 0,
                 window.getContentWidth(),
-                window.getContentHeight()
+                window.getContentHeight(),
+                FORMULA, 28f
             );
-            window.getCanvas().add(hello);
+            window.getCanvas().add(latex);
 
-            // Keep THello filling the content area when the window is resized
+            // Keep the widget filling the content area on resize
             window.setOnResize(() ->
-                hello.setBounds(new net.eric_nicolas.sword.ui.Rect(
+                latex.setBounds(new net.eric_nicolas.sword.ui.Rect(
                     0, 0, window.getContentWidth(), window.getContentHeight())));
 
             // Insert window in desktop
