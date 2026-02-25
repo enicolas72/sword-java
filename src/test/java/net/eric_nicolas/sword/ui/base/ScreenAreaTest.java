@@ -2,6 +2,7 @@ package net.eric_nicolas.sword.ui.base;
 
 import net.eric_nicolas.sword.ui.Point;
 import net.eric_nicolas.sword.ui.Rect;
+import java.awt.Color;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;
@@ -132,9 +133,9 @@ class ScreenAreaTest {
 
     @Test
     void testSetBackgroundColor() {
-        parent.setBackgroundColor(TColors.RED);
+        parent.setBackgroundColor(new Color(255, 0, 0));
         // Just verify no exception thrown
-        assertDoesNotThrow(() -> parent.setBackgroundColor(TColors.BLUE));
+        assertDoesNotThrow(() -> parent.setBackgroundColor(new Color(0, 0, 255)));
     }
 
     @Test

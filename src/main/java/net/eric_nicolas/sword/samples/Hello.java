@@ -23,13 +23,12 @@ public class Hello {
         public THello(int x, int y, int width, int height) {
             super(x, y, width, height);
             bigFont = new Font("Serif", Font.BOLD, 32);
-            setBackgroundColor(TColors.LIGHT_GRAY);
         }
 
         @Override
         protected void paint(PaintContext ctx) {
             // Draw text in local coordinates
-            ctx.setColor(TColors.BLACK);
+            ctx.setColor(ctx.palette().black);
             ctx.setFont(bigFont);
             ctx.drawString(20, 40, "Hello World !");
             ctx.drawString(20, 80, "S. W. O. R. D.");

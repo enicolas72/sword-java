@@ -3,6 +3,7 @@ package net.eric_nicolas.sword.ui.base;
 import net.eric_nicolas.sword.ui.events.Event;
 import net.eric_nicolas.sword.ui.events.EventCommand;
 
+import java.awt.Color;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -24,6 +25,9 @@ import java.util.function.IntPredicate;
  * call glfwPollEvents() without violating GLFW's no-reentrant-poll rule.
  */
 public class Screen {
+
+    /** Desktop background colour. */
+    public static final Color DESKTOP_BG = new Color(35, 50, 76);
 
     private final int width;
     private final int height;
@@ -90,7 +94,7 @@ public class Screen {
     }
 
     public void draw(PaintContext ctx) {
-        ctx.setColor(TColors.DESKTOP_BG);
+        ctx.setColor(DESKTOP_BG);
         ctx.fillRect(0, 0, width, height);
         for (Window window : windows) {
             window.draw(ctx);

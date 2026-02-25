@@ -1,7 +1,6 @@
 package net.eric_nicolas.sword.ui.driver;
 
 import net.eric_nicolas.sword.ui.base.Screen;
-import net.eric_nicolas.sword.ui.base.TColors;
 import net.eric_nicolas.sword.ui.base.Window;
 import net.eric_nicolas.sword.ui.events.EventKeyboard;
 import net.eric_nicolas.sword.ui.events.EventMouse;
@@ -177,9 +176,9 @@ public class LwjglDriver {
 
     private void renderFrame() {
         // Clear screen to desktop background colour
-        float r = TColors.DESKTOP_BG.getRed()   / 255f;
-        float g = TColors.DESKTOP_BG.getGreen() / 255f;
-        float b = TColors.DESKTOP_BG.getBlue()  / 255f;
+        float r = Screen.DESKTOP_BG.getRed()   / 255f;
+        float g = Screen.DESKTOP_BG.getGreen() / 255f;
+        float b = Screen.DESKTOP_BG.getBlue()  / 255f;
         glClearColor(r, g, b, 1f);
         glClear(GL_COLOR_BUFFER_BIT);
 

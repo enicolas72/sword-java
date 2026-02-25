@@ -39,7 +39,7 @@ public class ScreenArea {
         this.bounds = new Rect(x, y, width, height);
         this.clipRect = new Rect(bounds);
         this.bgColor = null;  // null means: inherit palette face colour
-        this.fgColor = TColors.BLACK;
+        this.fgColor = new Color(0, 0, 0);
     }
 
     // ===== Parent reference =====
