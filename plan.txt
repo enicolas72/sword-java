@@ -1,0 +1,20 @@
+
+
+—
+Let’s define a "window palette" to be the set of black / light grey / dark grey / white that is required to draw any window and widgets
+Then let’s create several palettes:
+- the standard one (as currently)
+- a slightly green one -> used by menu and menu choice
+- a slightly blue one -> used by dialogs
+This way menus / dialogs / regular window will be directly identifiable by their color scheme.
+Note: do not use any standard Java Color, instead define all Colors by their RGB directly.
+
+—
+Let’s implement a tabbed Canvas and create a sample application for that.
+The sample application will show three tabs : first one with a « First Tab » large text (like the hello sample), second tab with two checkboxes, a third tab with a line edit
+
+—
+Let’s implement a multi-pane Canvas. It will contain ’n’ canvas either horizontally or vertically, with separating bars which can be dragged to change the relative size of the sub canvas.
+Let’s create a sample application for that, the main window of this application will show three-pane canvas with horizontal separators. Top area will show « Top area » big text, middle area will show « Middle area » big text, bottom area will show « Bottom area » big text.
+
+—
