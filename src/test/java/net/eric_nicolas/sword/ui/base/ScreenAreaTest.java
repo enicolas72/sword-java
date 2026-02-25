@@ -159,4 +159,23 @@ class ScreenAreaTest {
         assertEquals(100, bounds.width());
         assertEquals(100, bounds.height());
     }
+
+    @Test
+    void testContainsPoint() {
+        child.setParent(parent);
+        // child absolute = (110, 120), size 50x40 → covers (110,120)–(160,160)
+        assertTrue(child.contains(new Point(115, 125)));
+        assertFalse(child.contains(new Point(200, 200)));
+    }
+
+    @Test
+    void testFatherReferenceAfterSetParent() {
+        child.setParent(parent);
+        assertSame(parent, child.father());
+    }
+
+    @Test
+    void testNullFatherByDefault() {
+        assertNull(parent.father());
+    }
 }

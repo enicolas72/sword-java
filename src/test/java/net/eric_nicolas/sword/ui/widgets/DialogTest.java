@@ -1,5 +1,6 @@
 package net.eric_nicolas.sword.ui.widgets;
 
+import net.eric_nicolas.sword.ui.base.WindowPalette;
 import net.eric_nicolas.sword.ui.widgets.Dialog;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,5 +50,15 @@ class DialogTest {
     @Test
     void testTitle() {
         assertEquals("Test Dialog", dialog.getTitle());
+    }
+
+    @Test
+    void testPaletteIsBlue() {
+        assertSame(WindowPalette.BLUE, dialog.getPalette());
+    }
+
+    @Test
+    void testNotResizable() {
+        assertFalse(dialog.isResizable());
     }
 }

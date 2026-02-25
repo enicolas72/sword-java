@@ -28,7 +28,6 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`Canvas`** — Transparent container for Widget children stored in `LinkedList<Widget>`; dispatches events in reverse (topmost first) z-order
 - **`Window`** — Overlapping window: left sidebar (drag grip + optional close button), outer resize border; internal `Canvas`; `bringToFront()` / `remove()`. Options: `setResizable(bool)` (thick border + resize handles vs. 1-px outline), `setClosable(bool)` (show/hide × button), `setPalette(WindowPalette)` (colour scheme for this window and all its widgets). `setOnResize(Runnable)` callback fired on resize. `draw()` injects the window's palette into the `PaintContext` before delegating to `super.draw()`, `canvas.draw()`, and `drawOverlay()` so the entire hierarchy uses the same palette automatically.
 - **`Screen`** — Plain class (not a `ScreenArea`): manages `LinkedList<Window>` with z-ordering; dispatches events topmost-first; routes unhandled commands to the registered `IntPredicate` command handler. Windows hold a direct `screen` reference (`Window.getScreen()`) set by `Screen.add()`; `Screen` is never in the `ScreenArea.father` chain. Application-level commands (those not consumed by any window) are queued in `pendingCommands` and drained by `processPendingCommands()` from the main loop — outside GLFW callbacks — so that modal handlers like `execDialog()` can safely pump the GLFW event loop.
-- **`TColors`** — Static colour constants (all defined by explicit RGB; no Java `Color.*` constants). Used for `DESKTOP_BG` and miscellaneous colours; window/widget chrome colours are provided by `WindowPalette`.
 - **`WindowPalette`** — Set of five coordinated colours (`black`, `dark`, `medium`, `face`, `white`) that defines the visual appearance of a window and all its widgets. Three pre-built instances: `STANDARD` (neutral grays, default), `GREEN` (slightly green-tinted, used by Menu/MenuChoice), `BLUE` (slightly blue-tinted, used by Dialog). Assigned via `Window.setPalette()`; injected into `PaintContext` by `Window.draw()` and propagated automatically through `withOrigin()`.
 - **`PaintContext`** — `Graphics2D` wrapper with local-coordinate translation via `withOrigin(Point)` and palette propagation via `withPalette(WindowPalette)`; covers draw/fill/clip/image primitives. `palette()` getter lets every `paint()` method read `black/dark/medium/face/white` without any static colour reference.
 - **`Application`** — Application shell (plain class, not a ScreenArea): owns a `Screen` and a `LwjglDriver`; extend and override `createMenuChoices()` + `handleCommand()`
@@ -54,10 +53,11 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`StandardButtons`** — Factory for standard OK / Cancel / Yes / No button instances
 - **`Scrollbar`** — Port of `TLift`: H/V scrollbar with arrow buttons, thumb drag, page click; `setRange(contentSize, viewSize)`, `getPosition()`, `setOnChange(Runnable)`. Drag capture: `mouseLUp`/`mouseMove` return true while dragging even outside bounds.
 - **`Scroller`** — Port of `TScroller`: scrollable viewport backed by a viewport-sized `BufferedImage`. Virtual content size (governs scrollbar range) is independent of the buffer. Mouse events are forwarded as viewport-local coordinates. Public API: `setContentSize`, `setScrollPosition`, `getScrollX/Y`, `setOnScroll`, `resize(newViewW, newViewH)` (live viewport resize).
+- **`LatexWidget`** — Displays a LaTeX formula string rendered by JLaTeXMath. Rendering is lazy (first paint) and cached in a `BufferedImage`; the cache is invalidated by `setLatex()` or `setFontSize()`. Text colour is read from `ctx.palette().black`, so the formula automatically adapts to the window's colour scheme. The rendered image is centred within the widget bounds. Requires `org.scilab.forge:jlatexmath` on the classpath.
 
 ### `net.eric_nicolas.sword.samples`
 
-- **`Hello`** — Multiple overlapping draggable windows with a custom `THello` widget drawing "Hello World!"
+- **`Hello`** — Multiple overlapping draggable windows; each window contains a `LatexWidget` rendering the Gaussian integral formula
 - **`Dialog`** — Demonstrates `Dialog`, `Button`, `CheckBox`, `RadioBox`, `GroupBox`, `EditLine`, `Label`
 - **`Mandel`** — Mandelbrot fractal viewer with zoom + pan. `MandelWidget` renders only the current viewport into a `BufferedImage`, tracking `zoom` and `offsetX/Y`. Virtual world size is fixed at `baseW × baseH` (set at construction) and scales with zoom (`virtualW = baseW * zoom`), so resizing the window reveals more of the complex plane rather than stretching the view. Left-click zooms in 2× (virtual world doubles, thumb halves); right-click undoes zoom. Wired to `Scroller` via `onZoomChange` / `onScroll` callbacks so scrollbars always reflect zoom level and enable full panning.
 
@@ -69,7 +69,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 | Aspect | C++ Original | Java Port |
 |--------|-------------|-----------|
-| Naming | All classes T-prefixed | Only `TColors` keeps T prefix; others use plain names (`ScreenArea`, `Application`, …) |
+| Naming | All classes T-prefixed | Plain names used everywhere: `ScreenArea`, `Application`, `WindowPalette`, … No T-prefixed classes remain |
 | Tree structure | TAtom: `_Next/_Previous/_Son/_Father` sibling chain | Only `father` parent ref in ScreenArea; children in `LinkedList` |
 | Child storage | TAtom linked tree | `LinkedList<Widget>` in Canvas, `LinkedList<Window>` in Screen |
 | Event tables | C++ macros `DEFINE_EVENTS_TABLE` | Virtual method overrides in ScreenArea subclasses |
@@ -89,7 +89,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 1. **No TAtom**: The linked sibling tree is removed. Children live in explicit `LinkedList` containers in Canvas and Screen.
 2. **TObject merged into ScreenArea**: The former mechanism/graphics split is collapsed. `ScreenArea` is the single root for all visual objects; it holds `father`, `status`, event dispatch, bounds, and drawing.
-3. **Application is a plain class**: Not a ScreenArea subclass. Owns a `Screen` and an `AwtDriver`; registers command/hotkey handlers via lambdas.
+3. **Application is a plain class**: Not a ScreenArea subclass. Owns a `Screen` and a `LwjglDriver`; registers command/hotkey handlers via lambdas.
 4. **Driver isolated in `ui.driver`**: `LwjglDriver` holds the GLFW window and OpenGL compositor. `EventLwjglAdapter` translates GLFW callbacks. No LWJGL/AWT imports outside this package.
 5. **Screen is not a ScreenArea**: Screen sits above the ScreenArea hierarchy. `ScreenArea.father` terminates at the top-level Window (father = null). Windows hold a direct `Screen` reference (`Window.getScreen()`) used for window management and command routing.
 6. **Parent reference only**: `ScreenArea.father` enables coordinate translation and event routing within the window hierarchy, but no sibling navigation.
@@ -121,6 +121,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - ✅ Scroller (viewport buffer, zoom-aware content/scrollbar sync)
 - ✅ Mandel sample (fractal, zoom history, pan with scrollbars)
 - ✅ Window palette system (`WindowPalette`: STANDARD / GREEN / BLUE; propagated via PaintContext)
+- ✅ LatexWidget (JLaTeXMath rendering, lazy cache, palette-aware text colour)
 
 ## Known Limitations
 
@@ -136,24 +137,33 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 ## Test Coverage
 
-7 test classes, 54 tests (JUnit 5):
+16 test classes, 164 tests (JUnit 5):
 
 | Test Class | What It Tests |
 |------------|--------------|
 | `PointTest` | Constructor, copy, arithmetic |
 | `RectTest` | Constructors, geometry ops, intersect/union |
-| `ScreenAreaTest` | Bounds, absolute position with parent chain, contains, visibility, status flags |
+| `ScreenAreaTest` | Bounds, absolute position with parent chain, contains(Point), visibility, status flags, father reference |
+| `CanvasTest` | Child widget management, parent wiring, unmodifiable list, widget order |
+| `WindowPaletteTest` | Colour values for STANDARD/GREEN/BLUE, custom constructor, tint direction |
+| `WindowTest` | Title, palette, resizable/closable flags, content dimensions, canvas sync on bounds change |
+| `ScreenTest` | Desktop colour, add/remove/bringToFront, screen reference wiring, quitting flag, pending command queue |
 | `CheckBoxTest` | Checked state, bitmask groups, disabled state |
 | `TRadioBoxTest` | Mutual exclusion, getValue, disabled state |
-| `EditLineTest` | setText, max length, null handling |
-| `DialogTest` | Result codes (OK/Cancel/Yes/No), title |
+| `EditLineTest` | setText, max length, null handling, enabled/disabled |
+| `DialogTest` | Result codes (OK/Cancel/Yes/No), title, BLUE palette, non-resizable |
+| `ButtonTest` | Text, null default, enabled/disabled, bounds |
+| `MenuTest` | GREEN palette, not closable/resizable, choices list |
+| `GroupBoxTest` | Title text, value field, null title, all constructors |
+| `ScrollbarTest` | Initial state, H/V dimensions, setRange clamping, setPosition clamping |
+| `LatexWidgetTest` | getLatex/setLatex, getFontSize/setFontSize, bounds, visibility |
 
 ---
 
 ## File Statistics
 
-- Java source files: 35 (src/main)
-- Test files: 7 (src/test)
-- Total tests: 54
+- Java source files: 36 (src/main)
+- Test files: 16 (src/test)
+- Total tests: 164
 - Packages: 6 (ui, ui.events, ui.base, ui.widgets, ui.driver, samples)
-- Classes: 35
+- Classes: 36

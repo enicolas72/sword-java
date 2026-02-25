@@ -35,11 +35,11 @@ net.eric_nicolas.sword.ui              → Point, Rect
 net.eric_nicolas.sword.ui.events       → Event, EventMouse, EventKeyboard, EventCommand
 net.eric_nicolas.sword.ui.driver       → LwjglDriver, EventLwjglAdapter  (all LWJGL/GLFW coupling here)
 net.eric_nicolas.sword.ui.base         → ScreenArea, Widget, Window, Canvas,
-                                         Screen, TColors, PaintContext, Application
+                                         Screen, WindowPalette, PaintContext, Application
 net.eric_nicolas.sword.ui.widgets      → Button, CheckBox, RadioBox, GroupBox,
                                          EditLine, Label, Menu, MenuChoice,
                                          Dialog, StandardButtons, AbstractButton,
-                                         ItemBox, Scrollbar, Scroller
+                                         ItemBox, Scrollbar, Scroller, LatexWidget
 net.eric_nicolas.sword.samples         → Hello, Dialog, Mandel (sample applications)
 ```
 
@@ -66,8 +66,8 @@ net.eric_nicolas.sword.samples         → Hello, Dialog, Mandel (sample applica
    - Widget-specific boolean state uses plain fields instead of flags: `Widget.enabled`, `Menu.mainMenu`, `MenuChoice.separator`, `Window.resizable`, `Window.closable`
 
 4. **Naming:**
-   - Core classes: `ScreenArea`, `Application`, `TColors` (TColors keeps its T prefix as a pure constants class)
-   - Gadget classes use plain names: `Button`, `Menu`, `Dialog`, `EditLine`, `Scrollbar`, etc.
+   - Core classes use plain names: `ScreenArea`, `Application`, `WindowPalette`, `Screen`, etc. — no T-prefixed classes remain
+   - Gadget classes use plain names: `Button`, `Menu`, `Dialog`, `EditLine`, `Scrollbar`, `LatexWidget`, etc.
    - Java conventions: camelCase for methods/fields, UPPER_CASE for constants
 
 5. **Driver Integration:**
@@ -115,8 +115,9 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 ✅ Modal dialog event loop (`execDialog()` — GLFW-based mini-loop via `Screen.frameStep`)
 ✅ Scrollbar (TLift port): arrow buttons, thumb drag, page click, H/V orientations
 ✅ Scroller (TScroller port): viewport-sized buffer, zoom-aware content/scrollbar sync; `resize()` for live viewport resize
-✅ Sample applications: Hello, Dialog (with working modal dialog), Mandel (Mandelbrot fractal viewer with zoom + pan; resize reveals more of the plane)
-✅ ~54 unit tests
+✅ Sample applications: Hello (LatexWidget), Dialog (with working modal dialog), Mandel (Mandelbrot fractal viewer with zoom + pan; resize reveals more of the plane)
+✅ LatexWidget — renders a LaTeX formula via JLaTeXMath; lazy cached `BufferedImage`; text colour from `ctx.palette().black`
+✅ 164 unit tests (16 test classes)
 
 **Deferred:**
 - TGauge (progress bar)
@@ -144,6 +145,8 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 | libgrx20 graphics calls | Java2D `Graphics2D` off-screen + LWJGL/OpenGL compositor (isolated in `ui.driver`) |
 | `TLift` | `Scrollbar` |
 | `TScroller` | `Scroller` |
+| Static colour constants (`TColors`) | Removed; colours defined inline as `new Color(r,g,b)` in `WindowPalette`; desktop background in `Screen.DESKTOP_BG` |
+| Formula/text rendering (none in original) | `LatexWidget` — renders LaTeX via JLaTeXMath into a cached `BufferedImage` |
 
 **Graphics / Driver Layer:**
 - `LwjglDriver` owns the GLFW window and OpenGL 3.3 compositor; renders each S.W.O.R.D `Window` as a textured quad (per-window `BufferedImage` → OpenGL texture, uploaded every frame)
@@ -169,9 +172,17 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 - Palette is set on a `Window` via `setPalette(WindowPalette)`; `Menu.init()` sets `GREEN`, `Dialog` constructor sets `BLUE`
 - `Window.draw()` injects the palette into the context with `ctx.withPalette(palette)` before delegating to `super.draw()`, `canvas.draw()`, and `drawOverlay()` — every widget in the hierarchy automatically receives the correct palette
 - `PaintContext.withOrigin()` copies the palette field, so it propagates without any extra wiring
-- All widget `paint()` methods use `ctx.palette().dark` / `.face` / `.black` etc. instead of `TColors` constants
-- `ScreenArea.draw()` uses `ctx.palette().face` as the default background fill when `bgColor == null`; explicit `setBackgroundColor()` still overrides when needed (e.g., for non-palette colours)
-- `TColors` is kept for `DESKTOP_BG` and miscellaneous colours; all its constants are defined by explicit RGB
+- All widget `paint()` methods use `ctx.palette().dark` / `.face` / `.black` etc.; no static colour constants anywhere
+- `ScreenArea.draw()` uses `ctx.palette().face` as the default background fill when `bgColor == null`; explicit `setBackgroundColor()` still overrides when needed
+- Desktop background colour is `Screen.DESKTOP_BG = new Color(35, 50, 76)`, defined locally in `Screen`; `LwjglDriver` reads it for the OpenGL clear colour
+
+**LatexWidget:**
+- Extends `Widget`; renders a LaTeX source string via `org.scilab.forge.jlatexmath` (JLaTeXMath)
+- Rendering is lazy and cached: `paint()` renders to a `BufferedImage` on first call, or when the formula/colour changes; the cache is invalidated by `setLatex()` / `setFontSize()`
+- Text colour is taken from `ctx.palette().black` so the formula adapts to the window's colour scheme
+- The rendered image is centred within the widget bounds; no stretching
+- Declared exceptions from JLaTeXMath are caught silently; `cache` stays null and nothing is drawn
+- JLaTeXMath works in headless mode (`-Djava.awt.headless=true`) because it uses Java2D internally
 
 **Scrollbar / Scroller design:**
 - `Scrollbar` renders its own arrow buttons and thumb; handles drag capture (returns true from `mouseMove`/`mouseLUp` while dragging, even outside bounds)

@@ -49,4 +49,17 @@ class EditLineTest {
         edit.setText("");
         assertEquals("", edit.getText());
     }
+
+    @Test
+    void testInitiallyEnabled() {
+        assertTrue(edit.isEnabled());
+    }
+
+    @Test
+    void testSetEnabled() {
+        edit.setEnabled(false);
+        assertFalse(edit.isEnabled());
+        edit.setEnabled(true);
+        assertTrue(edit.isEnabled());
+    }
 }

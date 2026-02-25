@@ -14,10 +14,11 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 - Custom widget painting (ScreenArea-based drawing areas)
 - Event system (mouse, keyboard, commands) routed through object hierarchy
 - Gadgets: Button, CheckBox, RadioBox, GroupBox, EditLine, Label, Menu, MenuChoice, Dialog, Scrollbar, Scroller
+- **LatexWidget** — displays a LaTeX formula rendered by JLaTeXMath (lazy cached, palette-aware)
 - **Window palette system** — three colour schemes: STANDARD (gray), GREEN (Menu/MenuChoice), BLUE (Dialog); propagates automatically via `PaintContext`
 - **Modal dialog event loop** (`execDialog()` — GLFW-based mini-loop, fully functional)
-- Sample applications: Hello (custom windows), Dialog (full gadget demo), Mandel (Mandelbrot viewer with zoom + scrollbars)
-- 54 unit tests covering geometry, object state, and gadget behavior
+- Sample applications: Hello (LatexWidget formula), Dialog (full gadget demo), Mandel (Mandelbrot viewer with zoom + scrollbars)
+- 164 unit tests (16 test classes) covering geometry, palette, window layout, screen management, and gadget behavior
 
 ### What's deferred
 
@@ -35,10 +36,10 @@ src/main/java/net/eric_nicolas/sword/
 │   ├── events/       - Event, EventMouse, EventKeyboard, EventCommand
 │   ├── driver/       - LwjglDriver, EventLwjglAdapter  (all LWJGL/GLFW coupling here)
 │   ├── base/         - Core layer: ScreenArea, Widget, Canvas, Window, Screen,
-│   │                   TColors, PaintContext, Application
+│   │                   WindowPalette, PaintContext, Application
 │   └── widgets/      - UI components: Button, CheckBox, RadioBox, GroupBox,
 │                       EditLine, Label, Menu, MenuChoice, Dialog, StandardButtons,
-│                       AbstractButton, ItemBox, Scrollbar, Scroller
+│                       AbstractButton, ItemBox, Scrollbar, Scroller, LatexWidget
 └── samples/          - Example applications (Hello, Dialog, Mandel)
 ```
 
@@ -53,6 +54,7 @@ The original C++ source is in `210_original/`.
 - Java 21+
 - Maven 3.6+
 - LWJGL 3 (declared in pom.xml; downloaded automatically by Maven)
+- JLaTeXMath 1.0.7 (declared in pom.xml; downloaded automatically by Maven)
 
 ### With Maven
 
