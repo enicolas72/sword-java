@@ -19,7 +19,6 @@
         <maven.compiler.target>21</maven.compiler.target>
         <maven.compiler.release>21</maven.compiler.release>
         <lwjgl.version>3.3.3</lwjgl.version>
-        <!-- arm64 (Apple Silicon). Change to natives-macos for Intel Mac. -->
         <lwjgl.natives>natives-macos-arm64</lwjgl.natives>
     </properties>
 
@@ -104,8 +103,6 @@
                     <mainClass>net.eric_nicolas.sword.samples.Hello</mainClass>
                     <jvmArgs>
                         <jvmArg>-XstartOnFirstThread</jvmArg>
-                        <!-- Prevent AWT LWCToolkit from hijacking NSApp events on macOS -->
-                        <jvmArg>-Djava.awt.headless=true</jvmArg>
                     </jvmArgs>
                 </configuration>
             </plugin>

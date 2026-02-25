@@ -346,19 +346,19 @@ public class LwjglDriver {
         glfwSetCursorPosCallback(glfwWindow, (win, x, y) -> {
             mouseX = x;
             mouseY = y;
-            EventMouse ev = GlfwEventAdapter.mouseMove(x, y, heldButtons);
+            EventMouse ev = EventLwjglAdapter.mouseMove(x, y, heldButtons);
             screen.handleEvent(ev);
         });
 
         glfwSetMouseButtonCallback(glfwWindow, (win, button, action, mods) -> {
             EventMouse ev;
             if (action == GLFW_PRESS) {
-                ev = GlfwEventAdapter.mouseDown(button, mouseX, mouseY, mods);
+                ev = EventLwjglAdapter.mouseDown(button, mouseX, mouseY, mods);
                 if (button == GLFW_MOUSE_BUTTON_LEFT)   heldButtons |= EventMouse.MB_LEFT;
                 if (button == GLFW_MOUSE_BUTTON_RIGHT)  heldButtons |= EventMouse.MB_RIGHT;
                 if (button == GLFW_MOUSE_BUTTON_MIDDLE) heldButtons |= EventMouse.MB_MIDDLE;
             } else {
-                ev = GlfwEventAdapter.mouseUp(button, mouseX, mouseY, mods);
+                ev = EventLwjglAdapter.mouseUp(button, mouseX, mouseY, mods);
                 if (button == GLFW_MOUSE_BUTTON_LEFT)   heldButtons &= ~EventMouse.MB_LEFT;
                 if (button == GLFW_MOUSE_BUTTON_RIGHT)  heldButtons &= ~EventMouse.MB_RIGHT;
                 if (button == GLFW_MOUSE_BUTTON_MIDDLE) heldButtons &= ~EventMouse.MB_MIDDLE;
@@ -368,12 +368,12 @@ public class LwjglDriver {
 
         glfwSetKeyCallback(glfwWindow, (win, key, scancode, action, mods) -> {
             if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-                EventKeyboard ev = GlfwEventAdapter.keyDown(key, '\0', mods);
+                EventKeyboard ev = EventLwjglAdapter.keyDown(key, '\0', mods);
                 if (ev == null) return;
                 if (hotKeyHandler != null && hotKeyHandler.test(ev.keyCode)) return;
                 screen.handleEvent(ev);
             } else if (action == GLFW_RELEASE) {
-                EventKeyboard ev = GlfwEventAdapter.keyUp(key, mods);
+                EventKeyboard ev = EventLwjglAdapter.keyUp(key, mods);
                 if (ev != null) screen.handleEvent(ev);
             }
         });

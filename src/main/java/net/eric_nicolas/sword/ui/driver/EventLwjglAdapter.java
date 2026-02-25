@@ -12,7 +12,7 @@ import static org.lwjgl.glfw.GLFW.*;
  * java.awt.event.KeyEvent VK_A–VK_Z and VK_0–VK_9, so widgets that compare
  * keyCode to those constants continue to work unchanged.
  */
-public class GlfwEventAdapter {
+public class EventLwjglAdapter {
 
     // ===== Mouse =====
 
