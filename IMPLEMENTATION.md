@@ -19,7 +19,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`EventMouse`** — Mouse event: `where` (Point), button mask, modifiers; `withOffset(dx,dy)` for coordinate translation
 - **`EventKeyboard`** — Keyboard event: key code, char, modifiers
 - **`EventCommand`** — Command event: `commandId` for routing UI actions up the hierarchy
-- **`GlfwEventAdapter`** — Converts GLFW raw input callbacks → S.W.O.R.D `EventMouse` / `EventKeyboard`
+- **`EventLwjglAdapter`** — Converts GLFW raw input callbacks → S.W.O.R.D `EventMouse` / `EventKeyboard`
 
 ### `net.eric_nicolas.sword.ui.base`
 
@@ -35,7 +35,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 ### `net.eric_nicolas.sword.ui.driver`
 
 - **`LwjglDriver`** — GLFW window + OpenGL 3.3 compositor. Each `Window` renders into its own `BufferedImage` (via `Window.renderToBuffer()` / Java2D); `LwjglDriver` uploads these as OpenGL textures and composites them in z-order each frame using a textured-quad shader. Provides `forceRepaint()` (no-op; continuous loop), `quit()`, and a `frameStep` `Runnable` registered with `Screen` for modal dialog loops. Requires `-XstartOnFirstThread` and `-Djava.awt.headless=true` on macOS.
-- **`GlfwEventAdapter`** — Converts GLFW raw input (cursor pos, mouse button, key, char callbacks) → S.W.O.R.D `EventMouse` / `EventKeyboard`. GLFW key codes 65–90 and 48–57 match Java `VK_` values directly.
+- **`EventLwjglAdapter`** — Converts GLFW raw input (cursor pos, mouse button, key, char callbacks) → S.W.O.R.D `EventMouse` / `EventKeyboard`. GLFW key codes 65–90 and 48–57 match Java `VK_` values directly.
 
 ### `net.eric_nicolas.sword.ui.widgets`
 
@@ -73,7 +73,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 | Child storage | TAtom linked tree | `LinkedList<Widget>` in Canvas, `LinkedList<Window>` in Screen |
 | Event tables | C++ macros `DEFINE_EVENTS_TABLE` | Virtual method overrides in ScreenArea subclasses |
 | Graphics backend | libgrx20 calls | Java2D `Graphics2D` off-screen + LWJGL/OpenGL compositor |
-| Driver coupling | N/A | Isolated in `ui.driver` (LwjglDriver + GlfwEventAdapter) |
+| Driver coupling | N/A | Isolated in `ui.driver` (LwjglDriver + EventLwjglAdapter) |
 | Data exchange | `SetData()/GetData()/DataSize()` | Removed |
 | `TShell` | Trivial TObject subclass | Removed; `Application` is a plain class |
 | `TObject` + `TZone` | Separate mechanism/graphics layers | Merged into `ScreenArea` |
@@ -89,7 +89,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 1. **No TAtom**: The linked sibling tree is removed. Children live in explicit `LinkedList` containers in Canvas and Screen.
 2. **TObject merged into ScreenArea**: The former mechanism/graphics split is collapsed. `ScreenArea` is the single root for all visual objects; it holds `father`, `status`, event dispatch, bounds, and drawing.
 3. **Application is a plain class**: Not a ScreenArea subclass. Owns a `Screen` and an `AwtDriver`; registers command/hotkey handlers via lambdas.
-4. **Driver isolated in `ui.driver`**: `LwjglDriver` holds the GLFW window and OpenGL compositor. `GlfwEventAdapter` translates GLFW callbacks. No LWJGL/AWT imports outside this package.
+4. **Driver isolated in `ui.driver`**: `LwjglDriver` holds the GLFW window and OpenGL compositor. `EventLwjglAdapter` translates GLFW callbacks. No LWJGL/AWT imports outside this package.
 5. **Screen is not a ScreenArea**: Screen sits above the ScreenArea hierarchy. `ScreenArea.father` terminates at the top-level Window (father = null). Windows hold a direct `Screen` reference (`Window.getScreen()`) used for window management and command routing.
 6. **Parent reference only**: `ScreenArea.father` enables coordinate translation and event routing within the window hierarchy, but no sibling navigation.
 7. **Method-override event dispatch**: `ScreenArea.handleEvent` dispatches via a `switch` to overridable methods; no macro tables.
@@ -106,7 +106,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - ✅ Window creation, management, z-ordering, drag
 - ✅ Overlapping window rendering
 - ✅ Custom zone/widget painting
-- ✅ GLFW input event conversion (GlfwEventAdapter)
+- ✅ GLFW input event conversion (EventLwjglAdapter)
 - ✅ OpenGL compositing (LwjglDriver — per-window BufferedImage textures)
 - ✅ Modal dialog event loop (execDialog — GLFW-based mini-loop)
 - ✅ Button (standard push button, 3D pressed effect)

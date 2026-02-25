@@ -33,7 +33,7 @@ GLFW must run on the AppKit main thread (`-XstartOnFirstThread`) and Java2D must
 ```
 net.eric_nicolas.sword.ui              → Point, Rect
 net.eric_nicolas.sword.ui.events       → Event, EventMouse, EventKeyboard, EventCommand
-net.eric_nicolas.sword.ui.driver       → LwjglDriver, GlfwEventAdapter  (all LWJGL/GLFW coupling here)
+net.eric_nicolas.sword.ui.driver       → LwjglDriver, EventLwjglAdapter  (all LWJGL/GLFW coupling here)
 net.eric_nicolas.sword.ui.base         → ScreenArea, Widget, Window, Canvas,
                                          Screen, TColors, PaintContext, Application
 net.eric_nicolas.sword.ui.widgets      → Button, CheckBox, RadioBox, GroupBox,
@@ -73,7 +73,7 @@ net.eric_nicolas.sword.samples         → Hello, Dialog, Mandel (sample applica
 5. **Driver Integration:**
    - All LWJGL/GLFW code lives in `ui.driver`; the framework core has zero LWJGL imports (AWT imports allowed only in `ui.driver` and `Window.renderToBuffer`)
    - `LwjglDriver` owns the GLFW window and OpenGL compositor; runs the main event+render loop
-   - `GlfwEventAdapter` converts GLFW callbacks → SWORD `EventMouse`/`EventKeyboard`
+   - `EventLwjglAdapter` converts GLFW callbacks → SWORD `EventMouse`/`EventKeyboard`
    - `Application` wires things up via lambdas: `screen.setCommandHandler(this::handleCommand)` and a hotkey predicate passed to `LwjglDriver`
    - `PaintContext` wraps `Graphics2D`; all drawing goes through it (off-screen, into `Window.renderBuffer`)
    - `LwjglDriver.forceRepaint()` is a no-op; the continuous render loop redraws every frame
@@ -150,7 +150,7 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 - `Screen` is a plain class (not a `ScreenArea`) that holds `LinkedList<Window>`; each `Window` owns a `Canvas` holding `Widget` children
 - Windows hold a direct `Window.screen` reference (set by `Screen.add()`); `Window.getScreen()` is used for window management and command dispatch
 - The `ScreenArea.father` chain terminates at the top-level `Window` (father = null); Screen is never in the father chain
-- Mouse/keyboard events wrapped by `GlfwEventAdapter` (in `ui.driver`) and dispatched to `Screen.handleEvent()` from GLFW callbacks
+- Mouse/keyboard events wrapped by `EventLwjglAdapter` (in `ui.driver`) and dispatched to `Screen.handleEvent()` from GLFW callbacks
 - Command dispatch from widgets: `sendCommand()` walks the `father` chain to the nearest `Window`, then calls `window.getScreen().handleEvent(cmd)`. Commands handled by a `Window` (e.g., `CM_OK` by `Dialog`) are consumed immediately within the GLFW callback. Commands unhandled by any window are **queued** in `Screen.pendingCommands` and dispatched to `Application.handleCommand` by `processPendingCommands()` between frames.
 - Global menu hotkeys are intercepted by `Application`'s hotkey predicate before desktop dispatch; matched via `Menu.processHotKey(keyCode)` which calls `MenuChoice.sendCommand()`
 

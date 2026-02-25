@@ -32,7 +32,7 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 src/main/java/net/eric_nicolas/sword/
 ├── ui/               - Geometry (Point, Rect)
 │   ├── events/       - Event, EventMouse, EventKeyboard, EventCommand
-│   ├── driver/       - LwjglDriver, GlfwEventAdapter  (all native/AWT coupling here)
+│   ├── driver/       - LwjglDriver, EventLwjglAdapter  (all LWJGL/GLFW coupling here)
 │   ├── base/         - Core layer: ScreenArea, Widget, Canvas, Window, Screen,
 │   │                   TColors, PaintContext, Application
 │   └── widgets/      - UI components: Button, CheckBox, RadioBox, GroupBox,
@@ -101,14 +101,14 @@ ui.base/          (ScreenArea – flags, parent ref, event dispatch, drawing)
     ↓
 ui/ + ui.events/  (Point, Rect, Event hierarchy)
     ↓
-ui.driver/        (LwjglDriver, GlfwEventAdapter – native isolation layer)
+ui.driver/        (LwjglDriver, EventLwjglAdapter – native isolation layer)
     ↓
 LWJGL 3 / GLFW / OpenGL 3.3 + Java2D off-screen (replaces libgrx20)
 ```
 
 **Rendering**: each `Window` renders its visual tree into its own `BufferedImage` via Java2D. `LwjglDriver` uploads these as OpenGL textures and composites them in z-order each frame using a textured-quad shader.
 
-**Events**: GLFW callbacks translate raw input to S.W.O.R.D events via `GlfwEventAdapter`, then dispatch through `Screen.handleEvent()`. Application-level commands are deferred to `Screen.processPendingCommands()` (called between frames, outside GLFW callbacks) so that handlers such as `execDialog()` can safely pump the GLFW event loop.
+**Events**: GLFW callbacks translate raw input to S.W.O.R.D events via `EventLwjglAdapter`, then dispatch through `Screen.handleEvent()`. Application-level commands are deferred to `Screen.processPendingCommands()` (called between frames, outside GLFW callbacks) so that handlers such as `execDialog()` can safely pump the GLFW event loop.
 
 Note: `Screen` is a standalone class (not a `ScreenArea` subclass). It sits alongside the hierarchy and holds `Window` instances; windows reference their Screen directly via `Window.getScreen()`.
 
