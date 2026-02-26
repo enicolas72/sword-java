@@ -1,5 +1,7 @@
 package net.eric_nicolas.sword.ui.widgets;
 
+import net.eric_nicolas.sword.ui.Cache;
+import net.eric_nicolas.sword.ui.Duple;
 import net.eric_nicolas.sword.ui.base.PaintContext;
 import net.eric_nicolas.sword.ui.base.Widget;
 
@@ -27,21 +29,25 @@ import java.awt.image.BufferedImage;
  * are emitted as raw math, and the whole thing is placed inside
  * {@code \begin{array}{l}...\end{array}} so newlines render as row breaks.
  *
- * Rendering is lazy (first paint) and cached in a {@link BufferedImage}.
- * Calling {@link #setTex(String)} or {@link #setFontSize(float)} invalidates
- * the cache and forces a re-render on the next paint.
+ * Rendered images are stored in a bounded {@link Cache} keyed by
+ * {@code (tex, color)}.  The cache holds up to {@value #CACHE_SIZE} entries
+ * with FIFO eviction, so colour-scheme switches never require a full re-render
+ * of the same formula.  Calling {@link #setFontSize(float)} clears the whole
+ * cache because the font size affects every entry.
  *
  * The text colour is taken from {@code ctx.palette().black} so the output
  * automatically adapts to the window's colour scheme.
  */
 public class TexWidget extends Widget {
 
+    /** Maximum number of (tex, color) → image entries kept in the cache. */
+    private static final int CACHE_SIZE = 8;
+
     private String tex;
     private float fontSize;
 
-    // Cached render; invalidated when tex, fontSize, or colour changes
-    private BufferedImage cache;
-    private Color lastColor;
+    private final Cache<Duple<String, Color>, BufferedImage> cache =
+            new Cache<>(CACHE_SIZE);
 
     /**
      * @param x        position (local to parent)
@@ -60,18 +66,19 @@ public class TexWidget extends Widget {
     @Override
     protected void paint(PaintContext ctx) {
         Color textColor = ctx.palette().black;
+        Duple<String, Color> key = new Duple<>(tex, textColor);
 
-        // Re-render when content or text colour has changed
-        if (cache == null || !textColor.equals(lastColor)) {
-            cache     = render(textColor);
-            lastColor = textColor;
+        BufferedImage img = cache.get(key);
+        if (img == null) {
+            img = render(textColor);
+            if (img != null) cache.put(key, img);
         }
 
-        if (cache != null) {
+        if (img != null) {
             // Centre the rendered image within the widget bounds
-            int dx = (bounds.width()  - cache.getWidth())  / 2;
-            int dy = (bounds.height() - cache.getHeight()) / 2;
-            ctx.drawImage(cache, Math.max(0, dx), Math.max(0, dy));
+            int dx = (bounds.width()  - img.getWidth())  / 2;
+            int dy = (bounds.height() - img.getHeight()) / 2;
+            ctx.drawImage(img, Math.max(0, dx), Math.max(0, dy));
         }
     }
 
@@ -169,15 +176,23 @@ public class TexWidget extends Widget {
 
     public String getTex() { return tex; }
 
+    /**
+     * Change the displayed TeX content.
+     * Old (tex, color) cache entries are not removed immediately; they will be
+     * evicted by FIFO when the cache fills up.
+     */
     public void setTex(String tex) {
         this.tex = tex;
-        cache = null;
     }
 
     public float getFontSize() { return fontSize; }
 
+    /**
+     * Change the font size.  Clears the entire cache because font size affects
+     * every cached image.
+     */
     public void setFontSize(float fontSize) {
         this.fontSize = fontSize;
-        cache = null;
+        cache.clear();
     }
 }

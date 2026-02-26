@@ -12,6 +12,8 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 - **`Point`** — Immutable 2D point with arithmetic helpers (plus, minus, min, max)
 - **`Rect`** — Rectangle (top-left origin + width/height); intersect, union, contains, grow
+- **`Duple<X, Y>`** — Immutable typed pair; implements `equals` / `hashCode` so it can be used as a map or cache key
+- **`Cache<K, V>`** — Bounded FIFO cache backed by a `LinkedHashMap` with `removeEldestEntry`; configurable `maxSize`; operations: `get`, `put`, `contains`, `size`, `maxSize`, `clear`
 
 ### `net.eric_nicolas.sword.ui.events`
 
@@ -53,7 +55,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`StandardButtons`** — Factory for standard OK / Cancel / Yes / No button instances
 - **`Scrollbar`** — Port of `TLift`: H/V scrollbar with arrow buttons, thumb drag, page click; `setRange(contentSize, viewSize)`, `getPosition()`, `setOnChange(Runnable)`. Drag capture: `mouseLUp`/`mouseMove` return true while dragging even outside bounds.
 - **`Scroller`** — Port of `TScroller`: scrollable viewport backed by a viewport-sized `BufferedImage`. Virtual content size (governs scrollbar range) is independent of the buffer. Mouse events are forwarded as viewport-local coordinates. Public API: `setContentSize`, `setScrollPosition`, `getScrollX/Y`, `setOnScroll`, `resize(newViewW, newViewH)` (live viewport resize).
-- **`TexWidget`** — Displays TeX-formatted content rendered by JLaTeXMath. Input is written in text mode; math content is delimited by `\math{...}` blocks; newlines produce line breaks. The input is converted automatically to a JLaTeXMath-compatible formula (`\begin{array}{l}...\end{array}`). Rendering is lazy (first paint) and cached in a `BufferedImage`; the cache is invalidated by `setTex()` or `setFontSize()`. Text colour is read from `ctx.palette().black`. Requires `org.scilab.forge:jlatexmath` on the classpath.
+- **`TexWidget`** — Displays TeX-formatted content rendered by JLaTeXMath. Input is written in text mode; math content is delimited by `\math{...}` blocks; newlines produce line breaks. The input is converted automatically to a JLaTeXMath-compatible formula (`\begin{array}{l}...\end{array}`). Rendered images are stored in a `Cache<Duple<String, Color>, BufferedImage>` (FIFO, 8 entries) so colour-scheme switches reuse cached renders. `setFontSize()` clears the cache; `setTex()` leaves stale entries for FIFO eviction. Requires `org.scilab.forge:jlatexmath` on the classpath.
 
 ### `net.eric_nicolas.sword.samples`
 
@@ -137,12 +139,14 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 ## Test Coverage
 
-16 test classes, 164 tests (JUnit 5):
+18 test classes, 201 tests (JUnit 5):
 
 | Test Class | What It Tests |
 |------------|--------------|
 | `PointTest` | Constructor, copy, arithmetic |
 | `RectTest` | Constructors, geometry ops, intersect/union |
+| `DupleTest` | Getters, equals/hashCode, null components, use as map key |
+| `CacheTest` | put/get, FIFO eviction, size limit, contains, clear |
 | `ScreenAreaTest` | Bounds, absolute position with parent chain, contains(Point), visibility, status flags, father reference |
 | `CanvasTest` | Child widget management, parent wiring, unmodifiable list, widget order |
 | `WindowPaletteTest` | Colour values for STANDARD/GREEN/BLUE, custom constructor, tint direction |
@@ -162,8 +166,8 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 ## File Statistics
 
-- Java source files: 36 (src/main)
-- Test files: 16 (src/test)
-- Total tests: 164
+- Java source files: 38 (src/main)
+- Test files: 18 (src/test)
+- Total tests: 201
 - Packages: 6 (ui, ui.events, ui.base, ui.widgets, ui.driver, samples)
-- Classes: 36
+- Classes: 38

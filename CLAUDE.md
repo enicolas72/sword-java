@@ -31,7 +31,7 @@ GLFW must run on the AppKit main thread (`-XstartOnFirstThread`) and Java2D must
 ### Package Structure
 
 ```
-net.eric_nicolas.sword.ui              → Point, Rect
+net.eric_nicolas.sword.ui              → Point, Rect, Duple, Cache
 net.eric_nicolas.sword.ui.events       → Event, EventMouse, EventKeyboard, EventCommand
 net.eric_nicolas.sword.ui.driver       → LwjglDriver, EventLwjglAdapter  (all LWJGL/GLFW coupling here)
 net.eric_nicolas.sword.ui.base         → ScreenArea, Widget, Window, Canvas,
@@ -180,7 +180,7 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 - Extends `Widget`; renders TeX-formatted content via `org.scilab.forge.jlatexmath` (JLaTeXMath)
 - Input is written in **text mode**; math content is wrapped in `\math{...}` blocks; newlines produce row breaks
 - The input is converted to a JLaTeXMath formula via `toLatex()`: plain text → `\text{...}`, `\math{...}` → raw math, lines joined with `\\` inside `\begin{array}{l}...\end{array}`
-- Rendering is lazy and cached: `paint()` renders to a `BufferedImage` on first call, or when content/colour changes; the cache is invalidated by `setTex()` / `setFontSize()`
+- Rendered images are stored in a `Cache<Duple<String, Color>, BufferedImage>` (FIFO, 8 entries): cache hits avoid re-rendering the same (tex, colour) pair; `setFontSize()` calls `cache.clear()` since font size affects every entry; `setTex()` does not clear (stale entries are evicted naturally by FIFO)
 - Text colour is taken from `ctx.palette().black` so the output adapts to the window's colour scheme
 - The rendered image is centred within the widget bounds; no stretching
 - Declared exceptions from JLaTeXMath are caught silently; `cache` stays null and nothing is drawn
