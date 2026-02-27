@@ -2,8 +2,7 @@ package net.eric_nicolas.sword.ui.widgets;
 
 import net.eric_nicolas.sword.ui.base.PaintContext;
 
-import java.awt.Font;
-import java.awt.FontMetrics;
+import java.awt.Dimension;
 
 /**
  * TStdButton - Standard button with text label.
@@ -11,48 +10,27 @@ import java.awt.FontMetrics;
 public class Button extends AbstractButton {
 
     protected String text;
-    protected Font buttonFont;
 
-    /**
-     * Default constructor.
-     */
     public Button() {
         this(0, 0, 80, 25, 0, 0, "Button");
     }
 
-    /**
-     * Constructor with position, size, command, and text.
-     */
     public Button(int x, int y, int width, int height, long command, int scanCode, String text) {
         super(x, y, width, height, command, scanCode);
         this.text = text != null ? text : "Button";
-        this.buttonFont = new Font("SansSerif", Font.PLAIN, 12);
     }
 
     @Override
     protected void drawInside(PaintContext ctx, int offset) {
         if (text == null || text.isEmpty()) return;
 
-        // Set text color based on state
         ctx.setColor(!isEnabled() ? ctx.palette().dark : ctx.palette().black);
-
-        // Draw text centered
-        ctx.setFont(buttonFont);
-        FontMetrics fm = ctx.getFontMetrics();
-        int textWidth = fm.stringWidth(text);
-        int textHeight = fm.getHeight();
-
-        int dx = (bounds.width() - textWidth) / 2 + offset;
-        int dy = (bounds.height() + textHeight) / 2 - fm.getDescent() + offset;
+        Dimension sz = ctx.measureText(text);
+        int dx = (bounds.width()  - sz.width)  / 2 + offset;
+        int dy = (bounds.height() - sz.height) / 2 + offset;
         ctx.drawString(dx, dy, text);
     }
 
-    public String getText() {
-        return text;
-    }
-
-    public void setText(String text) {
-        this.text = text;
-    }
+    public String getText() { return text; }
+    public void setText(String text) { this.text = text; }
 }
-

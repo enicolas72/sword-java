@@ -14,6 +14,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`Rect`** — Rectangle (top-left origin + width/height); intersect, union, contains, grow
 - **`Duple<X, Y>`** — Immutable typed pair; implements `equals` / `hashCode` so it can be used as a map or cache key
 - **`Cache<K, V>`** — Bounded FIFO cache backed by a `LinkedHashMap` with `removeEldestEntry`; configurable `maxSize`; operations: `get`, `put`, `contains`, `size`, `maxSize`, `clear`
+- **`TexHelper`** — Static helper that converts text-mode TeX strings to rendered `BufferedImage`s via JLaTeXMath. Input is plain text with optional `\math{...}` inline math blocks; newlines produce line breaks. Conversion pipeline: `toLatex()` wraps text in `\text{...}` and emits math verbatim inside `\begin{array}{l}...\end{array}`. Rendered images are stored in a static `Cache<Duple<Duple<String,Color>,Float>, BufferedImage>` (FIFO, 32 entries) keyed by `(text, color, fontSize)`. Public API: `render(text, color, fontSize)`, `measure(text, fontSize)`, `clearCache()`.
 
 ### `net.eric_nicolas.sword.ui.events`
 
@@ -31,7 +32,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`Window`** — Overlapping window: left sidebar (drag grip + optional close button), outer resize border; internal `Canvas`; `bringToFront()` / `remove()`. Options: `setResizable(bool)` (thick border + resize handles vs. 1-px outline), `setClosable(bool)` (show/hide × button), `setPalette(WindowPalette)` (colour scheme for this window and all its widgets). `setOnResize(Runnable)` callback fired on resize. `draw()` injects the window's palette into the `PaintContext` before delegating to `super.draw()`, `canvas.draw()`, and `drawOverlay()` so the entire hierarchy uses the same palette automatically.
 - **`Screen`** — Plain class (not a `ScreenArea`): manages `LinkedList<Window>` with z-ordering; dispatches events topmost-first; routes unhandled commands to the registered `IntPredicate` command handler. Windows hold a direct `screen` reference (`Window.getScreen()`) set by `Screen.add()`; `Screen` is never in the `ScreenArea.father` chain. Application-level commands (those not consumed by any window) are queued in `pendingCommands` and drained by `processPendingCommands()` from the main loop — outside GLFW callbacks — so that modal handlers like `execDialog()` can safely pump the GLFW event loop.
 - **`WindowPalette`** — Set of five coordinated colours (`black`, `dark`, `medium`, `face`, `white`) that defines the visual appearance of a window and all its widgets. Three pre-built instances: `STANDARD` (neutral grays, default), `GREEN` (slightly green-tinted, used by Menu/MenuChoice), `BLUE` (slightly blue-tinted, used by Dialog). Assigned via `Window.setPalette()`; injected into `PaintContext` by `Window.draw()` and propagated automatically through `withOrigin()`.
-- **`PaintContext`** — `Graphics2D` wrapper with local-coordinate translation via `withOrigin(Point)` and palette propagation via `withPalette(WindowPalette)`; covers draw/fill/clip/image primitives. `palette()` getter lets every `paint()` method read `black/dark/medium/face/white` without any static colour reference.
+- **`PaintContext`** — `Graphics2D` wrapper with local-coordinate translation via `withOrigin(Point)`, palette propagation via `withPalette(WindowPalette)`, and font-size propagation via `withFontSize(float)`. All text is drawn through `TexHelper`: `drawString(x, y, text)` renders text-mode TeX to a `BufferedImage` (top-left at the given coordinates) using the current colour and `fontSize` field (default 12 pt); `measureText(text)` returns the rendered image dimensions for layout. No AWT `Font` or `FontMetrics` exposure.
 - **`Application`** — Application shell (plain class, not a ScreenArea): owns a `Screen` and a `LwjglDriver`; extend and override `createMenuChoices()` + `handleCommand()`
 
 ### `net.eric_nicolas.sword.ui.driver`
@@ -41,25 +42,24 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 ### `net.eric_nicolas.sword.ui.widgets`
 
-- **`Label`** — Non-interactive text label
+- **`Label`** — Non-interactive text label. Text is rendered via `PaintContext.drawString` (→ `TexHelper`) so plain text and `\math{...}` inline math are both supported. `setFontSize(float)` / `getFontSize()` control the JLaTeXMath point size (default 12 pt); centering uses `ctx.measureText()`.
 - **`AbstractButton`** — Base for clickable buttons: 3D raised/pressed frame, scan-code support, command routing
 - **`Button`** — Standard push button with centred text
 - **`ItemBox`** — Base for selection controls (no button frame); click toggles `SF_DOWN`
 - **`CheckBox`** — Checkbox; bitmask integration with `GroupBox` for `getData()`
 - **`RadioBox`** — Radio button; mutually exclusive within `GroupBox`
 - **`GroupBox`** — Container for `CheckBox`/`RadioBox`; manages group `value` and titled frame
-- **`EditLine`** — Single-line text input: cursor, click-to-position, keyboard navigation, max length
-- **`Menu`** — Menu bar (`mainMenu=true`) or dropdown; horizontal/vertical layouts, hotkey support
+- **`EditLine`** — Single-line text input: cursor, click-to-position, keyboard navigation, max length. Cursor x-position computed via `TexHelper.measure(prefix, fontSize).width`.
+- **`Menu`** — Menu bar (`mainMenu=true`) or dropdown; horizontal/vertical layouts, hotkey support. Choice widths computed via `TexHelper.measure()`.
 - **`MenuChoice`** — Menu item: text, hotkey, command; `separator=true` for dividers
 - **`Dialog`** — Window subclass with result codes (`CM_OK`, `CM_CANCEL`, `CM_YES`, `CM_NO`); `execDialog()` runs a GLFW-based modal loop via `Screen.getFrameStep()`. CM_OK/CM_CANCEL are dispatched directly to `Dialog.command()` within GLFW callbacks (not queued), so `dialogResult` is set immediately and the modal loop exits on the next iteration.
 - **`StandardButtons`** — Factory for standard OK / Cancel / Yes / No button instances
 - **`Scrollbar`** — Port of `TLift`: H/V scrollbar with arrow buttons, thumb drag, page click; `setRange(contentSize, viewSize)`, `getPosition()`, `setOnChange(Runnable)`. Drag capture: `mouseLUp`/`mouseMove` return true while dragging even outside bounds.
 - **`Scroller`** — Port of `TScroller`: scrollable viewport backed by a viewport-sized `BufferedImage`. Virtual content size (governs scrollbar range) is independent of the buffer. Mouse events are forwarded as viewport-local coordinates. Public API: `setContentSize`, `setScrollPosition`, `getScrollX/Y`, `setOnScroll`, `resize(newViewW, newViewH)` (live viewport resize).
-- **`TexWidget`** — Displays TeX-formatted content rendered by JLaTeXMath. Input is written in text mode; math content is delimited by `\math{...}` blocks; newlines produce line breaks. The input is converted automatically to a JLaTeXMath-compatible formula (`\begin{array}{l}...\end{array}`). Rendered images are stored in a `Cache<Duple<String, Color>, BufferedImage>` (FIFO, 8 entries) so colour-scheme switches reuse cached renders. `setFontSize()` clears the cache; `setTex()` leaves stale entries for FIFO eviction. Requires `org.scilab.forge:jlatexmath` on the classpath.
 
 ### `net.eric_nicolas.sword.samples`
 
-- **`Hello`** — Multiple overlapping draggable windows; each window contains a `TexWidget` rendering the Gaussian integral formula
+- **`Hello`** — Multiple overlapping draggable windows; each window contains a `Label` (font size 22 pt) rendering "Hello World !" on the first line and the Gaussian integral formula via `\math{...}` on the second line
 - **`Dialog`** — Demonstrates `Dialog`, `Button`, `CheckBox`, `RadioBox`, `GroupBox`, `EditLine`, `Label`
 - **`Mandel`** — Mandelbrot fractal viewer with zoom + pan. `MandelWidget` renders only the current viewport into a `BufferedImage`, tracking `zoom` and `offsetX/Y`. Virtual world size is fixed at `baseW × baseH` (set at construction) and scales with zoom (`virtualW = baseW * zoom`), so resizing the window reveals more of the complex plane rather than stretching the view. Left-click zooms in 2× (virtual world doubles, thumb halves); right-click undoes zoom. Wired to `Scroller` via `onZoomChange` / `onScroll` callbacks so scrollbars always reflect zoom level and enable full panning.
 
@@ -98,8 +98,9 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 7. **Method-override event dispatch**: `ScreenArea.handleEvent` dispatches via a `switch` to overridable methods; no macro tables.
 8. **PaintContext**: Local-coordinate translation is managed in `PaintContext`; callers always draw in their own (0,0)-based coordinate space.
 9. **Window palette propagation**: `Window.draw()` calls `ctx.withPalette(palette)` before passing to `super.draw()`, `canvas.draw()`, and `drawOverlay()`. `PaintContext.withOrigin()` copies the palette, so every `paint()` method in the hierarchy receives `ctx.palette()` with the correct colour scheme — no extra wiring required. All widget paint methods read `ctx.palette().black/dark/medium/face/white` instead of static `TColors` constants.
-10. **Scrollbar drag capture**: Like Window title-bar drag, Scrollbar returns `true` from `mouseMove`/`mouseLUp` while `dragging==true` regardless of contains, so the thumb follows the mouse even outside the bar.
-11. **Scroller viewport buffer**: Content renders at viewport size (not virtual size), so only the visible slice is computed. The scrollbar range tracks the virtual size independently. Scroll offset is forwarded to the content widget via callback.
+10. **TexHelper / PaintContext text pipeline**: All text drawing goes through `TexHelper`. `PaintContext.drawString(x, y, text)` calls `TexHelper.render(text, color, fontSize)` → `BufferedImage` and blits the result top-left at `(x, y)`. `PaintContext.measureText(text)` returns the rendered image size so widgets can compute centering without AWT `Font` or `FontMetrics`. The `fontSize` is carried as a field on `PaintContext`; `withFontSize(float)` returns a derived context (just like `withPalette`). `Label` exposes `setFontSize(float)` so individual labels can override the default 12 pt.
+11. **Scrollbar drag capture**: Like Window title-bar drag, Scrollbar returns `true` from `mouseMove`/`mouseLUp` while `dragging==true` regardless of contains, so the thumb follows the mouse even outside the bar.
+12. **Scroller viewport buffer**: Content renders at viewport size (not virtual size), so only the visible slice is computed. The scrollbar range tracks the virtual size independently. Scroll offset is forwarded to the content widget via callback.
 
 ---
 
@@ -118,12 +119,12 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - ✅ EditLine (text input, cursor, keyboard navigation)
 - ✅ Menu / MenuChoice (hotkeys, separators, H+V layouts)
 - ✅ Dialog (result codes OK/Cancel/Yes/No)
-- ✅ Label
+- ✅ Label (text + `\math{...}` inline formulas via TexHelper; variable font size)
 - ✅ Scrollbar (arrow, thumb drag, page click, H/V)
 - ✅ Scroller (viewport buffer, zoom-aware content/scrollbar sync)
 - ✅ Mandel sample (fractal, zoom history, pan with scrollbars)
 - ✅ Window palette system (`WindowPalette`: STANDARD / GREEN / BLUE; propagated via PaintContext)
-- ✅ TexWidget (JLaTeXMath rendering, lazy cache, palette-aware text colour)
+- ✅ TexHelper (JLaTeXMath rendering, lazy FIFO cache, all text rendered via PaintContext)
 
 ## Known Limitations
 
@@ -160,7 +161,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 | `MenuTest` | GREEN palette, not closable/resizable, choices list |
 | `GroupBoxTest` | Title text, value field, null title, all constructors |
 | `ScrollbarTest` | Initial state, H/V dimensions, setRange clamping, setPosition clamping |
-| `TexWidgetTest` | getLatex/setLatex, getFontSize/setFontSize, bounds, visibility |
+| `LabelTest` | getText/setText, \math{} notation, getFontSize/setFontSize, bounds, visibility |
 
 ---
 

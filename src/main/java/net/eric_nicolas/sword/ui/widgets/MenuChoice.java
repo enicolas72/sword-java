@@ -8,12 +8,11 @@ import net.eric_nicolas.sword.ui.base.Window;
 import net.eric_nicolas.sword.ui.events.EventCommand;
 import net.eric_nicolas.sword.ui.events.EventMouse;
 
-import java.awt.Font;
+import java.awt.Dimension;
 import java.util.List;
 
 /**
  * TMenuChoice - A single menu item with text, hotkey, and command.
- * Lives in a Menu's Canvas.
  */
 public class MenuChoice extends Widget {
 
@@ -26,36 +25,23 @@ public class MenuChoice extends Widget {
     protected int command;
     protected Menu subMenu;
     protected int localScanCode;
-    protected Font menuFont;
 
-    /**
-     * Constructor for separator.
-     */
     public MenuChoice() {
         super(0, 0, 100, 6);
         defaults();
         separator = true;
     }
 
-    /**
-     * Constructor for menu item with command.
-     */
     public MenuChoice(String text, int globalScanCode, int command, int status) {
         super(0, 0, 100, 20);
         defaults();
         init(text, globalScanCode, command, null, status);
     }
 
-    /**
-     * Constructor for menu item with command (default status).
-     */
     public MenuChoice(String text, int globalScanCode, int command) {
         this(text, globalScanCode, command, 0);
     }
 
-    /**
-     * Constructor for menu item with submenu.
-     */
     public MenuChoice(String text, Menu subMenu, int status) {
         super(0, 0, 100, 20);
         defaults();
@@ -63,21 +49,20 @@ public class MenuChoice extends Widget {
     }
 
     protected void defaults() {
-        separator = false;
-        text = null;
-        hotText = null;
-        subMenu = null;
+        separator      = false;
+        text           = null;
+        hotText        = null;
+        subMenu        = null;
         globalScanCode = 0;
-        command = 0;
-        localScanCode = 0;
-        menuFont = new Font("SansSerif", Font.PLAIN, 12);
+        command        = 0;
+        localScanCode  = 0;
     }
 
     protected void init(String text, int globalScanCode, int command, Menu subMenu, int status) {
-        this.text = text;
+        this.text           = text;
         this.globalScanCode = globalScanCode;
-        this.command = command;
-        this.subMenu = subMenu;
+        this.command        = command;
+        this.subMenu        = subMenu;
         setStatus(status);
 
         if (globalScanCode != 0) {
@@ -96,17 +81,16 @@ public class MenuChoice extends Widget {
         return "";
     }
 
-    /** Walk up Canvas → Menu to find the containing menu. */
     private Menu containingMenu() {
-        ScreenArea canvas = father();          // the Menu's Canvas
+        ScreenArea canvas = father();
         if (canvas == null) return null;
-        ScreenArea menu = canvas.father();     // the Menu (Window)
+        ScreenArea menu = canvas.father();
         return menu instanceof Menu m ? m : null;
     }
 
     @Override
     protected void paint(PaintContext ctx) {
-        int width = bounds.width();
+        int width  = bounds.width();
         int height = bounds.height();
         WindowPalette pal = ctx.palette();
 
@@ -116,14 +100,9 @@ public class MenuChoice extends Widget {
             ctx.setColor(pal.face);
             ctx.drawLine(0, 3, width - 1, 3);
         } else {
-            if (hasStatus(SF_MENU_CHOICE_DOWN)) {
-                ctx.setColor(pal.dark);
-            } else {
-                ctx.setColor(pal.face);
-            }
+            ctx.setColor(hasStatus(SF_MENU_CHOICE_DOWN) ? pal.dark : pal.face);
             ctx.fillRect(0, 0, width, height);
 
-            ctx.setFont(menuFont);
             if (!isEnabled()) {
                 ctx.setColor(pal.medium);
             } else if (hasStatus(SF_MENU_CHOICE_DOWN)) {
@@ -133,12 +112,14 @@ public class MenuChoice extends Widget {
             }
 
             String displayText = text != null ? text.replace("&", "") : "";
-            ctx.drawString(5, 14, displayText);
+            Dimension sz = ctx.measureText(displayText);
+            int dy = (height - sz.height) / 2;
+            ctx.drawString(5, dy, displayText);
 
             if (subMenu != null) {
-                ctx.drawString(width - 20, 14, ">>");
+                ctx.drawString(width - 20, dy, ">>");
             } else if (hotText != null && !hotText.isEmpty()) {
-                ctx.drawString(width - 50, 14, hotText);
+                ctx.drawString(width - 50, dy, hotText);
             }
         }
     }
@@ -155,28 +136,18 @@ public class MenuChoice extends Widget {
     @Override
     protected boolean mouseMove(EventMouse event) {
         boolean wasIn = hasStatus(SF_MOUSE_IN);
-        boolean isIn = contains(event.where);
+        boolean isIn  = contains(event.where);
 
         if (isIn != wasIn) {
-            if (isIn) {
-                setStatus(SF_MOUSE_IN);
-                becomeActiveZone();
-            } else {
-                clearStatus(SF_MOUSE_IN);
-                leaveActiveZone();
-            }
+            if (isIn) { setStatus(SF_MOUSE_IN);   becomeActiveZone(); }
+            else      { clearStatus(SF_MOUSE_IN);  leaveActiveZone();  }
             return true;
         }
         return false;
     }
 
-    protected void becomeActiveZone() {
-        down();
-    }
-
-    protected void leaveActiveZone() {
-        up();
-    }
+    protected void becomeActiveZone() { down(); }
+    protected void leaveActiveZone()  { up();   }
 
     protected void down() {
         if (isEnabled() && !hasStatus(SF_MENU_CHOICE_DOWN)) {
@@ -240,15 +211,7 @@ public class MenuChoice extends Widget {
         return null;
     }
 
-    public int getCommand() {
-        return command;
-    }
-
-    public int getGlobalScanCode() {
-        return globalScanCode;
-    }
-
-    public Menu getSubMenu() {
-        return subMenu;
-    }
+    public int getCommand()        { return command; }
+    public int getGlobalScanCode() { return globalScanCode; }
+    public Menu getSubMenu()       { return subMenu; }
 }

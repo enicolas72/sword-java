@@ -1,51 +1,70 @@
 package net.eric_nicolas.sword.ui.base;
 
 import net.eric_nicolas.sword.ui.Point;
+import net.eric_nicolas.sword.ui.TexHelper;
 
-import java.awt.Graphics2D;
 import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 
 /**
  * PaintContext - Abstraction layer for painting operations.
- * Wraps AWT Graphics2D with a cleaner API where coordinates come first.
- * All drawing coordinates are in local (zone-relative) space; the origin
+ *
+ * Wraps AWT {@link Graphics2D} with a cleaner API where coordinates come first.
+ * All drawing coordinates are in local (widget-relative) space; the {@code origin}
  * field holds the absolute screen position that is silently added to every
- * coordinate before forwarding to Graphics2D.
+ * coordinate before forwarding to {@link Graphics2D}.
+ *
+ * <h3>Text rendering</h3>
+ * All text is rendered via {@link TexHelper}, which accepts text-mode TeX input
+ * (plain text with optional {@code \math{...}} inline math blocks) and returns
+ * a {@link java.awt.image.BufferedImage}.  The {@code fontSize} field (default
+ * {@value #DEFAULT_FONT_SIZE}) controls the JLaTeXMath point size; override it
+ * per-context with {@link #withFontSize(float)}.  {@link #drawString} draws the
+ * rendered image top-left at the given coordinates.  {@link #measureText} returns
+ * the rendered image dimensions for layout calculations.
  */
 public class PaintContext {
 
+    public static final float DEFAULT_FONT_SIZE = 12f;
+
     public static PaintContext ofAWT(Graphics2D g) {
-        return new PaintContext(g, new Point(0, 0), WindowPalette.STANDARD);
+        return new PaintContext(g, new Point(0, 0), WindowPalette.STANDARD, DEFAULT_FONT_SIZE);
     }
 
     /**
      * Return a new PaintContext whose origin is this context's origin PLUS
-     * the given delta.  The underlying Graphics2D is shared, and the current
-     * palette is propagated unchanged.
-     *
-     * Callers pass an element's absolute screen position as the delta.
-     * Because origins accumulate, a context pre-shifted by (-ox, -oy) (used by
-     * Window.renderToBuffer) automatically maps absolute coords to buffer-local
-     * coords: (-ox, -oy) + absPos(ox+...) = buffer-local position.
+     * the given delta.  The underlying {@link Graphics2D}, palette, and font
+     * size are propagated unchanged.
      */
     public PaintContext withOrigin(Point delta) {
-        return new PaintContext(g, Point.plus(this.origin, delta), this.palette);
+        return new PaintContext(g, Point.plus(this.origin, delta), this.palette, this.fontSize);
     }
 
     /**
-     * Return a new PaintContext with a different palette; origin is unchanged.
-     * Used by Window.draw() to inject the window's own palette at the root
-     * of the rendering tree.
+     * Return a new PaintContext with a different palette; origin and font size
+     * are unchanged.  Used by {@code Window.draw()} to inject the window's own
+     * palette at the root of the rendering tree.
      */
     public PaintContext withPalette(WindowPalette p) {
-        return new PaintContext(g, this.origin, p);
+        return new PaintContext(g, this.origin, p, this.fontSize);
+    }
+
+    /**
+     * Return a new PaintContext with a different font size; origin and palette
+     * are unchanged.  Used by widgets (e.g., {@code Label}) that need a
+     * non-default text size.
+     */
+    public PaintContext withFontSize(float size) {
+        return new PaintContext(g, this.origin, this.palette, size);
     }
 
     /** The palette active for this rendering context. */
     public WindowPalette palette() { return palette; }
+
+    /** The JLaTeXMath point size used by {@link #drawString} and {@link #measureText}. */
+    public float fontSize() { return fontSize; }
 
     // ===== Color operations =====
 
@@ -55,20 +74,6 @@ public class PaintContext {
 
     public Color getColor() {
         return g.getColor();
-    }
-
-    // ===== Font operations =====
-
-    public void setFont(Font font) {
-        g.setFont(font);
-    }
-
-    public Font getFont() {
-        return g.getFont();
-    }
-
-    public FontMetrics getFontMetrics() {
-        return g.getFontMetrics();
     }
 
     // ===== Clipping operations =====
@@ -81,173 +86,85 @@ public class PaintContext {
         setClip(p.x(), p.y(), width, height);
     }
 
-    // ===== Drawing operations (coordinates first) =====
+    // ===== Text operations =====
 
     /**
-     * Draw a string at the specified position.
-     * @param x X coordinate (local)
-     * @param y Y coordinate (baseline, local)
-     * @param text Text to draw
+     * Render {@code text} (text-mode TeX with optional {@code \math{...}} blocks)
+     * and draw the result with its top-left corner at {@code (x, y)}.
+     * Uses the current colour (set via {@link #setColor}) and this context's
+     * {@link #fontSize()}.
      */
     public void drawString(int x, int y, String text) {
-        g.drawString(text, x + origin.x(), y + origin.y());
+        java.awt.image.BufferedImage img = TexHelper.render(text, g.getColor(), fontSize);
+        if (img != null) g.drawImage(img, x + origin.x(), y + origin.y(), null);
     }
 
-    /**
-     * Draw a string at the specified position.
-     * @param p X,Y coordinates (local)
-     * @param text Text to draw
-     */
+    /** @see #drawString(int, int, String) */
     public void drawString(Point p, String text) {
         drawString(p.x(), p.y(), text);
     }
 
     /**
-     * Draw a character at the specified position.
-     * @param x X coordinate (local)
-     * @param y Y coordinate (baseline, local)
-     * @param ch Character to draw
+     * Return the pixel dimensions that {@code text} would occupy when rendered
+     * at this context's current font size.  Useful for centering text within a
+     * bounding box before calling {@link #drawString}.
      */
-    public void drawChar(int x, int y, char ch) {
-        g.drawString(String.valueOf(ch), x + origin.x(), y + origin.y());
+    public Dimension measureText(String text) {
+        return TexHelper.measure(text, fontSize);
     }
 
-    /**
-     * Draw a rectangle outline.
-     * @param x X coordinate (local)
-     * @param y Y coordinate (local)
-     * @param width Width
-     * @param height Height
-     */
+    // ===== Drawing operations (coordinates first) =====
+
     public void drawRect(int x, int y, int width, int height) {
         g.drawRect(x + origin.x(), y + origin.y(), width, height);
     }
 
-    /**
-     * Draw a rectangle outline.
-     * @param p X,Y coordinate (local)
-     * @param width Width
-     * @param height Height
-     */
     public void drawRect(Point p, int width, int height) {
         drawRect(p.x(), p.y(), width, height);
     }
 
-    /**
-     * Fill a rectangle.
-     * @param x X coordinate (local)
-     * @param y Y coordinate (local)
-     * @param width Width
-     * @param height Height
-     */
     public void fillRect(int x, int y, int width, int height) {
         g.fillRect(x + origin.x(), y + origin.y(), width, height);
     }
 
-    /**
-     * Fill a rectangle.
-     * @param p the top left corner coordinates (local)
-     * @param width Width
-     * @param height Height
-     */
     public void fillRect(Point p, int width, int height) {
         fillRect(p.x(), p.y(), width, height);
     }
 
-    /**
-     * Draw a line.
-     * @param x1 Start X coordinate (local)
-     * @param y1 Start Y coordinate (local)
-     * @param x2 End X coordinate (local)
-     * @param y2 End Y coordinate (local)
-     */
     public void drawLine(int x1, int y1, int x2, int y2) {
         g.drawLine(x1 + origin.x(), y1 + origin.y(), x2 + origin.x(), y2 + origin.y());
     }
 
-    /**
-     * Draw a line.
-     * @param p1 Start X,Y coordinate (local)
-     * @param p2 End X,Y coordinate (local)
-     */
     public void drawLine(Point p1, Point p2) {
         drawLine(p1.x(), p1.y(), p2.x(), p2.y());
     }
 
-    /**
-     * Draw an oval outline.
-     * @param x X coordinate (local)
-     * @param y Y coordinate (local)
-     * @param width Width
-     * @param height Height
-     */
     public void drawOval(int x, int y, int width, int height) {
         g.drawOval(x + origin.x(), y + origin.y(), width, height);
     }
 
-    /**
-     * Fill an oval.
-     * @param x X coordinate (local)
-     * @param y Y coordinate (local)
-     * @param width Width
-     * @param height Height
-     */
     public void fillOval(int x, int y, int width, int height) {
         g.fillOval(x + origin.x(), y + origin.y(), width, height);
     }
 
-    /**
-     * Draw a rounded rectangle outline.
-     * @param x X coordinate (local)
-     * @param y Y coordinate (local)
-     * @param width Width
-     * @param height Height
-     * @param arcWidth Arc width
-     * @param arcHeight Arc height
-     */
     public void drawRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
         g.drawRoundRect(x + origin.x(), y + origin.y(), width, height, arcWidth, arcHeight);
     }
 
-    /**
-     * Fill a rounded rectangle.
-     * @param x X coordinate (local)
-     * @param y Y coordinate (local)
-     * @param width Width
-     * @param height Height
-     * @param arcWidth Arc width
-     * @param arcHeight Arc height
-     */
     public void fillRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
         g.fillRoundRect(x + origin.x(), y + origin.y(), width, height, arcWidth, arcHeight);
     }
 
-    /**
-     * Draw a polygon outline.
-     * @param xPoints Array of X coordinates (local)
-     * @param yPoints Array of Y coordinates (local)
-     * @param nPoints Number of points
-     */
     public void drawPolygon(int[] xPoints, int[] yPoints, int nPoints) {
-        g.drawPolygon(translate(xPoints, nPoints, origin.x()), translate(yPoints, nPoints, origin.y()), nPoints);
+        g.drawPolygon(translate(xPoints, nPoints, origin.x()),
+                      translate(yPoints, nPoints, origin.y()), nPoints);
     }
 
-    /**
-     * Fill a polygon.
-     * @param xPoints Array of X coordinates (local)
-     * @param yPoints Array of Y coordinates (local)
-     * @param nPoints Number of points
-     */
     public void fillPolygon(int[] xPoints, int[] yPoints, int nPoints) {
-        g.fillPolygon(translate(xPoints, nPoints, origin.x()), translate(yPoints, nPoints, origin.y()), nPoints);
+        g.fillPolygon(translate(xPoints, nPoints, origin.x()),
+                      translate(yPoints, nPoints, origin.y()), nPoints);
     }
 
-    /**
-     * Draw an image at the specified position.
-     * @param image Image to draw
-     * @param x X coordinate (local)
-     * @param y Y coordinate (local)
-     */
     public void drawImage(java.awt.Image image, int x, int y) {
         g.drawImage(image, x + origin.x(), y + origin.y(), null);
     }
@@ -259,11 +176,6 @@ public class PaintContext {
             enabled ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
     }
 
-    public void setTextAntialiasing(boolean enabled) {
-        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-            enabled ? RenderingHints.VALUE_TEXT_ANTIALIAS_ON : RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
-    }
-
     //
 
     private static int[] translate(int[] points, int n, int offset) {
@@ -272,13 +184,15 @@ public class PaintContext {
         return result;
     }
 
-    private PaintContext(Graphics2D g, Point origin, WindowPalette palette) {
-        this.g = g;
-        this.origin = origin;
-        this.palette = palette;
+    private PaintContext(Graphics2D g, Point origin, WindowPalette palette, float fontSize) {
+        this.g        = g;
+        this.origin   = origin;
+        this.palette  = palette;
+        this.fontSize = fontSize;
     }
 
-    private final Graphics2D g;
-    private final Point origin;
+    private final Graphics2D    g;
+    private final Point         origin;
     private final WindowPalette palette;
+    private final float         fontSize;
 }

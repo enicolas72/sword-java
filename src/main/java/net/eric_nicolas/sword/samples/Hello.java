@@ -1,9 +1,9 @@
 package net.eric_nicolas.sword.samples;
 
 import net.eric_nicolas.sword.ui.base.*;
+import net.eric_nicolas.sword.ui.widgets.Label;
 import net.eric_nicolas.sword.ui.widgets.Menu;
 import net.eric_nicolas.sword.ui.widgets.MenuChoice;
-import net.eric_nicolas.sword.ui.widgets.TexWidget;
 
 /**
  * Hello - Simple Hello World application demonstrating S.W.O.R.D framework.
@@ -54,13 +54,9 @@ public class Hello {
                 300, 200, title
             );
 
-            // TexWidget fills the content area
-            TexWidget tex = new TexWidget(
-                0, 0,
-                window.getContentWidth(),
-                window.getContentHeight(),
-                TEX, 22f
-            );
+            // Label fills the content area; 22pt renders the formula at a comfortable size
+            Label tex = new Label(0, 0, window.getContentWidth(), window.getContentHeight(), TEX);
+            tex.setFontSize(22f);
             window.getCanvas().add(tex);
 
             // Keep the widget filling the content area on resize

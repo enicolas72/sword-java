@@ -1,6 +1,7 @@
 package net.eric_nicolas.sword.ui.widgets;
 
 import net.eric_nicolas.sword.ui.Rect;
+import net.eric_nicolas.sword.ui.TexHelper;
 import net.eric_nicolas.sword.ui.base.PaintContext;
 import net.eric_nicolas.sword.ui.base.Widget;
 import net.eric_nicolas.sword.ui.base.Window;
@@ -8,9 +9,6 @@ import net.eric_nicolas.sword.ui.base.WindowPalette;
 import net.eric_nicolas.sword.ui.events.EventKeyboard;
 import net.eric_nicolas.sword.ui.events.EventMouse;
 
-import java.awt.Graphics2D;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +23,6 @@ public class Menu extends Window {
     protected int textWidth;
     protected int hotTextWidth;
     protected Menu fatherMenu;
-    protected Font menuFont;
 
     public Menu() {
         this("Menu", false);
@@ -39,10 +36,9 @@ public class Menu extends Window {
     }
 
     protected void defaults() {
-        textWidth = 0;
+        textWidth    = 0;
         hotTextWidth = 0;
-        fatherMenu = null;
-        menuFont = new Font("SansSerif", Font.PLAIN, 12);
+        fatherMenu   = null;
     }
 
     protected void init(String title) {
@@ -73,29 +69,21 @@ public class Menu extends Window {
         int height = 24;
         int x = 5;
 
-        java.awt.image.BufferedImage tempImage = new java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = tempImage.createGraphics();
-        g.setFont(menuFont);
-        java.awt.FontMetrics fm = g.getFontMetrics();
-
         for (MenuChoice choice : getChoices()) {
             if (!choice.separator) {
                 String displayText = choice.text != null ? choice.text.replace("&", "") : "";
-                int width = fm.stringWidth(displayText) + 20;
+                int width = TexHelper.measure(displayText, PaintContext.DEFAULT_FONT_SIZE).width + 20;
 
                 if (choice.getSubMenu() != null) {
                     choice.getSubMenu().fatherMenu = this;
                     choice.getSubMenu().initChoices();
                 }
 
-                // Canvas-relative coordinates (no menu origin added; getAbsolutePosition
-                // walks the parent chain and adds the offsets automatically).
                 Rect choiceBounds = new Rect(x, 2, width, height - 4);
                 choice.setBounds(choiceBounds);
                 x += width;
             }
         }
-        g.dispose();
 
         myBounds = new Rect(myBounds.origin(), x + 5, height);
         setBounds(myBounds);
@@ -127,22 +115,16 @@ public class Menu extends Window {
     }
 
     protected int compWidth() {
-        textWidth = 0;
+        textWidth    = 0;
         hotTextWidth = 40;
-
-        java.awt.image.BufferedImage tempImage = new java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = tempImage.createGraphics();
-        g.setFont(menuFont);
-        FontMetrics fm = g.getFontMetrics();
 
         for (MenuChoice choice : getChoices()) {
             if (choice.text != null) {
                 String displayText = choice.text.replace("&", "");
-                int w = fm.stringWidth(displayText);
+                int w = TexHelper.measure(displayText, PaintContext.DEFAULT_FONT_SIZE).width;
                 if (w > textWidth) textWidth = w;
             }
         }
-        g.dispose();
 
         return textWidth + hotTextWidth + 40;
     }

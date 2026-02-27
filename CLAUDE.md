@@ -31,7 +31,7 @@ GLFW must run on the AppKit main thread (`-XstartOnFirstThread`) and Java2D must
 ### Package Structure
 
 ```
-net.eric_nicolas.sword.ui              → Point, Rect, Duple, Cache
+net.eric_nicolas.sword.ui              → Point, Rect, Duple, Cache, TexHelper
 net.eric_nicolas.sword.ui.events       → Event, EventMouse, EventKeyboard, EventCommand
 net.eric_nicolas.sword.ui.driver       → LwjglDriver, EventLwjglAdapter  (all LWJGL/GLFW coupling here)
 net.eric_nicolas.sword.ui.base         → ScreenArea, Widget, Window, Canvas,
@@ -39,7 +39,7 @@ net.eric_nicolas.sword.ui.base         → ScreenArea, Widget, Window, Canvas,
 net.eric_nicolas.sword.ui.widgets      → Button, CheckBox, RadioBox, GroupBox,
                                          EditLine, Label, Menu, MenuChoice,
                                          Dialog, StandardButtons, AbstractButton,
-                                         ItemBox, Scrollbar, Scroller, TexWidget
+                                         ItemBox, Scrollbar, Scroller
 net.eric_nicolas.sword.samples         → Hello, Dialog, Mandel (sample applications)
 ```
 
@@ -67,7 +67,7 @@ net.eric_nicolas.sword.samples         → Hello, Dialog, Mandel (sample applica
 
 4. **Naming:**
    - Core classes use plain names: `ScreenArea`, `Application`, `WindowPalette`, `Screen`, etc. — no T-prefixed classes remain
-   - Gadget classes use plain names: `Button`, `Menu`, `Dialog`, `EditLine`, `Scrollbar`, `TexWidget`, etc.
+   - Gadget classes use plain names: `Button`, `Menu`, `Dialog`, `EditLine`, `Label`, `Scrollbar`, etc.
    - Java conventions: camelCase for methods/fields, UPPER_CASE for constants
 
 5. **Driver Integration:**
@@ -115,9 +115,10 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 ✅ Modal dialog event loop (`execDialog()` — GLFW-based mini-loop via `Screen.frameStep`)
 ✅ Scrollbar (TLift port): arrow buttons, thumb drag, page click, H/V orientations
 ✅ Scroller (TScroller port): viewport-sized buffer, zoom-aware content/scrollbar sync; `resize()` for live viewport resize
-✅ Sample applications: Hello (TexWidget), Dialog (with working modal dialog), Mandel (Mandelbrot fractal viewer with zoom + pan; resize reveals more of the plane)
-✅ TexWidget — TeX text mode with `\math{...}` for formulas; lazy cached `BufferedImage`; text colour from `ctx.palette().black`
-✅ 164 unit tests (16 test classes)
+✅ Sample applications: Hello (Label with 22pt TeX rendering), Dialog (with working modal dialog), Mandel (Mandelbrot fractal viewer with zoom + pan; resize reveals more of the plane)
+✅ TexHelper — all text drawn via JLaTeXMath; text mode with `\math{...}` for inline math; static FIFO cache keyed by `(text, color, fontSize)`; `PaintContext.drawString` / `measureText` go through it
+✅ Label supports `setFontSize(float)` and renders TeX input (plain text + `\math{...}` blocks) at arbitrary size
+✅ 201 unit tests (18 test classes)
 
 **Deferred:**
 - TGauge (progress bar)
@@ -146,7 +147,8 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 | `TLift` | `Scrollbar` |
 | `TScroller` | `Scroller` |
 | Static colour constants (`TColors`) | Removed; colours defined inline as `new Color(r,g,b)` in `WindowPalette`; desktop background in `Screen.DESKTOP_BG` |
-| Formula/text rendering (none in original) | `TexWidget` — renders LaTeX via JLaTeXMath into a cached `BufferedImage` |
+| AWT `Font` / `FontMetrics` in widgets | Removed; all text drawn via `TexHelper` through `PaintContext.drawString` / `measureText` |
+| Formula/text rendering (none in original) | `TexHelper` — static helper; renders text-mode TeX (with `\math{...}`) via JLaTeXMath into a FIFO-cached `BufferedImage`; used by every `PaintContext.drawString` call |
 
 **Graphics / Driver Layer:**
 - `LwjglDriver` owns the GLFW window and OpenGL 3.3 compositor; renders each S.W.O.R.D `Window` as a textured quad (per-window `BufferedImage` → OpenGL texture, uploaded every frame)
@@ -176,15 +178,18 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 - `ScreenArea.draw()` uses `ctx.palette().face` as the default background fill when `bgColor == null`; explicit `setBackgroundColor()` still overrides when needed
 - Desktop background colour is `Screen.DESKTOP_BG = new Color(35, 50, 76)`, defined locally in `Screen`; `LwjglDriver` reads it for the OpenGL clear colour
 
-**TexWidget:**
-- Extends `Widget`; renders TeX-formatted content via `org.scilab.forge.jlatexmath` (JLaTeXMath)
-- Input is written in **text mode**; math content is wrapped in `\math{...}` blocks; newlines produce row breaks
-- The input is converted to a JLaTeXMath formula via `toLatex()`: plain text → `\text{...}`, `\math{...}` → raw math, lines joined with `\\` inside `\begin{array}{l}...\end{array}`
-- Rendered images are stored in a `Cache<Duple<String, Color>, BufferedImage>` (FIFO, 8 entries): cache hits avoid re-rendering the same (tex, colour) pair; `setFontSize()` calls `cache.clear()` since font size affects every entry; `setTex()` does not clear (stale entries are evicted naturally by FIFO)
-- Text colour is taken from `ctx.palette().black` so the output adapts to the window's colour scheme
-- The rendered image is centred within the widget bounds; no stretching
-- Declared exceptions from JLaTeXMath are caught silently; `cache` stays null and nothing is drawn
-- JLaTeXMath works in headless mode (`-Djava.awt.headless=true`) because it uses Java2D internally
+**TexHelper / PaintContext text pipeline:**
+- `TexHelper` (in `net.eric_nicolas.sword.ui`) is the sole text-rendering engine for the whole widget hierarchy
+- Input is written in **text mode**: plain text rendered as `\text{...}`, inline math wrapped in `\math{...}` blocks, newlines produce row breaks via `\begin{array}{l}...\end{array}`
+- Static `Cache<Duple<Duple<String,Color>,Float>, BufferedImage>` (FIFO, 32 entries) keyed by `(text, color, fontSize)` — renders are shared across all widgets
+- `TexHelper.render(text, color, fontSize)` → `BufferedImage`; `TexHelper.measure(text, fontSize)` → `Dimension` (renders with `Color.BLACK` since dimensions are colour-independent)
+- `PaintContext` carries a `fontSize` field (default `DEFAULT_FONT_SIZE = 12f`); `withFontSize(float)` returns a derived context (parallel to `withPalette`/`withOrigin`)
+- `PaintContext.drawString(x, y, text)` blits the TexHelper image top-left at `(x, y)` using the current colour and font size; `PaintContext.measureText(text)` delegates to `TexHelper.measure`
+- No AWT `Font`, `FontMetrics`, `setFont`, `getFontMetrics`, or `drawChar` anywhere in the codebase
+- `Menu.initChoicesHorizontal()` / `compWidth()` use `TexHelper.measure()` to compute choice widths — no temp `Graphics2D` needed
+- `EditLine` cursor x-position is computed via `TexHelper.measure(prefix, DEFAULT_FONT_SIZE).width`
+- `Label` exposes `setFontSize(float)` / `getFontSize()` for per-label size override; uses `ctx.withFontSize(fontSize)` in `paint()`
+- JLaTeXMath works in headless mode (`-Djava.awt.headless=true`) because it uses Java2D off-screen rendering internally
 
 **Scrollbar / Scroller design:**
 - `Scrollbar` renders its own arrow buttons and thumb; handles drag capture (returns true from `mouseMove`/`mouseLUp` while dragging, even outside bounds)
