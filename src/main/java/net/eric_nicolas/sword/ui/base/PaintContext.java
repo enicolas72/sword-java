@@ -7,6 +7,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 
 /**
  * PaintContext - Abstraction layer for painting operations.
@@ -30,7 +31,7 @@ public class PaintContext {
     public static final float DEFAULT_FONT_SIZE = 12f;
 
     public static PaintContext ofAWT(Graphics2D g) {
-        return new PaintContext(g, new Point(0, 0), WindowPalette.STANDARD, DEFAULT_FONT_SIZE);
+        return new PaintContext(g, new Point(0, 0), WindowPalette.STANDARD, DEFAULT_FONT_SIZE, 1);
     }
 
     /**
@@ -39,7 +40,7 @@ public class PaintContext {
      * size are propagated unchanged.
      */
     public PaintContext withOrigin(Point delta) {
-        return new PaintContext(g, Point.plus(this.origin, delta), this.palette, this.fontSize);
+        return new PaintContext(g, Point.plus(this.origin, delta), this.palette, this.fontSize, this.dpr);
     }
 
     /**
@@ -48,7 +49,7 @@ public class PaintContext {
      * palette at the root of the rendering tree.
      */
     public PaintContext withPalette(WindowPalette p) {
-        return new PaintContext(g, this.origin, p, this.fontSize);
+        return new PaintContext(g, this.origin, p, this.fontSize, this.dpr);
     }
 
     /**
@@ -57,7 +58,16 @@ public class PaintContext {
      * non-default text size.
      */
     public PaintContext withFontSize(float size) {
-        return new PaintContext(g, this.origin, this.palette, size);
+        return new PaintContext(g, this.origin, this.palette, size, this.dpr);
+    }
+
+    /**
+     * Return a new PaintContext with the given device pixel ratio; other fields
+     * are unchanged.  Used by {@code Window.renderToBuffer(int dpr)} so that
+     * text is rendered at physical resolution and placed at physical coordinates.
+     */
+    public PaintContext withDpr(int dpr) {
+        return new PaintContext(g, this.origin, this.palette, this.fontSize, dpr);
     }
 
     /** The palette active for this rendering context. */
@@ -95,8 +105,15 @@ public class PaintContext {
      * {@link #fontSize()}.
      */
     public void drawString(int x, int y, String text) {
-        java.awt.image.BufferedImage img = TexHelper.render(text, g.getColor(), fontSize);
-        if (img != null) g.drawImage(img, x + origin.x(), y + origin.y(), null);
+        java.awt.image.BufferedImage img = TexHelper.render(text, g.getColor(), fontSize * dpr);
+        if (img != null) {
+            // Bypass the dpr scale transform: render at physical resolution and
+            // place at physical coordinates directly, then restore the transform.
+            AffineTransform saved = g.getTransform();
+            g.setTransform(new AffineTransform());
+            g.drawImage(img, (x + origin.x()) * dpr, (y + origin.y()) * dpr, null);
+            g.setTransform(saved);
+        }
     }
 
     /** @see #drawString(int, int, String) */
@@ -110,7 +127,9 @@ public class PaintContext {
      * bounding box before calling {@link #drawString}.
      */
     public Dimension measureText(String text) {
-        return TexHelper.measure(text, fontSize);
+        Dimension phys = TexHelper.measure(text, fontSize * dpr);
+        int d = Math.max(1, dpr);
+        return new Dimension(phys.width / d, phys.height / d);
     }
 
     // ===== Drawing operations (coordinates first) =====
@@ -184,15 +203,17 @@ public class PaintContext {
         return result;
     }
 
-    private PaintContext(Graphics2D g, Point origin, WindowPalette palette, float fontSize) {
+    private PaintContext(Graphics2D g, Point origin, WindowPalette palette, float fontSize, int dpr) {
         this.g        = g;
         this.origin   = origin;
         this.palette  = palette;
         this.fontSize = fontSize;
+        this.dpr      = dpr;
     }
 
     private final Graphics2D    g;
     private final Point         origin;
     private final WindowPalette palette;
     private final float         fontSize;
+    private final int           dpr;
 }

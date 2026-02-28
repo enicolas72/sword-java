@@ -6,6 +6,8 @@ import org.scilab.forge.jlatexmath.TeXIcon;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -34,6 +36,9 @@ public final class TexHelper {
     /** Maximum number of cached (text, color, fontSize) → image entries. */
     private static final int CACHE_SIZE = 32;
 
+    /** Base font for plain-text rendering (no math blocks).  Derived per call with the right size. */
+    private static final Font PLAIN_FONT = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
+
     // Cache key: outer.x() = (text, color), outer.y() = fontSize
     private static final Cache<Duple<Duple<String, Color>, Float>, BufferedImage> CACHE =
             new Cache<>(CACHE_SIZE);
@@ -57,7 +62,13 @@ public final class TexHelper {
         BufferedImage img = CACHE.get(key);
         if (img != null) return img;
 
-        img = doRender(toLatex(text), color, fontSize);
+        // Plain single-line text (no math, no newlines) → crisp AWT system-font rendering.
+        // Strings containing \math{} or \n go through JLaTeXMath (the right tool for formulas).
+        boolean hasMath = text.contains("\\math{");
+        boolean multiline = text.contains("\n");
+        img = (hasMath || multiline)
+                ? doRender(toLatex(text), color, fontSize)
+                : renderAWT(text, color, fontSize);
         if (img != null) CACHE.put(key, img);
         return img;
     }
@@ -141,6 +152,36 @@ public final class TexHelper {
     }
 
     // ===== Rendering =====
+
+    /**
+     * Render plain text (no math blocks) using Java2D AWT font rendering.
+     * Produces crisp system-font output (Helvetica/sans-serif on macOS,
+     * Liberation Sans on Linux) at the requested size.
+     * Works correctly in headless mode.
+     */
+    private static BufferedImage renderAWT(String text, Color color, float fontSize) {
+        Font font = PLAIN_FONT.deriveFont(fontSize);
+
+        // Use a 1×1 scratch image to get FontMetrics at the correct size.
+        BufferedImage scratch = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D gt = scratch.createGraphics();
+        gt.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        gt.setFont(font);
+        FontMetrics fm = gt.getFontMetrics();
+        int w = Math.max(1, fm.stringWidth(text));
+        int h = Math.max(1, fm.getAscent() + fm.getDescent());
+        gt.dispose();
+
+        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = img.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,      RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g.setFont(font);
+        g.setColor(color);
+        g.drawString(text, 0, fm.getAscent());
+        g.dispose();
+        return img;
+    }
 
     private static BufferedImage doRender(String formula, Color color, float fontSize) {
         if (formula.isEmpty()) return null;
