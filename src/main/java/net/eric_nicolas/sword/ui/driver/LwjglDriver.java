@@ -44,6 +44,10 @@ public class LwjglDriver {
     private final int height;
     private final IntPredicate hotKeyHandler;
 
+    private int dpr;  // device pixel ratio (1 on standard displays, 2 on Retina/HiDPI)
+    private int fbW;  // physical framebuffer width
+    private int fbH;  // physical framebuffer height
+
     private long glfwWindow;
     private boolean running;
 
@@ -106,13 +110,15 @@ public class LwjglDriver {
 
         GL.createCapabilities();
 
-        // Set viewport to the actual framebuffer size, which may differ from the
-        // window size on Retina / HiDPI displays (macOS returns 2x physical pixels).
+        // Query physical framebuffer size (may be 2× logical on Retina/HiDPI).
         try (MemoryStack stack = MemoryStack.stackPush()) {
-            IntBuffer fbW = stack.mallocInt(1);
-            IntBuffer fbH = stack.mallocInt(1);
-            glfwGetFramebufferSize(glfwWindow, fbW, fbH);
-            glViewport(0, 0, fbW.get(0), fbH.get(0));
+            IntBuffer fbWbuf = stack.mallocInt(1);
+            IntBuffer fbHbuf = stack.mallocInt(1);
+            glfwGetFramebufferSize(glfwWindow, fbWbuf, fbHbuf);
+            fbW = fbWbuf.get(0);
+            fbH = fbHbuf.get(0);
+            dpr = Math.max(1, fbW / width);
+            glViewport(0, 0, fbW, fbH);
         }
 
         glEnable(GL_BLEND);
@@ -183,7 +189,7 @@ public class LwjglDriver {
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
-        glUniform2f(uScreen, width, height);
+        glUniform2f(uScreen, fbW, fbH);
         glUniform1i(uTexture, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindVertexArray(vao);
@@ -191,13 +197,13 @@ public class LwjglDriver {
         cleanupRemovedWindows();
 
         for (Window win : screen.getWindows()) {
-            win.renderToBuffer();
+            win.renderToBuffer(dpr);
 
             int texId = ensureTexture(win);
             uploadTexture(texId, win.getRenderBuffer());
 
-            glUniform2f(uPos,  win.getBounds().origin().x(), win.getBounds().origin().y());
-            glUniform2f(uSize, win.getBounds().width(),      win.getBounds().height());
+            glUniform2f(uPos,  win.getBounds().origin().x() * dpr, win.getBounds().origin().y() * dpr);
+            glUniform2f(uSize, win.getBounds().width()       * dpr, win.getBounds().height()      * dpr);
             glUniform1f(uAlpha, win.isDragging() ? DRAG_ALPHA : 1f);
 
             glBindTexture(GL_TEXTURE_2D, texId);
@@ -212,8 +218,8 @@ public class LwjglDriver {
         return textures.computeIfAbsent(win, w -> {
             int id = glGenTextures();
             glBindTexture(GL_TEXTURE_2D, id);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             return id;

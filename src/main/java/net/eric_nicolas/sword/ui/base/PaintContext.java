@@ -30,7 +30,7 @@ public class PaintContext {
     public static final float DEFAULT_FONT_SIZE = 12f;
 
     public static PaintContext ofAWT(Graphics2D g) {
-        return new PaintContext(g, new Point(0, 0), WindowPalette.STANDARD, DEFAULT_FONT_SIZE);
+        return new PaintContext(g, new Point(0, 0), WindowPalette.STANDARD, DEFAULT_FONT_SIZE, 1);
     }
 
     /**
@@ -39,7 +39,7 @@ public class PaintContext {
      * size are propagated unchanged.
      */
     public PaintContext withOrigin(Point delta) {
-        return new PaintContext(g, Point.plus(this.origin, delta), this.palette, this.fontSize);
+        return new PaintContext(g, Point.plus(this.origin, delta), this.palette, this.fontSize, this.dpr);
     }
 
     /**
@@ -48,7 +48,7 @@ public class PaintContext {
      * palette at the root of the rendering tree.
      */
     public PaintContext withPalette(WindowPalette p) {
-        return new PaintContext(g, this.origin, p, this.fontSize);
+        return new PaintContext(g, this.origin, p, this.fontSize, this.dpr);
     }
 
     /**
@@ -57,7 +57,16 @@ public class PaintContext {
      * non-default text size.
      */
     public PaintContext withFontSize(float size) {
-        return new PaintContext(g, this.origin, this.palette, size);
+        return new PaintContext(g, this.origin, this.palette, size, this.dpr);
+    }
+
+    /**
+     * Return a new PaintContext with the given device pixel ratio; other fields
+     * are unchanged.  Used by {@code Window.renderToBuffer(int dpr)} so that
+     * text is rendered at physical resolution.
+     */
+    public PaintContext withDpr(int dpr) {
+        return new PaintContext(g, this.origin, this.palette, this.fontSize, dpr);
     }
 
     /** The palette active for this rendering context. */
@@ -95,8 +104,19 @@ public class PaintContext {
      * {@link #fontSize()}.
      */
     public void drawString(int x, int y, String text) {
-        java.awt.image.BufferedImage img = TexHelper.render(text, g.getColor(), fontSize);
-        if (img != null) g.drawImage(img, x + origin.x(), y + origin.y(), null);
+        // Render at OVERSAMPLE × the display size so JLaTeXMath has more detail to
+        // work with, then downsample to the target size via bicubic interpolation.
+        // This is supersampling: the high-res render is filtered down, producing
+        // sharper, cleaner glyphs than rendering at native size would.
+        java.awt.image.BufferedImage img = TexHelper.render(text, g.getColor(), fontSize * dpr * OVERSAMPLE);
+        if (img != null) {
+            int scale = Math.max(1, dpr) * OVERSAMPLE;
+            int lw = img.getWidth()  / scale;   // target size in logical pixels
+            int lh = img.getHeight() / scale;
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g.setRenderingHint(RenderingHints.KEY_RENDERING,     RenderingHints.VALUE_RENDER_QUALITY);
+            g.drawImage(img, x + origin.x(), y + origin.y(), lw, lh, null);
+        }
     }
 
     /** @see #drawString(int, int, String) */
@@ -110,7 +130,9 @@ public class PaintContext {
      * bounding box before calling {@link #drawString}.
      */
     public Dimension measureText(String text) {
-        return TexHelper.measure(text, fontSize);
+        int scale = Math.max(1, dpr) * OVERSAMPLE;
+        Dimension d = TexHelper.measure(text, fontSize * dpr * OVERSAMPLE);
+        return new Dimension(d.width / scale, d.height / scale);
     }
 
     // ===== Drawing operations (coordinates first) =====
@@ -184,15 +206,22 @@ public class PaintContext {
         return result;
     }
 
-    private PaintContext(Graphics2D g, Point origin, WindowPalette palette, float fontSize) {
+    /** Oversampling factor for JLaTeXMath rendering.  The formula is rendered at
+     *  {@code fontSize × dpr × OVERSAMPLE} and bicubic-downsampled to the target
+     *  display size, giving significantly sharper glyphs than native-size rendering. */
+    private static final int OVERSAMPLE = 2;
+
+    private PaintContext(Graphics2D g, Point origin, WindowPalette palette, float fontSize, int dpr) {
         this.g        = g;
         this.origin   = origin;
         this.palette  = palette;
         this.fontSize = fontSize;
+        this.dpr      = dpr;
     }
 
     private final Graphics2D    g;
     private final Point         origin;
     private final WindowPalette palette;
     private final float         fontSize;
+    private final int           dpr;
 }

@@ -410,34 +410,40 @@ public class Window extends ScreenArea {
 
     // ===== Per-window render buffer (used by OpenGL compositor) =====
 
+    /** Render at DPR=1 (non-HiDPI fallback). */
+    public void renderToBuffer() { renderToBuffer(1); }
+
     /**
-     * Render this window's full visual tree into its own BufferedImage.
-     * We translate the Graphics2D by (-x, -y) before rendering so that the
-     * existing draw() logic — which adds getAbsolutePosition() = (x, y) to
-     * every coordinate — produces output at (0, 0) in the buffer rather than
-     * at the window's screen position.
+     * Render this window's full visual tree into a physical-resolution buffer.
+     * {@code dpr} is the device pixel ratio (1 on standard displays, 2 on HiDPI/Retina).
+     * The buffer is created at {@code (width*dpr) × (height*dpr)} physical pixels;
+     * {@code g.scale(dpr,dpr)} is applied so widget geometry stays in logical pixels.
+     * Text rendering (via PaintContext) handles its own oversampling on top of dpr.
      */
-    public void renderToBuffer() {
-        int w = bounds.width();
-        int h = bounds.height();
+    public void renderToBuffer(int dpr) {
+        int w  = bounds.width();
+        int h  = bounds.height();
+        int pw = w * dpr;
+        int ph = h * dpr;
         if (renderBuffer == null
-                || renderBuffer.getWidth()  != w
-                || renderBuffer.getHeight() != h) {
-            renderBuffer = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+                || renderBuffer.getWidth()  != pw
+                || renderBuffer.getHeight() != ph) {
+            renderBuffer = new BufferedImage(pw, ph, BufferedImage.TYPE_INT_ARGB);
         }
         java.awt.Graphics2D g = renderBuffer.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Clear the buffer to transparent (buffer-local coordinates: origin is 0,0).
+        // Clear the buffer to transparent at physical size.
         g.setComposite(AlphaComposite.Clear);
-        g.fillRect(0, 0, w, h);
+        g.fillRect(0, 0, pw, ph);
         g.setComposite(AlphaComposite.SrcOver);
 
-        // PaintContext.withOrigin() accumulates, so starting at (-ox, -oy) means
-        // each element's absPos + (-ox, -oy) = its position in the buffer.
+        // Scale so widget logical-pixel coordinates map to physical pixels.
+        if (dpr > 1) g.scale(dpr, dpr);
+
         int ox = bounds.origin().x();
         int oy = bounds.origin().y();
-        draw(PaintContext.ofAWT(g).withOrigin(new Point(-ox, -oy)));
+        draw(PaintContext.ofAWT(g).withDpr(dpr).withOrigin(new Point(-ox, -oy)));
         g.dispose();
     }
 
