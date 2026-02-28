@@ -34,8 +34,7 @@ public final class TexHelper {
     /** Maximum number of cached (text, color, fontSize) → image entries. */
     private static final int CACHE_SIZE = 32;
 
-    // Cache key: outer.x() = (text, color), outer.y() = fontSize
-    private static final Cache<Duple<Duple<String, Color>, Float>, BufferedImage> CACHE =
+    private static final Cache<Triple<String, Color, Float>, BufferedImage> CACHE =
             new Cache<>(CACHE_SIZE);
 
     private TexHelper() {}   // static utility class
@@ -52,8 +51,7 @@ public final class TexHelper {
     public static BufferedImage render(String text, Color color, float fontSize) {
         if (text == null || text.isEmpty()) return null;
 
-        Duple<Duple<String, Color>, Float> key =
-                new Duple<>(new Duple<>(text, color), fontSize);
+        Triple<String, Color, Float> key = new Triple<>(text, color, fontSize);
         BufferedImage img = CACHE.get(key);
         if (img != null) return img;
 
