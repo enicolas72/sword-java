@@ -31,10 +31,14 @@ import java.awt.image.BufferedImage;
  */
 public final class TexHelper {
 
-    /** Maximum number of cached (text, color, fontSize) → image entries. */
     private static final int CACHE_SIZE = 32;
 
+    /** (text, color, fontSize) → rendered image. */
     private static final Cache<Triple<String, Color, Float>, BufferedImage> CACHE =
+            new Cache<>(CACHE_SIZE);
+
+    /** (text, fontSize) → pixel dimensions; color-independent so kept separately. */
+    private static final Cache<Duple<String, Float>, Dimension> DIM_CACHE =
             new Cache<>(CACHE_SIZE);
 
     private TexHelper() {}   // static utility class
@@ -62,21 +66,30 @@ public final class TexHelper {
 
     /**
      * Return the pixel dimensions that {@code text} would occupy at the given
-     * font size.  Renders with {@link Color#BLACK} since image dimensions are
-     * colour-independent.
+     * font size.  Dimensions are colour-independent and cached separately from
+     * rendered images so repeated layout passes cost only a single map lookup.
      *
      * @return dimensions, or {@code (0, 0)} if the text is empty or rendering fails
      */
     public static Dimension measure(String text, float fontSize) {
+        if (text == null || text.isEmpty()) return new Dimension(0, 0);
+
+        Duple<String, Float> dimKey = new Duple<>(text, fontSize);
+        Dimension cached = DIM_CACHE.get(dimKey);
+        if (cached != null) return cached;
+
         BufferedImage img = render(text, Color.BLACK, fontSize);
-        return img != null
+        Dimension dim = img != null
                 ? new Dimension(img.getWidth(), img.getHeight())
                 : new Dimension(0, 0);
+        DIM_CACHE.put(dimKey, dim);
+        return dim;
     }
 
-    /** Remove all cached images. */
+    /** Remove all cached images and dimensions. */
     public static void clearCache() {
         CACHE.clear();
+        DIM_CACHE.clear();
     }
 
     // ===== TeX → JLaTeXMath conversion =====
