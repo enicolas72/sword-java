@@ -24,21 +24,20 @@ import java.awt.image.BufferedImage;
  * Newlines ({@code \n}) produce line breaks via {@code \begin{array}{l}...}.
  *
  * <h3>Caching</h3>
- * Rendered images are stored in a static {@link Cache} keyed by
- * {@code (text, color, fontSize)}.  The cache holds up to {@value #CACHE_SIZE}
- * entries with FIFO eviction.  Call {@link #clearCache()} to flush all entries
- * (e.g., after a global font-size change).
+ * {@link TeXIcon} objects (the result of the expensive parse-and-layout step)
+ * are cached by {@code (text, fontSize)} — colour-independent, because colour
+ * is applied via {@link TeXIcon#setForeground} just before each paint call.
+ * This means a cache hit saves {@code createTeXIcon} time (≈100–320 µs) for
+ * any colour variant of a previously seen string.  The cache holds up to
+ * {@value #CACHE_SIZE} entries with FIFO eviction.  Call {@link #clearCache()}
+ * to flush all entries (e.g. after a global font-size change).
  */
 public final class TexHelper {
 
     private static final int CACHE_SIZE = 32;
 
-    /** (text, color, fontSize) → rendered image. */
-    private static final Cache<Triple<String, Color, Float>, BufferedImage> CACHE =
-            new Cache<>(CACHE_SIZE);
-
-    /** (text, fontSize) → pixel dimensions; color-independent so kept separately. */
-    private static final Cache<Duple<String, Float>, Dimension> DIM_CACHE =
+    /** (text, fontSize) → parsed-and-laid-out icon; colour-independent. */
+    private static final Cache<Duple<String, Float>, TeXIcon> ICON_CACHE =
             new Cache<>(CACHE_SIZE);
 
     private TexHelper() {}   // static utility class
@@ -48,6 +47,9 @@ public final class TexHelper {
     /**
      * Render {@code text} (text-mode TeX with optional {@code \math{...}} blocks)
      * to a {@link BufferedImage} at the given font size and colour.
+     * The expensive parse-and-layout step ({@code createTeXIcon}) is cached by
+     * {@code (text, fontSize)}; only the rasterisation ({@code paintIcon}) runs
+     * on every call.
      *
      * @return the rendered image, or {@code null} if the input is empty or
      *         JLaTeXMath throws an exception
@@ -55,41 +57,38 @@ public final class TexHelper {
     public static BufferedImage render(String text, Color color, float fontSize) {
         if (text == null || text.isEmpty()) return null;
 
-        Triple<String, Color, Float> key = new Triple<>(text, color, fontSize);
-        BufferedImage img = CACHE.get(key);
-        if (img != null) return img;
+        TeXIcon icon = getOrCreateIcon(text, fontSize);
+        if (icon == null) return null;
 
-        img = doRender(toLatex(text), color, fontSize);
-        if (img != null) CACHE.put(key, img);
+        icon.setForeground(color);
+        int w = icon.getIconWidth();
+        int h = icon.getIconHeight();
+        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = img.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,      RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        icon.paintIcon(null, g2, 0, 0);
+        g2.dispose();
         return img;
     }
 
     /**
      * Return the pixel dimensions that {@code text} would occupy at the given
-     * font size.  Dimensions are colour-independent and cached separately from
-     * rendered images so repeated layout passes cost only a single map lookup.
+     * font size.  Uses the cached {@link TeXIcon} directly — no extra render needed.
      *
-     * @return dimensions, or {@code (0, 0)} if the text is empty or rendering fails
+     * @return dimensions, or {@code (0, 0)} if the text is empty or parsing fails
      */
     public static Dimension measure(String text, float fontSize) {
         if (text == null || text.isEmpty()) return new Dimension(0, 0);
-
-        Duple<String, Float> dimKey = new Duple<>(text, fontSize);
-        Dimension cached = DIM_CACHE.get(dimKey);
-        if (cached != null) return cached;
-
-        BufferedImage img = render(text, Color.BLACK, fontSize);
-        Dimension dim = img != null
-                ? new Dimension(img.getWidth(), img.getHeight())
+        TeXIcon icon = getOrCreateIcon(text, fontSize);
+        return icon != null
+                ? new Dimension(icon.getIconWidth(), icon.getIconHeight())
                 : new Dimension(0, 0);
-        DIM_CACHE.put(dimKey, dim);
-        return dim;
     }
 
-    /** Remove all cached images and dimensions. */
+    /** Remove all cached icons. */
     public static void clearCache() {
-        CACHE.clear();
-        DIM_CACHE.clear();
+        ICON_CACHE.clear();
     }
 
     // ===== TeX → JLaTeXMath conversion =====
@@ -151,24 +150,22 @@ public final class TexHelper {
         sb.append("\\text{").append(escaped).append("}");
     }
 
-    // ===== Rendering =====
+    // ===== Icon cache =====
 
-    private static BufferedImage doRender(String formula, Color color, float fontSize) {
-        if (formula.isEmpty()) return null;
+    /**
+     * Return the cached {@link TeXIcon} for {@code (text, fontSize)}, creating
+     * and caching it if not already present.  This is the only place
+     * {@code createTeXIcon} is called.
+     */
+    private static TeXIcon getOrCreateIcon(String text, float fontSize) {
+        Duple<String, Float> key = new Duple<>(text, fontSize);
+        TeXIcon icon = ICON_CACHE.get(key);
+        if (icon != null) return icon;
         try {
-            TeXFormula tf   = new TeXFormula(formula);
-            TeXIcon    icon = tf.createTeXIcon(TeXConstants.STYLE_DISPLAY, fontSize);
-            icon.setForeground(color);
-
-            int w = icon.getIconWidth();
-            int h = icon.getIconHeight();
-            BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2 = img.createGraphics();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,      RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-            icon.paintIcon(null, g2, 0, 0);
-            g2.dispose();
-            return img;
+            TeXFormula tf = new TeXFormula(toLatex(text));
+            icon = tf.createTeXIcon(TeXConstants.STYLE_DISPLAY, fontSize);
+            ICON_CACHE.put(key, icon);
+            return icon;
         } catch (Exception e) {
             return null;
         }
