@@ -4,16 +4,13 @@ import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
 import org.scilab.forge.jlatexmath.TeXIcon;
 
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
 
 /**
- * TexHelper — converts text-mode TeX strings to rendered {@link BufferedImage}s
- * via JLaTeXMath.  Used by {@link net.eric_nicolas.sword.ui.base.PaintContext}
- * to draw all text in the S.W.O.R.D widget hierarchy.
+ * TexHelper — parses and lays out text-mode TeX strings as cached
+ * {@link TeXIcon} objects via JLaTeXMath.  Used by
+ * {@link net.eric_nicolas.sword.ui.base.PaintContext} to draw all text
+ * in the S.W.O.R.D widget hierarchy.
  *
  * <h3>Input format</h3>
  * Input is written in <em>text mode</em>: plain text is emitted as-is; inline
@@ -24,13 +21,12 @@ import java.awt.image.BufferedImage;
  * Newlines ({@code \n}) produce line breaks via {@code \begin{array}{l}...}.
  *
  * <h3>Caching</h3>
- * {@link TeXIcon} objects (the result of the expensive parse-and-layout step)
- * are cached by {@code (text, fontSize)} — colour-independent, because colour
- * is applied via {@link TeXIcon#setForeground} just before each paint call.
- * This means a cache hit saves {@code createTeXIcon} time (≈100–320 µs) for
- * any colour variant of a previously seen string.  The cache holds up to
- * {@value #CACHE_SIZE} entries with FIFO eviction.  Call {@link #clearCache()}
- * to flush all entries (e.g. after a global font-size change).
+ * {@link TeXIcon} objects (the result of the expensive parse-and-layout step,
+ * ≈100–320 µs) are cached by {@code (text, fontSize)} — colour-independent,
+ * because colour is applied via {@link TeXIcon#setForeground} at paint time.
+ * The cache holds up to {@value #CACHE_SIZE} entries with FIFO eviction.
+ * Call {@link #clearCache()} to flush all entries (e.g. after a global
+ * font-size change).
  */
 public final class TexHelper {
 
@@ -45,41 +41,35 @@ public final class TexHelper {
     // ===== Public API =====
 
     /**
-     * Render {@code text} (text-mode TeX with optional {@code \math{...}} blocks)
-     * to a {@link BufferedImage} at the given font size and colour.
-     * The expensive parse-and-layout step ({@code createTeXIcon}) is cached by
-     * {@code (text, fontSize)}; only the rasterisation ({@code paintIcon}) runs
-     * on every call.
+     * Return the cached {@link TeXIcon} for {@code (text, fontSize)}, creating
+     * and caching it on the first call.  Returns {@code null} for null/empty
+     * input or if JLaTeXMath cannot parse the formula.
      *
-     * @return the rendered image, or {@code null} if the input is empty or
-     *         JLaTeXMath throws an exception
+     * <p>Callers are responsible for calling {@link TeXIcon#setForeground}
+     * before painting to apply the desired colour.
      */
-    public static BufferedImage render(String text, Color color, float fontSize) {
+    public static TeXIcon getOrCreateIcon(String text, float fontSize) {
         if (text == null || text.isEmpty()) return null;
-
-        TeXIcon icon = getOrCreateIcon(text, fontSize);
-        if (icon == null) return null;
-
-        icon.setForeground(color);
-        int w = icon.getIconWidth();
-        int h = icon.getIconHeight();
-        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = img.createGraphics();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,      RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        icon.paintIcon(null, g2, 0, 0);
-        g2.dispose();
-        return img;
+        Duple<String, Float> key = new Duple<>(text, fontSize);
+        TeXIcon icon = ICON_CACHE.get(key);
+        if (icon != null) return icon;
+        try {
+            TeXFormula tf = new TeXFormula(toLatex(text));
+            icon = tf.createTeXIcon(TeXConstants.STYLE_DISPLAY, fontSize);
+            ICON_CACHE.put(key, icon);
+            return icon;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**
      * Return the pixel dimensions that {@code text} would occupy at the given
-     * font size.  Uses the cached {@link TeXIcon} directly — no extra render needed.
+     * font size, using the cached {@link TeXIcon} directly.
      *
-     * @return dimensions, or {@code (0, 0)} if the text is empty or parsing fails
+     * @return dimensions, or {@code (0, 0)} for null/empty input or parse failure
      */
     public static Dimension measure(String text, float fontSize) {
-        if (text == null || text.isEmpty()) return new Dimension(0, 0);
         TeXIcon icon = getOrCreateIcon(text, fontSize);
         return icon != null
                 ? new Dimension(icon.getIconWidth(), icon.getIconHeight())
@@ -148,26 +138,5 @@ public final class TexHelper {
         if (text.isEmpty()) return;
         String escaped = text.replace("{", "\\{").replace("}", "\\}");
         sb.append("\\text{").append(escaped).append("}");
-    }
-
-    // ===== Icon cache =====
-
-    /**
-     * Return the cached {@link TeXIcon} for {@code (text, fontSize)}, creating
-     * and caching it if not already present.  This is the only place
-     * {@code createTeXIcon} is called.
-     */
-    private static TeXIcon getOrCreateIcon(String text, float fontSize) {
-        Duple<String, Float> key = new Duple<>(text, fontSize);
-        TeXIcon icon = ICON_CACHE.get(key);
-        if (icon != null) return icon;
-        try {
-            TeXFormula tf = new TeXFormula(toLatex(text));
-            icon = tf.createTeXIcon(TeXConstants.STYLE_DISPLAY, fontSize);
-            ICON_CACHE.put(key, icon);
-            return icon;
-        } catch (Exception e) {
-            return null;
-        }
     }
 }

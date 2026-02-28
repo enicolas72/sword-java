@@ -2,11 +2,13 @@ package net.eric_nicolas.sword.ui.base;
 
 import net.eric_nicolas.sword.ui.Point;
 import net.eric_nicolas.sword.ui.TexHelper;
+import org.scilab.forge.jlatexmath.TeXIcon;
 
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 
 /**
  * PaintContext - Abstraction layer for painting operations.
@@ -108,15 +110,25 @@ public class PaintContext {
         // work with, then downsample to the target size via bicubic interpolation.
         // This is supersampling: the high-res render is filtered down, producing
         // sharper, cleaner glyphs than rendering at native size would.
-        java.awt.image.BufferedImage img = TexHelper.render(text, g.getColor(), fontSize * dpr * OVERSAMPLE);
-        if (img != null) {
-            int scale = Math.max(1, dpr) * OVERSAMPLE;
-            int lw = img.getWidth()  / scale;   // target size in logical pixels
-            int lh = img.getHeight() / scale;
-            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-            g.setRenderingHint(RenderingHints.KEY_RENDERING,     RenderingHints.VALUE_RENDER_QUALITY);
-            g.drawImage(img, x + origin.x(), y + origin.y(), lw, lh, null);
-        }
+        TeXIcon icon = TexHelper.getOrCreateIcon(text, fontSize * dpr * OVERSAMPLE);
+        if (icon == null) return;
+
+        icon.setForeground(g.getColor());
+        int w = icon.getIconWidth();
+        int h = icon.getIconHeight();
+        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = img.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,      RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        icon.paintIcon(null, g2, 0, 0);
+        g2.dispose();
+
+        int scale = Math.max(1, dpr) * OVERSAMPLE;
+        int lw = w / scale;   // target size in logical pixels
+        int lh = h / scale;
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING,     RenderingHints.VALUE_RENDER_QUALITY);
+        g.drawImage(img, x + origin.x(), y + origin.y(), lw, lh, null);
     }
 
     /** @see #drawString(int, int, String) */
