@@ -18,7 +18,7 @@ Java port of the **S.W.O.R.D** (System of Windows for the ORganisation of the De
 - **Window palette system** — three colour schemes: STANDARD (gray), GREEN (Menu/MenuChoice), BLUE (Dialog); propagates automatically via `PaintContext`
 - **Modal dialog event loop** (`execDialog()` — GLFW-based mini-loop, fully functional)
 - Sample applications: Hello (TexWidget formula), Dialog (full gadget demo), Mandel (Mandelbrot viewer with zoom + scrollbars)
-- 164 unit tests (16 test classes) covering geometry, palette, window layout, screen management, and gadget behavior
+- 217 unit tests (19 test classes) covering geometry, palette, window layout, screen management, and gadget behavior
 
 ### What's deferred
 

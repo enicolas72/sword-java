@@ -13,8 +13,9 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`Point`** — Immutable 2D point with arithmetic helpers (plus, minus, min, max)
 - **`Rect`** — Rectangle (top-left origin + width/height); intersect, union, contains, grow
 - **`Duple<X, Y>`** — Immutable typed pair; implements `equals` / `hashCode` so it can be used as a map or cache key
+- **`Triple<X, Y, Z>`** — Immutable typed triplet; implements `equals` / `hashCode` (via `Objects.hash`) so it can be used as a map or cache key; companion to `Duple`
 - **`Cache<K, V>`** — Bounded FIFO cache backed by a `LinkedHashMap` with `removeEldestEntry`; configurable `maxSize`; operations: `get`, `put`, `contains`, `size`, `maxSize`, `clear`
-- **`TexHelper`** — Static helper that converts text-mode TeX strings to rendered `BufferedImage`s via JLaTeXMath. Input is plain text with optional `\math{...}` inline math blocks; newlines produce line breaks. Conversion pipeline: `toLatex()` wraps text in `\text{...}` and emits math verbatim inside `\begin{array}{l}...\end{array}`. Rendered images are stored in a static `Cache<Duple<Duple<String,Color>,Float>, BufferedImage>` (FIFO, 32 entries) keyed by `(text, color, fontSize)`. Public API: `render(text, color, fontSize)`, `measure(text, fontSize)`, `clearCache()`.
+- **`TexHelper`** — Static helper that parses text-mode TeX strings and lays them out as cached `TeXIcon` objects via JLaTeXMath. Input is plain text with optional `\math{...}` inline math blocks; newlines produce line breaks. Conversion pipeline: `toLatex()` wraps text in `\text{...}` and emits math verbatim inside `\begin{array}{l}...\end{array}`. Icons are stored in a static `Cache<Duple<String,Float>, TeXIcon>` (FIFO, 32 entries) keyed by `(text, fontSize)` — color-independent; color is applied via `TeXIcon.setForeground` at paint time. Public API: `getOrCreateIcon(text, fontSize)`, `measure(text, fontSize)`, `clearCache()`.
 
 ### `net.eric_nicolas.sword.ui.events`
 
@@ -32,7 +33,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 - **`Window`** — Overlapping window: left sidebar (drag grip + optional close button), outer resize border; internal `Canvas`; `bringToFront()` / `remove()`. Options: `setResizable(bool)` (thick border + resize handles vs. 1-px outline), `setClosable(bool)` (show/hide × button), `setPalette(WindowPalette)` (colour scheme for this window and all its widgets). `setOnResize(Runnable)` callback fired on resize. `draw()` injects the window's palette into the `PaintContext` before delegating to `super.draw()`, `canvas.draw()`, and `drawOverlay()` so the entire hierarchy uses the same palette automatically.
 - **`Screen`** — Plain class (not a `ScreenArea`): manages `LinkedList<Window>` with z-ordering; dispatches events topmost-first; routes unhandled commands to the registered `IntPredicate` command handler. Windows hold a direct `screen` reference (`Window.getScreen()`) set by `Screen.add()`; `Screen` is never in the `ScreenArea.father` chain. Application-level commands (those not consumed by any window) are queued in `pendingCommands` and drained by `processPendingCommands()` from the main loop — outside GLFW callbacks — so that modal handlers like `execDialog()` can safely pump the GLFW event loop.
 - **`WindowPalette`** — Set of five coordinated colours (`black`, `dark`, `medium`, `face`, `white`) that defines the visual appearance of a window and all its widgets. Three pre-built instances: `STANDARD` (neutral grays, default), `GREEN` (slightly green-tinted, used by Menu/MenuChoice), `BLUE` (slightly blue-tinted, used by Dialog). Assigned via `Window.setPalette()`; injected into `PaintContext` by `Window.draw()` and propagated automatically through `withOrigin()`.
-- **`PaintContext`** — `Graphics2D` wrapper with local-coordinate translation via `withOrigin(Point)`, palette propagation via `withPalette(WindowPalette)`, and font-size propagation via `withFontSize(float)`. All text is drawn through `TexHelper`: `drawString(x, y, text)` renders text-mode TeX to a `BufferedImage` (top-left at the given coordinates) using the current colour and `fontSize` field (default 12 pt); `measureText(text)` returns the rendered image dimensions for layout. No AWT `Font` or `FontMetrics` exposure.
+- **`PaintContext`** — `Graphics2D` wrapper with local-coordinate translation via `withOrigin(Point)`, palette propagation via `withPalette(WindowPalette)`, font-size propagation via `withFontSize(float)`, and HiDPI support via `withDpr(int)` (device pixel ratio, default 1). All text is drawn through `TexHelper`: `drawString(x, y, text)` calls `getOrCreateIcon`, sets foreground to the current colour, and paints directly via `icon.paintIcon(null, g, ...)` at the given coordinates; `measureText(text)` returns the icon dimensions for layout. No AWT `Font` or `FontMetrics` exposure.
 - **`Application`** — Application shell (plain class, not a ScreenArea): owns a `Screen` and a `LwjglDriver`; extend and override `createMenuChoices()` + `handleCommand()`
 
 ### `net.eric_nicolas.sword.ui.driver`
@@ -98,7 +99,7 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 7. **Method-override event dispatch**: `ScreenArea.handleEvent` dispatches via a `switch` to overridable methods; no macro tables.
 8. **PaintContext**: Local-coordinate translation is managed in `PaintContext`; callers always draw in their own (0,0)-based coordinate space.
 9. **Window palette propagation**: `Window.draw()` calls `ctx.withPalette(palette)` before passing to `super.draw()`, `canvas.draw()`, and `drawOverlay()`. `PaintContext.withOrigin()` copies the palette, so every `paint()` method in the hierarchy receives `ctx.palette()` with the correct colour scheme — no extra wiring required. All widget paint methods read `ctx.palette().black/dark/medium/face/white` instead of static `TColors` constants.
-10. **TexHelper / PaintContext text pipeline**: All text drawing goes through `TexHelper`. `PaintContext.drawString(x, y, text)` calls `TexHelper.render(text, color, fontSize)` → `BufferedImage` and blits the result top-left at `(x, y)`. `PaintContext.measureText(text)` returns the rendered image size so widgets can compute centering without AWT `Font` or `FontMetrics`. The `fontSize` is carried as a field on `PaintContext`; `withFontSize(float)` returns a derived context (just like `withPalette`). `Label` exposes `setFontSize(float)` so individual labels can override the default 12 pt.
+10. **TexHelper / PaintContext text pipeline**: All text drawing goes through `TexHelper`. The expensive JLaTeXMath parse+layout step is cached in a `Cache<Duple<String,Float>, TeXIcon>` (color-independent key). `PaintContext.drawString(x, y, text)` calls `getOrCreateIcon`, sets `TeXIcon.setForeground` to the current colour, and paints directly via `icon.paintIcon`. `PaintContext.measureText(text)` reads icon dimensions directly. The `fontSize` is carried as a field on `PaintContext`; `withFontSize(float)` returns a derived context (just like `withPalette`). `Label` exposes `setFontSize(float)` so individual labels can override the default 12 pt.
 11. **Scrollbar drag capture**: Like Window title-bar drag, Scrollbar returns `true` from `mouseMove`/`mouseLUp` while `dragging==true` regardless of contains, so the thumb follows the mouse even outside the bar.
 12. **Scroller viewport buffer**: Content renders at viewport size (not virtual size), so only the visible slice is computed. The scrollbar range tracks the virtual size independently. Scroll offset is forwarded to the content widget via callback.
 
@@ -140,13 +141,14 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 ## Test Coverage
 
-18 test classes, 201 tests (JUnit 5):
+19 test classes, 217 tests (JUnit 5):
 
 | Test Class | What It Tests |
 |------------|--------------|
 | `PointTest` | Constructor, copy, arithmetic |
 | `RectTest` | Constructors, geometry ops, intersect/union |
 | `DupleTest` | Getters, equals/hashCode, null components, use as map key |
+| `TripleTest` | Getters, equals/hashCode, null components, use as map key |
 | `CacheTest` | put/get, FIFO eviction, size limit, contains, clear |
 | `ScreenAreaTest` | Bounds, absolute position with parent chain, contains(Point), visibility, status flags, father reference |
 | `CanvasTest` | Child widget management, parent wiring, unmodifiable list, widget order |
@@ -167,8 +169,8 @@ Phase 2 complete. Core infrastructure, all main gadgets, scrollbars, and three s
 
 ## File Statistics
 
-- Java source files: 38 (src/main)
-- Test files: 18 (src/test)
-- Total tests: 201
+- Java source files: 39 (src/main)
+- Test files: 19 (src/test)
+- Total tests: 217
 - Packages: 6 (ui, ui.events, ui.base, ui.widgets, ui.driver, samples)
-- Classes: 38
+- Classes: 39

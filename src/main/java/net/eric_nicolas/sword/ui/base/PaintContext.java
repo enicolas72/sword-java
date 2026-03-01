@@ -4,11 +4,7 @@ import net.eric_nicolas.sword.ui.Point;
 import net.eric_nicolas.sword.ui.TexHelper;
 import org.scilab.forge.jlatexmath.TeXIcon;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
+import java.awt.*;
 
 /**
  * PaintContext - Abstraction layer for painting operations.
@@ -20,12 +16,12 @@ import java.awt.image.BufferedImage;
  *
  * <h3>Text rendering</h3>
  * All text is rendered via {@link TexHelper}, which accepts text-mode TeX input
- * (plain text with optional {@code \math{...}} inline math blocks) and returns
- * a {@link java.awt.image.BufferedImage}.  The {@code fontSize} field (default
- * {@value #DEFAULT_FONT_SIZE}) controls the JLaTeXMath point size; override it
- * per-context with {@link #withFontSize(float)}.  {@link #drawString} draws the
- * rendered image top-left at the given coordinates.  {@link #measureText} returns
- * the rendered image dimensions for layout calculations.
+ * (plain text with optional {@code \math{...}} inline math blocks).  The
+ * {@code fontSize} field (default {@value #DEFAULT_FONT_SIZE}) controls the
+ * JLaTeXMath point size; override it per-context with {@link #withFontSize(float)}.
+ * {@link #drawString} paints the icon directly onto the {@link Graphics2D} at the
+ * given coordinates.  {@link #measureText} returns the dimensions for layout
+ * calculations.
  */
 public class PaintContext {
 
@@ -106,29 +102,10 @@ public class PaintContext {
      * {@link #fontSize()}.
      */
     public void drawString(int x, int y, String text) {
-        // Render at OVERSAMPLE × the display size so JLaTeXMath has more detail to
-        // work with, then downsample to the target size via bicubic interpolation.
-        // This is supersampling: the high-res render is filtered down, producing
-        // sharper, cleaner glyphs than rendering at native size would.
-        TeXIcon icon = TexHelper.getOrCreateIcon(text, fontSize * dpr * OVERSAMPLE);
+        TeXIcon icon = TexHelper.getOrCreateIcon(text, fontSize);
         if (icon == null) return;
-
         icon.setForeground(g.getColor());
-        int w = icon.getIconWidth();
-        int h = icon.getIconHeight();
-        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = img.createGraphics();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,      RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        icon.paintIcon(null, g2, 0, 0);
-        g2.dispose();
-
-        int scale = Math.max(1, dpr) * OVERSAMPLE;
-        int lw = w / scale;   // target size in logical pixels
-        int lh = h / scale;
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-        g.setRenderingHint(RenderingHints.KEY_RENDERING,     RenderingHints.VALUE_RENDER_QUALITY);
-        g.drawImage(img, x + origin.x(), y + origin.y(), lw, lh, null);
+        icon.paintIcon(null, g, x + origin.x(), y + origin.y());
     }
 
     /** @see #drawString(int, int, String) */
@@ -142,9 +119,7 @@ public class PaintContext {
      * bounding box before calling {@link #drawString}.
      */
     public Dimension measureText(String text) {
-        int scale = Math.max(1, dpr) * OVERSAMPLE;
-        Dimension d = TexHelper.measure(text, fontSize * dpr * OVERSAMPLE);
-        return new Dimension(d.width / scale, d.height / scale);
+        return TexHelper.measure(text, fontSize);
     }
 
     // ===== Drawing operations (coordinates first) =====
@@ -217,11 +192,6 @@ public class PaintContext {
         for (int i = 0; i < n; i++) result[i] = points[i] + offset;
         return result;
     }
-
-    /** Oversampling factor for JLaTeXMath rendering.  The formula is rendered at
-     *  {@code fontSize × dpr × OVERSAMPLE} and bicubic-downsampled to the target
-     *  display size, giving significantly sharper glyphs than native-size rendering. */
-    private static final int OVERSAMPLE = 2;
 
     private PaintContext(Graphics2D g, Point origin, WindowPalette palette, float fontSize, int dpr) {
         this.g        = g;

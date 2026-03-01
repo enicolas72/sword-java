@@ -31,7 +31,7 @@ GLFW must run on the AppKit main thread (`-XstartOnFirstThread`) and Java2D must
 ### Package Structure
 
 ```
-net.eric_nicolas.sword.ui              → Point, Rect, Duple, Cache, TexHelper
+net.eric_nicolas.sword.ui              → Point, Rect, Duple, Triple, Cache, TexHelper
 net.eric_nicolas.sword.ui.events       → Event, EventMouse, EventKeyboard, EventCommand
 net.eric_nicolas.sword.ui.driver       → LwjglDriver, EventLwjglAdapter  (all LWJGL/GLFW coupling here)
 net.eric_nicolas.sword.ui.base         → ScreenArea, Widget, Window, Canvas,
@@ -116,9 +116,9 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 ✅ Scrollbar (TLift port): arrow buttons, thumb drag, page click, H/V orientations
 ✅ Scroller (TScroller port): viewport-sized buffer, zoom-aware content/scrollbar sync; `resize()` for live viewport resize
 ✅ Sample applications: Hello (Label with 22pt TeX rendering), Dialog (with working modal dialog), Mandel (Mandelbrot fractal viewer with zoom + pan; resize reveals more of the plane)
-✅ TexHelper — all text drawn via JLaTeXMath; text mode with `\math{...}` for inline math; static FIFO cache keyed by `(text, color, fontSize)`; `PaintContext.drawString` / `measureText` go through it
+✅ TexHelper — all text drawn via JLaTeXMath; text mode with `\math{...}` for inline math; color-independent `TeXIcon` cache keyed by `(text, fontSize)`; `PaintContext.drawString` / `measureText` go through it
 ✅ Label supports `setFontSize(float)` and renders TeX input (plain text + `\math{...}` blocks) at arbitrary size
-✅ 201 unit tests (18 test classes)
+✅ 217 unit tests (19 test classes)
 
 **Deferred:**
 - TGauge (progress bar)
@@ -148,7 +148,7 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 | `TScroller` | `Scroller` |
 | Static colour constants (`TColors`) | Removed; colours defined inline as `new Color(r,g,b)` in `WindowPalette`; desktop background in `Screen.DESKTOP_BG` |
 | AWT `Font` / `FontMetrics` in widgets | Removed; all text drawn via `TexHelper` through `PaintContext.drawString` / `measureText` |
-| Formula/text rendering (none in original) | `TexHelper` — static helper; renders text-mode TeX (with `\math{...}`) via JLaTeXMath into a FIFO-cached `BufferedImage`; used by every `PaintContext.drawString` call |
+| Formula/text rendering (none in original) | `TexHelper` — static helper; parses text-mode TeX (with `\math{...}`) via JLaTeXMath; caches `TeXIcon` by `(text, fontSize)`; `PaintContext.drawString` paints directly via `icon.paintIcon` |
 
 **Graphics / Driver Layer:**
 - `LwjglDriver` owns the GLFW window and OpenGL 3.3 compositor; renders each S.W.O.R.D `Window` as a textured quad (per-window `BufferedImage` → OpenGL texture, uploaded every frame)
@@ -181,10 +181,10 @@ java -XstartOnFirstThread -Djava.awt.headless=true \
 **TexHelper / PaintContext text pipeline:**
 - `TexHelper` (in `net.eric_nicolas.sword.ui`) is the sole text-rendering engine for the whole widget hierarchy
 - Input is written in **text mode**: plain text rendered as `\text{...}`, inline math wrapped in `\math{...}` blocks, newlines produce row breaks via `\begin{array}{l}...\end{array}`
-- Static `Cache<Duple<Duple<String,Color>,Float>, BufferedImage>` (FIFO, 32 entries) keyed by `(text, color, fontSize)` — renders are shared across all widgets
-- `TexHelper.render(text, color, fontSize)` → `BufferedImage`; `TexHelper.measure(text, fontSize)` → `Dimension` (renders with `Color.BLACK` since dimensions are colour-independent)
-- `PaintContext` carries a `fontSize` field (default `DEFAULT_FONT_SIZE = 12f`); `withFontSize(float)` returns a derived context (parallel to `withPalette`/`withOrigin`)
-- `PaintContext.drawString(x, y, text)` blits the TexHelper image top-left at `(x, y)` using the current colour and font size; `PaintContext.measureText(text)` delegates to `TexHelper.measure`
+- Static `Cache<Duple<String,Float>, TeXIcon>` (FIFO, 32 entries) keyed by `(text, fontSize)` — color-independent; caches the expensive JLaTeXMath parse + layout step; color applied via `TeXIcon.setForeground` at paint time
+- Public API: `getOrCreateIcon(text, fontSize)` → `TeXIcon` (null for null/empty/unparseable input); `measure(text, fontSize)` → `Dimension`; `clearCache()`
+- `PaintContext` carries a `fontSize` field (default `DEFAULT_FONT_SIZE = 12f`) and a `dpr` field (device pixel ratio, default 1 for non-HiDPI); `withFontSize(float)` / `withDpr(int)` return derived contexts (parallel to `withPalette`/`withOrigin`)
+- `PaintContext.drawString(x, y, text)` calls `getOrCreateIcon`, sets foreground to the current colour, and paints directly via `icon.paintIcon(null, g, x + origin.x(), y + origin.y())`; `PaintContext.measureText(text)` delegates to `TexHelper.measure`
 - No AWT `Font`, `FontMetrics`, `setFont`, `getFontMetrics`, or `drawChar` anywhere in the codebase
 - `Menu.initChoicesHorizontal()` / `compWidth()` use `TexHelper.measure()` to compute choice widths — no temp `Graphics2D` needed
 - `EditLine` cursor x-position is computed via `TexHelper.measure(prefix, DEFAULT_FONT_SIZE).width`
